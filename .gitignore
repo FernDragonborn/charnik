@@ -29,8 +29,12 @@ src-tauri/gen/
 # Tauri release script — holds the local signing key, never committed
 tools/build-release.ps1
 
-# local design mocks + renders (kept on disk, not tracked)
-design-preview/
+# design mocks are tracked, the dead ones in archive/; renders, scratch scripts and notes stay local
+design-preview/*
+!design-preview/*.html
+!design-preview/archive/
+design-preview/archive/*
+!design-preview/archive/*.html
 
 # downloaded SRD source (re-fetchable; converters in tools/srd/ read it → the CONTENT repo's CSVs)
 tools/srd-src/

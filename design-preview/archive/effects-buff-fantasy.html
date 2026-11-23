@@ -1,0 +1,148 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Buff icon — fantasy theme</title>
+		<style>
+			@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+			:root {
+				--bg: #0f1116;
+				--surface: #171a21;
+				--border: #272c37;
+				--border-strong: #333a47;
+				--text: #e6e8ec;
+				--muted: #878f9d;
+				--good: #3bb8a6;
+				--accent-bright: #ef6b78;
+				--font-d: 'Space Grotesk', sans-serif;
+				--font-m: 'JetBrains Mono', monospace;
+			}
+			body {
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--font-d);
+				margin: 0;
+				padding: 32px;
+			}
+			h1 {
+				font-size: 18px;
+				font-weight: 700;
+				margin: 0 0 4px;
+			}
+			.lead {
+				color: var(--muted);
+				font-size: 13px;
+				margin: 0 0 26px;
+			}
+			.opts {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 16px;
+				max-width: 820px;
+			}
+			.opt {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 8px;
+				width: 108px;
+			}
+			.chip {
+				width: 52px;
+				height: 52px;
+				display: grid;
+				place-items: center;
+				border: 1px solid var(--border-strong);
+				border-radius: 11px;
+				background: var(--surface);
+				color: var(--good);
+			}
+			/* show each at HEADER size too, so we judge legibility small */
+			.small {
+				width: 26px;
+				height: 26px;
+			}
+			.lbl {
+				font-family: var(--font-m);
+				font-size: 10px;
+				color: var(--muted);
+				text-align: center;
+			}
+			.row {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+			}
+			.ctx {
+				margin-top: 30px;
+				display: flex;
+				gap: 18px;
+				flex-wrap: wrap;
+			}
+			.hdr {
+				display: inline-flex;
+				align-items: center;
+				gap: 7px;
+				font-family: var(--font-m);
+				font-size: 10px;
+				letter-spacing: 0.13em;
+				text-transform: uppercase;
+				color: var(--good);
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 6px 12px;
+			}
+			.hdr .ct {
+				color: var(--muted);
+			}
+			.hdr.deb {
+				color: var(--accent-bright);
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Buffs icon — fantasy theme (6) · simple + angular, legible small</h1>
+		<p class="lead">No circle-constructions, no fine detail. Each shown big + at header size.</p>
+		<div class="opts">
+			<!-- 1: crystal / gem -->
+			<div class="opt">
+				<span class="chip"><svg width="26" height="26" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M10 2 L14.8 7 L10 18 L5.2 7 Z" /><path d="M5.2 7 H14.8 M10 2 L10 18" /></svg></span>
+				<span class="lbl">1 · crystal</span>
+			</div>
+			<!-- 2: rune (algiz — protection/life) -->
+			<div class="opt">
+				<span class="chip"><svg width="26" height="26" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.5 V17.5 M10 7 L5.3 3.4 M10 7 L14.7 3.4" /></svg></span>
+				<span class="lbl">2 · rune (algiz)</span>
+			</div>
+			<!-- 3: chalice / grail -->
+			<div class="opt">
+				<span class="chip"><svg width="26" height="26" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 4 H14.5 L13 9.5 A3.4 3.4 0 0 1 7 9.5 Z" /><path d="M10 12.6 V16 M6.5 16.5 H13.5" /></svg></span>
+				<span class="lbl">3 · chalice</span>
+			</div>
+			<!-- 4: hexagram (arcane star) -->
+			<div class="opt">
+				<span class="chip"><svg width="26" height="26" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M10 2.5 L15 11 H5 Z" /><path d="M10 17.5 L5 9 H15 Z" /></svg></span>
+				<span class="lbl">4 · hexagram</span>
+			</div>
+			<!-- 5: fleur-de-lis (heraldic) -->
+			<div class="opt">
+				<span class="chip"><svg width="26" height="26" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2 C10 5 9 6.5 9 8.5 C9 10 10 11 10 11 C10 11 11 10 11 8.5 C11 6.5 10 5 10 2 Z" /><path d="M10 9 C8 7 5.5 8 6 11 C6.3 12.6 8 13 9.5 12 M10 9 C12 7 14.5 8 14 11 C13.7 12.6 12 13 10.5 12" /><path d="M7 12 H13 M10 12 V17.5" /></svg></span>
+				<span class="lbl">5 · fleur-de-lis</span>
+			</div>
+			<!-- 6: crescent moon -->
+			<div class="opt">
+				<span class="chip"><svg width="26" height="26" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M14.5 4 A6.4 6.4 0 1 0 14.5 16 A5 5 0 1 1 14.5 4 Z" /></svg></span>
+				<span class="lbl">6 · crescent</span>
+			</div>
+		</div>
+
+		<div class="ctx">
+			<span class="hdr"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M10 2 L14.8 7 L10 18 L5.2 7 Z" /><path d="M5.2 7 H14.8 M10 2 L10 18" /></svg>Buffs <span class="ct">· 4</span></span>
+			<span class="hdr"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.5 V17.5 M10 7 L5.3 3.4 M10 7 L14.7 3.4" /></svg>Buffs <span class="ct">· 4</span></span>
+			<span class="hdr"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M10 2.5 L15 11 H5 Z" /><path d="M10 17.5 L5 9 H15 Z" /></svg>Buffs <span class="ct">· 4</span></span>
+			<span class="hdr"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M14.5 4 A6.4 6.4 0 1 0 14.5 16 A5 5 0 1 1 14.5 4 Z" /></svg>Buffs <span class="ct">· 4</span></span>
+			<span class="hdr deb"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M10 2.5 L16 5 V10 C16 14 13 16.6 10 18 C7 16.6 4 14 4 10 V5 Z" /><path d="M10.5 4.5 L8.5 9 L11 10.5 L9.2 15.5" stroke-linecap="round" /></svg>Debuffs <span class="ct">· 3</span></span>
+		</div>
+	</body>
+</html>

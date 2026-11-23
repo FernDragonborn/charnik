@@ -1,0 +1,153 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Buff icon — paired + blessing motifs</title>
+		<style>
+			@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+			:root {
+				--bg: #0f1116;
+				--surface: #171a21;
+				--border: #272c37;
+				--border-strong: #333a47;
+				--text: #e6e8ec;
+				--muted: #878f9d;
+				--good: #3bb8a6;
+				--accent-bright: #ef6b78;
+				--font-d: 'Space Grotesk', sans-serif;
+				--font-m: 'JetBrains Mono', monospace;
+			}
+			body {
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--font-d);
+				margin: 0;
+				padding: 32px;
+			}
+			h1 {
+				font-size: 18px;
+				font-weight: 700;
+				margin: 0 0 4px;
+			}
+			.lead {
+				color: var(--muted);
+				font-size: 13px;
+				margin: 0 0 26px;
+			}
+			.opts {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 16px;
+				max-width: 800px;
+			}
+			.opt {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 8px;
+				width: 110px;
+			}
+			.chip {
+				width: 52px;
+				height: 52px;
+				display: grid;
+				place-items: center;
+				border: 1px solid var(--border-strong);
+				border-radius: 11px;
+				background: var(--surface);
+				color: var(--good);
+			}
+			.lbl {
+				font-family: var(--font-m);
+				font-size: 10px;
+				color: var(--muted);
+				text-align: center;
+			}
+			.ctx {
+				margin-top: 32px;
+			}
+			.ctx h3 {
+				font-family: var(--font-m);
+				font-size: 10px;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--muted);
+				margin: 0 0 10px;
+			}
+			.pair {
+				display: flex;
+				gap: 18px;
+				flex-wrap: wrap;
+			}
+			.hdr {
+				display: inline-flex;
+				align-items: center;
+				gap: 7px;
+				font-family: var(--font-m);
+				font-size: 10px;
+				letter-spacing: 0.13em;
+				text-transform: uppercase;
+				color: var(--good);
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 6px 12px;
+			}
+			.hdr .ct {
+				color: var(--muted);
+			}
+			.hdr.deb {
+				color: var(--accent-bright);
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Buffs icon — pair with the cracked-shield debuff + blessing motifs</h1>
+		<p class="lead">1–2 mirror the debuff (shield family). 3–6 are softer "blessing / growth" motifs.</p>
+		<div class="opts">
+			<!-- 1: whole shield (mirror of cracked shield) -->
+			<div class="opt">
+				<span class="chip"><svg width="24" height="24" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M10 2.5 L16 5 V10 C16 14 13 16.6 10 18 C7 16.6 4 14 4 10 V5 Z" /></svg></span>
+				<span class="lbl">1 · whole shield</span>
+			</div>
+			<!-- 2: shield + plus -->
+			<div class="opt">
+				<span class="chip"><svg width="24" height="24" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M10 2.5 L16 5 V10 C16 14 13 16.6 10 18 C7 16.6 4 14 4 10 V5 Z" /><path d="M10 7 V12 M7.5 9.5 H12.5" stroke-linecap="round" /></svg></span>
+				<span class="lbl">2 · shield +</span>
+			</div>
+			<!-- 3: wing -->
+			<div class="opt">
+				<span class="chip"><svg width="24" height="24" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"><path d="M3 15 C6 9 11 6 17 5.5 C15.5 8 15.5 10 16.5 12 C13.5 11.5 10.5 12 8 13.5 C6.5 14 4.7 14.6 3 15 Z" /><path d="M6.5 13.3 C8.5 12 11 11.3 13.8 11.2 M9 11.9 C10.8 10.9 12.8 10.4 15 10.4" opacity="0.6" /></svg></span>
+				<span class="lbl">3 · wing</span>
+			</div>
+			<!-- 4: laurel wreath -->
+			<div class="opt">
+				<span class="chip"><svg width="24" height="24" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5 C4 6.5 3.6 11.5 6.5 15.5" /><path d="M13 3.5 C16 6.5 16.4 11.5 13.5 15.5" /><path d="M6.4 6 L4.4 5.4 M5.7 8.6 L3.6 8.4 M5.8 11.4 L4 11.8 M13.6 6 L15.6 5.4 M14.3 8.6 L16.4 8.4 M14.2 11.4 L16 11.8" /></svg></span>
+				<span class="lbl">4 · laurel</span>
+			</div>
+			<!-- 5: sprout / growth -->
+			<div class="opt">
+				<span class="chip"><svg width="24" height="24" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17 V9" /><path d="M10 10.5 C10 7.5 12.3 5.5 15.5 5.5 C15.5 8.5 13.3 10.5 10 10.5 Z" /><path d="M10 12 C10 9.8 8.2 8.3 5.6 8.3 C5.6 10.5 7.4 12 10 12 Z" /></svg></span>
+				<span class="lbl">5 · sprout</span>
+			</div>
+			<!-- 6: chevron-up in circle -->
+			<div class="opt">
+				<span class="chip"><svg width="24" height="24" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7.2" /><path d="M6.5 11.5 L10 8 L13.5 11.5" /></svg></span>
+				<span class="lbl">6 · up-in-circle</span>
+			</div>
+		</div>
+
+		<div class="ctx">
+			<h3>the shield pair, in context</h3>
+			<div class="pair">
+				<span class="hdr"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M10 2.5 L16 5 V10 C16 14 13 16.6 10 18 C7 16.6 4 14 4 10 V5 Z" /></svg>Buffs <span class="ct">· 4</span></span>
+				<span class="hdr deb"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M10 2.5 L16 5 V10 C16 14 13 16.6 10 18 C7 16.6 4 14 4 10 V5 Z" /><path d="M10.5 4.5 L8.5 9 L11 10.5 L9.2 15.5" stroke-linecap="round" /></svg>Debuffs <span class="ct">· 3</span></span>
+			</div>
+			<h3 style="margin-top: 20px">shield + plus, in context</h3>
+			<div class="pair">
+				<span class="hdr"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M10 2.5 L16 5 V10 C16 14 13 16.6 10 18 C7 16.6 4 14 4 10 V5 Z" /><path d="M10 7 V12 M7.5 9.5 H12.5" stroke-linecap="round" /></svg>Buffs <span class="ct">· 4</span></span>
+				<span class="hdr deb"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M10 2.5 L16 5 V10 C16 14 13 16.6 10 18 C7 16.6 4 14 4 10 V5 Z" /><path d="M10.5 4.5 L8.5 9 L11 10.5 L9.2 15.5" stroke-linecap="round" /></svg>Debuffs <span class="ct">· 3</span></span>
+			</div>
+		</div>
+	</body>
+</html>

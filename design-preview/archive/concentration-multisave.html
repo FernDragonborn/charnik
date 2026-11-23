@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="uk" data-theme="charnik">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Charnik — concentration multi-save (variations)</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			:root {
+				--bg: #0f1116;
+				--surface: #171a21;
+				--surface-2: #1f232c;
+				--line: #272c37;
+				--line-2: #333a47;
+				--text: #e6e8ec;
+				--muted: #878f9d;
+				--accent: #cf2b40;
+				--accent-bright: #ef6b78;
+				--accent-deep: #b3243a;
+				--accent-soft: #241317;
+				--gold: #caa24a;
+				--good: #3bb8a6;
+				--good-soft: #11302c;
+				--danger: #e0635a;
+				--disp: 'Space Grotesk', system-ui, sans-serif;
+				--body: 'Inter', system-ui, sans-serif;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--body);
+				padding: 28px;
+			}
+			h1 {
+				font-family: var(--disp);
+				font-size: 22px;
+				margin: 0 0 4px;
+			}
+			.sub {
+				color: var(--muted);
+				font-size: 13px;
+				margin: 0 0 22px;
+				max-width: 1000px;
+				line-height: 1.5;
+			}
+			.grid {
+				display: grid;
+				grid-template-columns: repeat(2, minmax(400px, 1fr));
+				gap: 22px;
+				max-width: 1000px;
+			}
+			.variant > h2 {
+				font-family: var(--disp);
+				font-size: 15px;
+				margin: 0 0 3px;
+			}
+			.variant > .tag {
+				font-size: 12px;
+				color: var(--muted);
+				margin: 0 0 11px;
+				line-height: 1.45;
+				min-height: 34px;
+			}
+			.conc {
+				display: inline-flex;
+				align-items: center;
+				gap: 8px;
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 12px;
+				padding: 5px 11px;
+				border-radius: 999px;
+				background: var(--accent-soft);
+				border: 1px solid var(--accent);
+				color: var(--accent-bright);
+			}
+			.conc .lbl {
+				font-family: var(--body);
+				font-size: 11px;
+				border: 1px solid var(--accent);
+				border-radius: 5px;
+				padding: 1px 6px;
+			}
+			.callout {
+				margin-top: 11px;
+				padding: 12px 13px;
+				border-radius: 11px;
+				border: 1px solid var(--accent);
+				background: var(--accent-soft);
+				box-shadow: 0 0 0 3px rgba(207, 43, 64, 0.14);
+			}
+			.co-top {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 8px;
+			}
+			.co-title {
+				font-family: var(--disp);
+				font-weight: 700;
+				font-size: 13px;
+				color: var(--accent-bright);
+			}
+			.co-why {
+				font-size: 11px;
+				color: var(--muted);
+			}
+			.co-row {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				margin-top: 10px;
+				flex-wrap: wrap;
+			}
+			.dc {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				font-size: 12px;
+				color: var(--muted);
+			}
+			.dc input,
+			.num {
+				width: 46px;
+				text-align: center;
+				font-family: var(--body);
+				font-weight: 600;
+				font-size: 14px;
+				background: var(--surface-2);
+				border: 1px solid var(--line-2);
+				border-radius: 6px;
+				color: var(--text);
+				padding: 3px;
+			}
+			.roll-btn {
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 12px;
+				padding: 6px 13px;
+				border-radius: 7px;
+				cursor: pointer;
+				background: var(--accent-deep);
+				border: 1px solid var(--accent-deep);
+				color: #fff;
+			}
+			.roll-btn.mini {
+				padding: 4px 9px;
+				font-size: 11px;
+			}
+			.ghost {
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 11px;
+				padding: 5px 10px;
+				border-radius: 7px;
+				cursor: pointer;
+				background: transparent;
+				border: 1px dashed var(--line-2);
+				color: var(--muted);
+			}
+			.stepper {
+				display: inline-flex;
+				align-items: center;
+				border: 1px solid var(--line-2);
+				border-radius: 7px;
+				overflow: hidden;
+			}
+			.stepper button {
+				background: var(--surface-2);
+				border: none;
+				color: var(--text);
+				width: 26px;
+				height: 28px;
+				cursor: pointer;
+				font-size: 15px;
+			}
+			.stepper span {
+				min-width: 30px;
+				text-align: center;
+				font-weight: 600;
+				font-size: 14px;
+			}
+			.push {
+				margin-left: auto;
+			}
+			.foot {
+				font-size: 11px;
+				color: var(--muted);
+				margin-top: 9px;
+			}
+			/* per-source rows (variant C) */
+			.src {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				margin-top: 8px;
+				font-size: 12px;
+			}
+			.src .name {
+				width: 96px;
+				background: var(--surface-2);
+				border: 1px solid var(--line);
+				border-radius: 6px;
+				color: var(--text);
+				padding: 4px 6px;
+				font-size: 12px;
+			}
+			.src .arrow {
+				color: var(--muted);
+			}
+			.src .dc-val {
+				font-weight: 600;
+				color: var(--text);
+			}
+			.pill {
+				display: inline-block;
+				font-size: 11px;
+				padding: 1px 7px;
+				border-radius: 999px;
+				border: 1px solid var(--good);
+				color: var(--good);
+				background: var(--good-soft);
+			}
+			.pill.fail {
+				border-color: var(--danger);
+				color: var(--danger);
+				background: #2a1512;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Concentration — multi-save variations (on chosen variant A)</h1>
+		<p class="sub">
+			All on top of variant A (surface + suggested DC, player rolls). The question is how to offer
+			<b>several saves at once</b> when RAW wants one per source (2014) or a table rules Magic Missile
+			per-dart. Common case stays one save; multi-save is opt-in.
+		</p>
+
+		<div class="grid">
+			<!-- A · single (reference) -->
+			<section class="variant">
+				<h2>A · Single save (default — the 95% case)</h2>
+				<p class="tag">One Damage press → one save on the amount. No multi-save UI unless asked. This
+					is the baseline; the others only add an opt-in.</p>
+				<div class="conc">◈ Concentration <span class="lbl">Bless</span></div>
+				<div class="callout">
+					<div class="co-top">
+						<span class="co-title">Concentration check</span>
+						<span class="co-why">you took 22 damage</span>
+					</div>
+					<div class="co-row">
+						<span class="dc">DC <input value="11" /></span>
+						<span class="co-why">d20 + CON (+3)</span>
+						<button class="roll-btn push">🎲 Roll save</button>
+					</div>
+				</div>
+			</section>
+
+			<!-- B · count stepper -->
+			<section class="variant">
+				<h2>B · Count stepper (×N, quick)</h2>
+				<p class="tag">Bump a “sources” counter → rolls N saves at the same shown DC. Fastest, but
+					same DC for each (fine for equal darts; not for arrow + breath).</p>
+				<div class="conc">◈ Concentration <span class="lbl">Bless</span></div>
+				<div class="callout">
+					<div class="co-top">
+						<span class="co-title">Concentration check</span>
+						<span class="co-why">Magic Missile · 12 dmg</span>
+					</div>
+					<div class="co-row">
+						<span class="dc">DC <input value="10" /></span>
+						<span class="co-why">sources</span>
+						<span class="stepper"><button>−</button><span>3</span><button>+</button></span>
+						<button class="roll-btn push">🎲 Roll 3 saves</button>
+					</div>
+					<div class="foot">→ three separate CON saves vs DC 10.</div>
+				</div>
+			</section>
+
+			<!-- C · per-source rows -->
+			<section class="variant">
+				<h2>C · Per-source rows (＋ add source — most faithful)</h2>
+				<p class="tag">Each source = a row with its own damage → its own DC, rolled independently.
+					Exactly RAW 2014 (“separate save per source”). Handles differing DCs.</p>
+				<div class="conc">◈ Concentration <span class="lbl">Bless</span></div>
+				<div class="callout">
+					<div class="co-top">
+						<span class="co-title">Concentration checks</span>
+						<span class="co-why">2 sources this turn</span>
+					</div>
+					<div class="src">
+						<input class="name" value="Arrow" />
+						<span class="dc">dmg <input class="num" value="7" /></span>
+						<span class="arrow">→</span> <span class="dc-val">DC 10</span>
+						<button class="roll-btn mini push">🎲</button>
+						<span class="pill">14 ✓</span>
+					</div>
+					<div class="src">
+						<input class="name" value="Fire breath" />
+						<span class="dc">dmg <input class="num" value="28" /></span>
+						<span class="arrow">→</span> <span class="dc-val">DC 14</span>
+						<button class="roll-btn mini push">🎲</button>
+						<span class="pill fail">9 ✗</span>
+					</div>
+					<div class="co-row">
+						<button class="ghost">＋ add source</button>
+						<button class="roll-btn push">🎲 Roll all</button>
+					</div>
+					<div class="foot">Fail on Fire breath → offer to drop Bless.</div>
+				</div>
+			</section>
+
+			<!-- D · split total -->
+			<section class="variant">
+				<h2>D · Split total into N (auto-divide)</h2>
+				<p class="tag">Enter the total, then “split into N” divides it equally into N instances, each
+					with its own DC. Convenient for Magic Missile: 12 ÷ 3 = 4 each → DC 10 ×3.</p>
+				<div class="conc">◈ Concentration <span class="lbl">Bless</span></div>
+				<div class="callout">
+					<div class="co-top">
+						<span class="co-title">Concentration check</span>
+						<span class="co-why">you took 12 damage</span>
+					</div>
+					<div class="co-row">
+						<span class="dc">split into</span>
+						<span class="stepper"><button>−</button><span>3</span><button>+</button></span>
+						<span class="co-why">= 4 · 4 · 4 → DC 10 each</span>
+						<button class="roll-btn push">🎲 Roll 3 saves</button>
+					</div>
+					<div class="foot">One entry, split when the table rules per-dart; leave at 1 for one save.</div>
+				</div>
+			</section>
+		</div>
+	</body>
+</html>

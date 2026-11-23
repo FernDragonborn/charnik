@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<title>Every service dialog · C1</title>
+<style>
+	:root {
+		--bg: #0f1116; --surface: #171a21; --surface-2: #1d212a; --border: #272c37; --border-strong: #333a47;
+		--text: #e6e8ec; --muted: #878f9d; --body-text: #c7cbd2; --accent-deep: #b3243a; --danger-text: #ff6b7d;
+		--warn: #e0a339; --good: #4fb7a5;
+		--display: 'Space Grotesk', system-ui, 'Segoe UI', sans-serif;
+		--body: 'Inter', system-ui, 'Segoe UI', sans-serif;
+		--mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+	}
+	:root[data-theme='light'] {
+		--bg: #eef0ee; --surface: #ffffff; --surface-2: #f4f5f2; --border: #d9ddd6; --border-strong: #c3c9bd;
+		--text: #1b2024; --muted: #5a6570; --body-text: #2c343b; --accent-deep: #b3243a; --danger-text: #b3243a;
+		--warn: #9a6a12; --good: #1f7a6b;
+	}
+	* { box-sizing: border-box; }
+	body { margin: 0; padding: 28px 32px 60px; background: var(--bg); color: var(--text); font: 14px/1.5 var(--body); }
+	header.page { display: flex; align-items: baseline; gap: 18px; margin-bottom: 6px; }
+	header.page h1 { font: 600 22px var(--display); margin: 0; }
+	header.page button { font: 600 12px var(--body); padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border-strong); background: transparent; color: var(--text); }
+	p.rule { color: var(--muted); max-width: 1000px; margin: 0 0 26px; }
+	h2.group { font: 600 12px var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 34px 0 12px; }
+	.grid { display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-start; }
+	.cap { color: var(--muted); font-size: 12px; margin: 0 0 6px; }
+
+	/* the shell */
+	.dlg { width: 560px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 8px; position: relative; padding: 22px 24px 20px; }
+	.dlg.wide { width: 760px; }
+	.dlg .lang { position: absolute; top: 14px; right: 14px; font: 600 11px var(--body); color: var(--good); border: 1px solid var(--good); border-radius: 4px; padding: 2px 6px; }
+	.ask { margin: 0; padding-right: 44px; color: var(--muted); font-size: 13px; }
+	.fact { margin: 2px 0 12px; font: 600 26px/1.15 var(--display); overflow-wrap: anywhere; }
+	.fact.path { font: 600 18px/1.3 var(--mono); }
+	.dlg p.body { margin: 0 0 10px; color: var(--body-text); white-space: pre-line; }
+	.dlg p.warn { margin: 0 0 10px; color: var(--warn); }
+	.dlg p.hint { margin: -4px 0 10px; color: var(--muted); font-size: 13px; }
+	footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 16px; }
+	footer .side { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+	button.b { padding: 8px 16px; border-radius: 4px; border: 1px solid var(--border-strong); background: transparent; color: var(--text); font: 600 13px var(--body); white-space: nowrap; }
+	button.b.yes { background: var(--text); color: var(--bg); border-color: var(--text); }
+	button.b.danger { border-color: var(--accent-deep); color: var(--danger-text); }
+	button.b.link { border: 0; padding: 8px 0; color: var(--muted); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+
+	/* details a dialog carries */
+	.rows { margin: 4px 0 12px; border-top: 1px solid var(--border); }
+	.rows > div { display: grid; grid-template-columns: 1fr auto auto; gap: 16px; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--border); }
+	.rows > div.two { grid-template-columns: 150px 1fr; }
+	.rows code, .mono { font: 13px var(--mono); color: var(--text); overflow-wrap: anywhere; }
+	.rows span { color: var(--muted); font-size: 12px; white-space: nowrap; }
+	.rows b { color: var(--text); font-weight: 600; }
+	.rows .k { color: var(--muted); font-size: 13px; }
+	.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 4px 0 12px; }
+	.cols > div { border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; }
+	.cols .k { color: var(--muted); font-size: 12px; }
+	.cols .v { font: 600 15px var(--display); }
+	.choices { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 6px; }
+	.choices > div { border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; }
+	.choices b { display: block; font-weight: 600; }
+	.choices span { color: var(--muted); font-size: 13px; }
+	.field { display: grid; grid-template-columns: 130px 1fr; gap: 10px; align-items: center; margin: 0 0 8px; }
+	.field .k { color: var(--muted); font-size: 13px; }
+	.field .in { border: 1px solid var(--border-strong); border-radius: 4px; padding: 6px 10px; color: var(--muted); font-size: 13px; }
+	.pre { margin: 4px 0 10px; padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; font: 12px/1.5 var(--mono); color: var(--body-text); white-space: normal; overflow: hidden; }
+	.search { border: 1px solid var(--border-strong); border-radius: 4px; padding: 6px 10px; color: var(--muted); font-size: 13px; margin: 0 0 8px; }
+	.pick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 4px; }
+	.pick > div { border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; }
+	.pick > div.on { border-color: var(--text); }
+	.pick b { display: block; font-size: 13px; }
+	.pick span { color: var(--muted); font-size: 12px; }
+	.pills { display: flex; gap: 6px; margin: 0 0 6px; }
+	.pills span { font: 600 11px var(--body); border: 1px solid var(--border-strong); border-radius: 999px; padding: 3px 10px; }
+	.pills span.on { border-color: var(--danger-text); color: var(--danger-text); }
+	.cols > div { display: flex; flex-direction: column; gap: 2px; }
+	.cols .keep { align-self: flex-start; margin-top: 8px; padding: 5px 12px; font-size: 12px; }
+	.area { min-height: 84px; margin: 0 0 10px; padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: 4px; color: var(--muted); font-size: 13px; }
+	details.what { margin: 0 0 10px; }
+	details.what summary { color: var(--muted); font-size: 13px; cursor: pointer; }
+	.dlg.xwide { width: 980px; }
+	.orph { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 2px 0 10px; }
+	.orph .pane { border: 1px solid var(--border); border-radius: 6px; padding: 12px; min-width: 0; }
+	.orph .pl { margin: 0 0 6px; color: var(--muted); font-size: 12px; }
+	.orph .meta { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; color: var(--muted); font-size: 12px; }
+	.orph .meta code { font: 12px var(--mono); color: var(--text); }
+	.orph .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; margin-bottom: 10px; font-size: 13px; }
+	.orph .fields i { display: block; font-style: normal; color: var(--muted); font-size: 11px; }
+	.orph .fields em { font-style: normal; color: var(--warn); font-size: 12px; margin-left: 4px; }
+	.orph .prose { color: var(--body-text); font-size: 13px; border-top: 1px solid var(--border); padding-top: 8px; }
+	.orph .res { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+	.orph .res > div { border: 1px solid var(--border); border-radius: 4px; padding: 6px 10px; }
+	.orph .res > div.on { border-color: var(--text); }
+	.orph .res b { display: block; font-size: 13px; }
+	.orph .res span { color: var(--muted); font-size: 12px; }
+	.orph .pv { border-top: 1px solid var(--border); padding-top: 8px; }
+	/* where the event itself is the news, it is the large line and what it concerns sits under it */
+	.fact.event { margin-bottom: 4px; padding-right: 44px; }
+	.sub { margin: 0 0 12px; font: 600 15px/1.3 var(--display); color: var(--text); overflow-wrap: anywhere; }
+	.sub.path { font: 13px/1.4 var(--mono); color: var(--body-text); }
+	.what-it { margin: 0 0 10px; display: flex; flex-direction: column; gap: 6px; }
+	.what-it p { margin: 0; color: var(--body-text); font-size: 13px; }
+	.what-it b { color: var(--text); font-weight: 600; }
+	.tc { border: 1px solid var(--border); border-radius: 6px; margin: 4px 0 10px; overflow: hidden; }
+	.tc-filter { display: flex; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+	.tc-filter span { font: 600 11px var(--body); border: 1px solid var(--border-strong); border-radius: 999px; padding: 3px 10px; color: var(--muted); }
+	.tc-filter span.on { border-color: var(--text); color: var(--text); }
+	.tc-head, .tc-row { display: grid; grid-template-columns: 1fr 44px 1fr; }
+	.tc-head > div { padding: 8px 12px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
+	.tc-head b { display: block; font-size: 12px; }
+	.tc-head code { font: 11px var(--mono); color: var(--muted); }
+	.tc-dir { padding: 6px 12px 2px; font: 11px var(--mono); color: var(--muted); }
+	.tc-row { border-bottom: 1px solid var(--border); }
+	.tc-row:last-child { border-bottom: 0; }
+	.tc-row > div { padding: 8px 12px; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+	.tc-row code { font: 13px var(--mono); }
+	.tc-row span { color: var(--muted); font-size: 12px; }
+	.tc-row em { font-style: normal; font: 600 11px var(--body); color: var(--good); }
+	.tc-row .lose code { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--border-strong); }
+	.tc-row .arrow { align-items: center; justify-content: center; font: 600 18px var(--body); color: var(--good); }
+	.relay-choice { display: flex; gap: 6px; flex-wrap: wrap; margin: 2px 0 10px; }
+	.relay-choice button { font: 600 12px var(--body); padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border-strong); background: transparent; color: var(--body-text); cursor: pointer; }
+	.relay-choice button[aria-checked='true'] { border-color: var(--text); color: var(--text); }
+	.relay-choice button:focus-visible { outline: 2px solid var(--good); outline-offset: 2px; }
+	/* the explanation keeps its height whichever option it speaks for, so nothing below it jumps */
+	.relay-say { min-height: 5.6em; margin: 0 0 6px; transition: opacity .12s linear; }
+	.relay-say p { margin: 0 0 4px; font-size: 13px; }
+	.relay-say .who { color: var(--text); }
+	.relay-say .sees { color: var(--muted); }
+	.relay-say.previewing { opacity: .85; }
+	.gives { border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; margin: 0 0 10px; }
+	.gives .pl { margin: 0; color: var(--muted); font-size: 12px; }
+	.gives .d { margin: 2px 0 10px; color: var(--text); font-size: 14px; }
+	.gives .uses { margin: 2px 0 0; font-size: 13px; color: var(--text); }
+	.gives .uses span { color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<header class="page"><h1>Службові діалоги · C1</h1><button id="theme">Світла / темна</button></header>
+<p class="rule">Одне правило для всіх: великим — головне. Здебільшого це те, про що питають (персонаж, стіл, набір), а дрібно над ним — що відбувається; а там, де головна новина — сама подія (дані й файли), великим стоїть подія, а під нею — чого вона стосується (шлях — моноширинним). Усі відповіді — в підвалі, де їх шукають очима; абзацом — що з цього вийде; далі деталі, якщо є. Прапорця, бейджа, смуги збоку й лінії під шапкою немає. Кнопки по краях: «ні», «пропустити», «більше не питати» — ліворуч; відповідь — праворуч. Світла кнопка — звичайне «так»; червона рамка — лише там, де щось зникне назавжди. Тексти — нинішні з каталогу; переписано тільки те, що тепер розкладено на «дрібно» і «великим».</p>
+<div id="out"></div>
+<script>
+	const B = (label, kind = '') => ({ label, kind });
+	const groups = [
+		['Видалити чи відкинути', [
+			{ cap: 'Ростер · видалити персонажа', ask: 'Видалити персонажа', fact: 'Каррот Червоний', body: 'Це видалить аркуш персонажа, портрет, журнал кидків і всі резервні копії. Скасувати неможливо.', left: [B('Скасувати')], right: [B('Видалити персонажа', 'danger')] },
+			{ cap: 'Ростер · відкинути заготовку', ask: 'Відкинути заготовку', fact: 'Безіменний ельф', body: 'Цю незавершену заготовку буде видалено назавжди. Скасувати неможливо.', left: [B('Скасувати')], right: [B('Відкинути заготовку', 'danger')] },
+			{ cap: 'Компендіум · видалити запис хоумбрю', ask: 'Видалити запис хоумбрю', fact: 'Меч Світанку', body: 'Це прибирає запис із вашої таблиці хоумбрю, і скасувати це не можна.', left: [B('Скасувати')], right: [B('Видалити', 'danger')] },
+			{ cap: 'Налаштування ▸ Теми · видалити тему', ask: 'Видалити тему', fact: 'Північна ніч', body: 'Її файл буде видалено з вашої теки даних. Щоб зберегти копію, спершу експортуйте її.', left: [B('Скасувати')], right: [B('Видалити', 'danger')] },
+			{ cap: 'Налаштування ▸ Дані · відновити демо', ask: 'Відновити демонстраційного персонажа', fact: 'Karroth the Red', body: 'Це перебудує персонажа до початкової демоверсії й відкине всі ваші правки в ньому. Інших персонажів це не стосується.', left: [B('Скасувати')], right: [B('Відновити демо', 'danger')] },
+			{ cap: 'Стіл · закрити стіл', ask: 'Закрити стіл', fact: 'Thursday game', body: 'Усіх гравців буде від’єднано. Щоб грати знову, потрібні новий стіл і нове запрошення.', left: [B('Скасувати')], right: [B('Закрити стіл', 'danger')] },
+			{ cap: 'Стіл · забути стіл', ask: 'Забути стіл', fact: 'Thursday game', body: 'Цей комп’ютер забуде ключ столу та його журнал. Гравці приєднаються до нового столу за новим запрошенням.', left: [B('Скасувати')], right: [B('Забути', 'danger')] },
+			{ cap: 'Чернетки · стара схема', ask: 'Деякі чернетки не вдасться відновити', fact: '3 чернетки', body: '3 незавершені редагування збережено за старішою схемою вмісту, і перенести їх вперед не вийде.',
+				html: '<div class="rows"><div class="two"><span class="k">новий запис: Предмет</span><b>Плащ туману</b></div><div class="two"><span class="k">Закляття · редагування</span><b>Вогняна стріла</b></div><div class="two"><span class="k">нечитаний файл</span><code>drafts/7f3a.json</code></div></div><p class="hint">Якщо їх відкинути, місце звільниться; якщо лишити — файли залишаться на диску на випадок, якщо майбутня версія зможе їх прочитати.</p>',
+				left: [B('Поки що лишити')], right: [B('Відкинути 3 чернетки', 'danger')] },
+		]],
+		['Здоров’я контенту', [
+			{ cap: 'Файли змінили поза Charnik', wide: true, xwide: true, ask: '', fact: 'Файли контенту змінено поза Charnik', sub: '3 файли', body: 'Хтось — ви в таблиці чи інша програма — змінив їх напряму. Так можна, нічого не втрачено. Ми лише перевіряємо, що зміни ваші.',
+				html: '<div class="tc"><div class="tc-head"><div><b>Як Charnik записав востаннє</b><code>за відбитком у шапці файлу</code></div><div></div><div><b>Як зараз на диску</b><code>C:\\Users\\player\\Documents\\charnik\\content</code></div></div><div class="tc-dir">srd-2024 · файл набору</div><div class="tc-row"><div class="lose"><code>spells.csv</code><span>оновлено 12 лист.</span></div><div class="arrow">→</div><div class="keep"><code>spells.csv</code><span>змінено 22 лист., 21:40</span><em>лишиться · проти комплектного: +3 рядки, 2 змінено</em></div></div><div class="tc-dir">homebrew · ваші файли</div><div class="tc-row"><div class="lose"><code>items.csv</code><span>3 жовт.</span></div><div class="arrow">→</div><div class="keep"><code>items.csv</code><span>21 лист., 09:12</span><em>лишиться</em></div></div><div class="tc-row"><div class="lose"><code>feats.csv</code><span>дата невідома</span></div><div class="arrow">→</div><div class="keep"><code>feats.csv</code><span>20 лист., 18:05</span><em>лишиться</em></div></div></div><p class="hint">Записати — визнати версії з диска своїми: Charnik запише їм новий відбиток і дату. Файл набору (<code class="mono">spells.csv</code>) після цього оновлення набору не замінюватимуть; передумаєте — Налаштування ▸ Здоров’я контенту ▸ «Ваші версії файлів набору». Нічого не видаляється.</p>',
+				left: [B('Пропустити поки що'), B('Більше не питати', 'link')], right: [B('Так, це мої зміни — записати', 'yes')] },
+			{ cap: 'Набору правил немає на диску', ask: 'Набору правил немає на диску', fact: '5.5e (2024)', body: 'Видалити — ваше право. Але якщо на заміну нічого не поставили, то не буде ні видів, ні класів, ні заклять, ні предметів, а все, що персонажі звідти брали, лишиться порожнім.', left: [B('Так і задумано — більше не питати', 'link')], right: [B('Повернути', 'yes')] },
+			{ cap: 'Бракує метаданих', ask: 'Перевірка метаданих контенту', fact: '2 файли', body: 'У них бракує трохи метаданих — нічого не зламалось, це нормально. Заповніть нижче або відкладіть.',
+				html: '<p class="cap" style="margin-top:4px">homebrew/items.csv</p><div class="field"><span class="k">Автор</span><span class="in">Ваше ім’я чи нік</span></div><div class="field"><span class="k">Ліцензія</span><span class="in">CC-BY-4.0 ▾</span></div><div class="field"><span class="k">Джерело</span><span class="in">Назва книги чи набору</span></div>',
+				left: [B('Пропустити поки що'), B('Більше не питати', 'link')], right: [B('Заповнити та зберегти', 'yes')] },
+			{ cap: 'Осиротіла чернетка · 1 з 3', ask: 'Чернетка вказує на запис, якого вже немає · 1 з 3', fact: 'вадпбважпьва', body: '', wide: true, xwide: true,
+				html: '<div class="orph"><div class="pane"><p class="pl">Ваша чернетка</p><div class="meta"><span>Закляття · редагування</span><span>було: <code>spell · 5e (2014) · fire-lance</code> (Вогняний спис)</span><span>востаннє правлено 19 лист., 21:40</span></div><div class="fields"><span><i>Рівень</i>2</span><span><i>Школа</i>Втілення</span><span><i>Шкода</i>3d8 вогнем</span><span><i>Дальність</i>120 фт (36,6 м)</span></div><div class="prose">Ви кидаєте спис чистого полум’я в істоту, яку бачите в межах дальності. Зробіть дальню атаку закляттям; у разі влучання ціль отримує 3d8 шкоди вогнем, а горючі предмети поруч займаються…</div></div><div class="pane"><p class="pl">Прив’язати до</p><div class="search">Шукати запис…</div><div class="res"><div class="on"><b>Вогняна стріла</b><span>Закляття · 5e (2014) · найближче до «fire-lance»</span></div><div><b>Вогняна куля</b><span>Закляття · 5e (2014)</span></div><div><b>Спис блискавки</b><span>Закляття · хоумбрю</span></div></div><div class="pv"><p class="pl">Вогняна стріла · зараз у записі</p><div class="fields"><span><i>Рівень</i>0 <em>≠ 2</em></span><span><i>Школа</i>Втілення</span><span><i>Шкода</i>1d10 вогнем <em>≠ 3d8</em></span><span><i>Дальність</i>120 фт (36,6 м)</span></div></div></div></div><p class="hint">«Пропустити» лишає чернетку як є: прив’язати її можна будь-коли в Компендіумі ▸ Чернетки.</p>',
+				left: [B('Видалити чернетку', 'danger'), B('Пропустити')], right: [B('Лишити як новий запис'), B('Прив’язати до «Вогняна стріла»', 'yes')] },
+			{ cap: 'Скасувати оновлення набору', ask: 'Скасувати останнє оновлення', fact: '5.5e (2024)', body: 'Повернеться версія, що була до цього оновлення. А що робити з тим, що ви змінили в наборі відтоді?',
+				html: '<div class="choices"><div><b>Зберегти мої зміни як резервну копію</b><span>Спершу набір у теперішньому вигляді копіюється вбік. Копію можна відновити з цієї сторінки.</span></div><div><b>Перенести мої зміни</b><span>Файли, які ви зробили своїми, лишаються, а переклади переносяться.</span></div><div><b>Відкинути мої зміни</b><span>Стара версія повертається точно як була.</span></div></div>',
+				left: [B('Скасувати')], right: [] },
+			{ cap: 'Повернути файли набору з резервної копії', ask: 'Повернути файли набору', fact: '5e (2014) · 3 файли', body: 'До стану на 14 листопада: текст правил того дня разом із перекладами, які в ньому були. Набір у нинішньому вигляді збережеться, тож «Скасувати це оновлення» поверне все назад.', left: [B('Скасувати')], right: [B('Повернути', 'yes')] },
+			{ cap: 'Плагін', ask: 'Увімкнути плагін?', fact: 'Dice Goblin', body: '',
+				html: '<div class="gives"><p class="pl">Що він дає</p><p class="d">Кістки, що ростуть із рівнем, для «Кістки гніву», і власний запас «Гоблінської удачі», який відновлюється на світанку.</p><p class="pl">Потрібен для</p><p class="uses">Кістка гніву <span>предмет</span> · Гоблінська удача <span>риса</span> · Лють предків <span>риса</span></p></div><p class="hint">Плагін — невеликий шматок коду в наборі контенту: він рахує те, чого звичайні правила в таблицях не вміють. Він працює в пісочниці — лише рахує числа для аркуша, не бачить ваших файлів і не виходить у мережу. Не ввімкнете — ці три правила лишаться текстом, решта набору «Goblin Pack» працюватиме.</p><details class="what"><summary>Подробиці</summary><div class="rows"><div class="two"><span class="k">Автор</span>dicegoblin</div><div class="two"><span class="k">Версія</span>1.2.0</div><div class="two"><span class="k">Звідки</span>набір «Goblin Pack»</div><div class="two"><span class="k">Відбиток коду</span><code>a7f3…9c21</code></div></div></details><p class="warn">Вмикайте лише плагіни від авторів, яким ви довіряєте.</p>',
+				left: [B('Не вмикати')], right: [B('Увімкнути плагін', 'yes')] },
+		]],
+		['Дані та файли', [
+			{ cap: 'Перший запуск', ask: '', fact: 'Де Charnik зберігатиме ваші дані?', sub: 'C:\\Users\\player\\Documents', path: true, body: 'Ваші персонажі та контент SRD зберігаються тут як звичайні файли, які ви будь-коли можете відкрити, редагувати чи зробити резервну копію. Змінити розташування можна пізніше в Налаштуваннях.',
+				html: '<p class="hint">Тут буде створено теку з назвою «charnik».</p>', left: [B('Обрати теку…')], right: [B('Зберігати тут', 'yes')] },
+			{ cap: 'Персонажа змінено поза Charnik', ask: '', fact: 'Персонажа змінено поза Charnik', sub: 'Каррот Червоний', body: 'Інша програма записала його файл, поки він був відкритий тут. Нічого не перезаписано. Оберіть, який стан лишити, або збережіть обидва.', wide: true,
+				html: '<div class="cols"><div><span class="k">На екрані</span><div class="v">Рівень 8 · 38 хітів</div><button class="b keep">Лишити цей</button></div><div><span class="k">У файлі</span><div class="v">Рівень 8 · 52 хіти</div><button class="b keep">Лишити цей</button></div></div><p class="hint">Лишити один — інший стан зникне. Зберегти обидва — стан з екрана стане окремим персонажем «Каррот Червоний (копія)».</p>',
+				left: [], right: [B('Зберегти обидва', 'yes')] },
+			{ cap: 'Перенести дані в теку, де вже є файли', wide: true, xwide: true, ask: '', fact: 'У тій теці вже є файли', sub: 'D:\\Ігри\\charnik', path: true, body: 'Автоматичне переміщення потребує порожньої теки. Якщо ви вже скопіювали дані туди — «Лише змінити шлях читання». Щоб звести обидві теки в одну — «Об’єднати».',
+				html: '<div class="tc"><div class="tc-filter"><span class="on">Збіги імен · 2</span><span>Лише в поточній · 198</span><span>Лише в обраній · 14</span><span>Усі · 214</span></div><div class="tc-head"><div><b>Поточна тека</b><code>C:\\Users\\player\\Documents\\charnik</code></div><div></div><div><b>Обрана тека</b><code>D:\\Ігри\\charnik</code></div></div><div class="tc-dir">characters / karroth</div><div class="tc-row"><div class="keep"><code>character.json</code><span>22 лист., 21:40 · 14 КБ</span><em>лишиться</em></div><div class="arrow">←</div><div class="lose"><code>character.json</code><span>18 лист., 19:02 · 13 КБ</span></div></div><div class="tc-dir">themes</div><div class="tc-row"><div class="lose"><code>north.json</code><span>2 жовт., 10:15 · 2 КБ</span></div><div class="arrow">→</div><div class="keep"><code>north.json</code><span>20 лист., 18:30 · 2 КБ</span><em>лишиться</em></div></div></div><p class="hint">Однакові імена — один і той самий файл у двох теках. «Об’єднати» лишає новіший (стрілка вказує на нього), а старіший замінює. Файли, що є лише в одній теці, просто копіюються.</p>',
+				left: [B('Обрати іншу')], right: [B('Лише змінити шлях читання'), B('Об’єднати — лишити новіші', 'yes')] },
+			{ cap: 'Після переміщення', wide: true, ask: '', fact: 'Дані переміщено. Стара тека лишилась', body: 'Ваші дані скопійовано в нову теку й перевірено — там усе на місці. А старої копії Charnik прибрати не зміг.',
+				html: '<div class="rows"><div class="two"><span class="k">Тепер Charnik читає</span><code>D:\\Ігри\\charnik</code></div><div class="two"><span class="k">Лишилась повна копія</span><span style="white-space:normal"><code>C:\\Users\\player\\Documents\\charnik</code><br>214 файлів · 3,2 МБ · її Charnik більше не чіпає</span></div></div><p class="body">Windows не дала її видалити — так буває, коли якийсь файл звідти відкритий в іншій програмі: у Провіднику, редакторі чи OneDrive, що саме її синхронізує. Закрийте його і спробуйте ще раз, або видаліть теку самі.</p><details class="what"><summary>Подробиці</summary><div class="pre">remove_dir_all: Access is denied. (os error 5)<br>C:\\Users\\player\\Documents\\charnik\\characters\\karroth\\portrait.webp</div></details>',
+				left: [B('Лишити як є'), B('Відкрити стару теку', 'link')], right: [B('Спробувати видалити ще раз', 'yes')] },
+			{ cap: 'Повідомити про помилку', wide: true, ask: 'Повідомити про помилку', fact: 'Розкажіть, що сталося', body: '',
+				html: '<div class="area">Я натиснув «Короткий відпочинок», і кості хітів не відновились…</div><details class="what"><summary>Що буде додано до звіту</summary><div class="pre">version   0.8.3<br>platform  windows 10.0.19045<br>content   5e (2014), 5.5e (2024) · 4 812 rows<br>[22:08:53] table link: a table is open</div></details><p class="hint">Звіт відкриється на GitHub уже заповненим — лишиться натиснути «Submit». Імен, нотаток і особистого тексту в ньому немає. Потрібен обліковий запис GitHub.</p>',
+				left: [B('Закрити')], right: [B('Надіслати на GitHub ↗', 'yes')] },
+		]],
+		['Гра і стіл', [
+			{ cap: 'Аркуш · змінити редакцію', ask: 'Перейти на іншу редакцію', fact: '5.5e (2024)', body: 'У 5.5e (2024) немає двох виборів цього персонажа, тож їх доведеться прибрати з аркуша:',
+				html: '<div class="rows"><div class="two"><span class="k">Риса</span><b>Вогнетривкість</b></div><div class="two"><span class="k">Закляття</span><b>Вогняна стріла</b></div></div><p class="hint">Решта лишається як є. Передумаєте — «Скасувати» ↶ у конструкторі поверне і редакцію, і ці вибори.</p>',
+				left: [B('Залишитись на 5e (2014)')], right: [B('Перейти й прибрати 2 вибори', 'yes')] },
+			{ cap: 'Стіл · перший стіл на пристрої (наведіть мишу на варіанти)', ask: 'Як гравці знайдуть ваш стіл?', fact: 'Thursday game', body: '',
+				html: '<p class="hint" style="margin-top:0">Посередник — сервер, що з’єднує ваші застосунки, коли вони не знаходять один одного напряму. Гра йде крізь нього зашифрованою: він бачить лише мережеві адреси учасників.</p><div class="relay-choice" role="radiogroup" aria-label="Як гравці знайдуть ваш стіл"><button role="radio" aria-checked="true" data-who="Гравці під’єднаються звідусіль, нічого налаштовувати не треба." data-sees="Бачить: number 0 знає IP-адреси учасників, але не гру. Сервери публічні й нічого не обіцяють щодо роботи.">Через публічний сервер</button><button role="radio" aria-checked="false" data-who="Гравці під’єднаються звідусіль — через сервер, який тримаєте ви чи ваша група." data-sees="Бачить: лише ваш сервер. Його адресу вказуєте в Налаштуваннях ▸ Стіл.">Через ваш сервер</button><button role="radio" aria-checked="false" data-who="Гравці мають бути у вашій мережі — вдома, у клубі. Перезапуск роутера може змінити адресу, і стіл доведеться відкрити заново." data-sees="Бачить: ніхто сторонній. Але запрошення містить IP-адресу вашого комп’ютера — не викладайте його публічно.">Напряму, лише ваша мережа</button></div><div class="relay-say"><p class="who"></p><p class="sees"></p></div>',
+				left: [B('Скасувати')], right: [B('Відкрити стіл', 'yes')] },
+			{ cap: 'Бій · Дика подоба (робоча поверхня, а не питання)', ask: 'Дика подоба · 2 використання', fact: 'Оберіть форму', body: 'Нічого не витрачається, доки ви її не візьмете.', wide: true,
+				html: '<div class="search">Шукати звіра…</div><div class="pick"><div class="on"><b>Ведмідь бурий</b><span>ПН 1 · 34 хіти</span></div><div><b>Вовк</b><span>ПН 1/4 · 11 хітів</span></div><div><b>Павук гігантський</b><span>ПН 1 · 26 хітів</span></div></div>',
+				left: [B('Скасувати')], right: [B('Взяти форму «Ведмідь бурий»', 'yes')] },
+			{ cap: 'Бій · питання опції', ask: 'Натхнення барда', fact: '+3 до перевірки', body: 'Додайте +3 до перевірки. Вона успішна?', left: [B('Ні')], right: [B('Так', 'yes')] },
+		]],
+	];
+	const btn = (b) => `<button class="b ${b.kind}">${b.label}</button>`;
+	document.getElementById('out').innerHTML = groups.map(([title, list]) => `<h2 class="group">${title}</h2><div class="grid">${list.map((d) => `
+		<div><p class="cap">${d.cap}</p><div class="dlg${d.wide ? ' wide' : ''}${d.xwide ? ' xwide' : ''}"><span class="lang">UK</span>
+			${d.ask ? `<p class="ask">${d.ask}</p>` : ''}<p class="fact${d.sub ? ' event' : ''}">${d.fact}</p>${d.sub ? `<p class="sub${d.path ? ' path' : ''}">${d.sub}</p>` : ''}${d.body ? `<p class="body">${d.body}</p>` : ''}${d.html ?? ''}
+			<footer><span class="side">${d.left.map(btn).join('')}</span><span class="side">${d.right.map(btn).join('')}</span></footer>
+		</div></div>`).join('')}</div>`).join('');
+	document.getElementById('theme').onclick = () => {
+		const root = document.documentElement;
+		root.dataset.theme = root.dataset.theme === 'light' ? '' : 'light';
+	};
+	// a choice speaks for the option under the pointer or the keyboard, and for the chosen one otherwise
+	for (const group of document.querySelectorAll('.relay-choice')) {
+		const say = group.nextElementSibling;
+		const show = (btn, previewing) => {
+			say.querySelector('.who').textContent = btn.dataset.who;
+			say.querySelector('.sees').textContent = btn.dataset.sees;
+			say.classList.toggle('previewing', previewing);
+		};
+		const chosen = () => group.querySelector('[aria-checked="true"]');
+		for (const btn of group.querySelectorAll('button')) {
+			btn.addEventListener('mouseenter', () => show(btn, btn !== chosen()));
+			btn.addEventListener('focus', () => show(btn, btn !== chosen()));
+			btn.addEventListener('click', () => {
+				for (const other of group.querySelectorAll('button')) other.setAttribute('aria-checked', String(other === btn));
+				show(btn, false);
+			});
+		}
+		group.addEventListener('mouseleave', () => show(chosen(), false));
+		group.addEventListener('focusout', (e) => { if (!group.contains(e.relatedTarget)) show(chosen(), false); });
+		// as tall as the longest thing it can say, measured once, so no option makes it grow
+		let tallest = 0;
+		for (const btn of group.querySelectorAll('button')) { show(btn, false); tallest = Math.max(tallest, say.scrollHeight); }
+		say.style.minHeight = `${tallest}px`;
+		show(chosen(), false);
+	}
+</script>
+</body>
+</html>

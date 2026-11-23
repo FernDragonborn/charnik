@@ -1,0 +1,147 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Debuff icon — 6 more</title>
+		<style>
+			@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+			:root {
+				--bg: #0f1116;
+				--surface: #171a21;
+				--surface-2: #1f232c;
+				--border: #272c37;
+				--border-strong: #333a47;
+				--text: #e6e8ec;
+				--muted: #878f9d;
+				--accent-bright: #ef6b78;
+				--font-d: 'Space Grotesk', sans-serif;
+				--font-m: 'JetBrains Mono', monospace;
+			}
+			body {
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--font-d);
+				margin: 0;
+				padding: 32px;
+			}
+			h1 {
+				font-size: 18px;
+				font-weight: 700;
+				margin: 0 0 4px;
+			}
+			.lead {
+				color: var(--muted);
+				font-size: 13px;
+				margin: 0 0 26px;
+			}
+			.opts {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 14px;
+				max-width: 720px;
+			}
+			.opt {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 7px;
+				width: 96px;
+			}
+			.chip {
+				width: 46px;
+				height: 46px;
+				display: grid;
+				place-items: center;
+				border: 1px solid var(--border-strong);
+				border-radius: 10px;
+				background: var(--surface);
+				color: var(--accent-bright);
+			}
+			.lbl {
+				font-family: var(--font-m);
+				font-size: 10px;
+				color: var(--muted);
+				text-align: center;
+			}
+			/* in-context header preview */
+			.ctx {
+				margin-top: 30px;
+				display: flex;
+				gap: 24px;
+				flex-wrap: wrap;
+			}
+			.hdr {
+				display: inline-flex;
+				align-items: center;
+				gap: 7px;
+				font-family: var(--font-m);
+				font-size: 10px;
+				letter-spacing: 0.13em;
+				text-transform: uppercase;
+				color: var(--accent-bright);
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 6px 12px;
+			}
+			.hdr .ct {
+				color: var(--muted);
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Debuffs icon — 6 more (non-directional)</h1>
+		<p class="lead">Same crimson header colour. Avoids down-glyphs (▾ = collapse). Pick a number.</p>
+		<div class="opts">
+			<!-- 1: ! in circle -->
+			<div class="opt">
+				<span class="chip">
+					<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10" cy="10" r="7.2" /><path d="M10 5.8 V10.6" /><circle cx="10" cy="13.6" r="0.5" fill="currentColor" stroke="none" /></svg>
+				</span>
+				<span class="lbl">1 · alert (!)</span>
+			</div>
+			<!-- 2: slash circle (impair / no) -->
+			<div class="opt">
+				<span class="chip">
+					<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10" cy="10" r="7.2" /><path d="M5 5 L15 15" /></svg>
+				</span>
+				<span class="lbl">2 · slash-circle</span>
+			</div>
+			<!-- 3: broken chain (bound) -->
+			<div class="opt">
+				<span class="chip">
+					<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3.5" y="6" width="6" height="8" rx="3" /><rect x="10.5" y="6" width="6" height="8" rx="3" /></svg>
+				</span>
+				<span class="lbl">3 · chains</span>
+			</div>
+			<!-- 4: kettlebell / weight (encumbered) -->
+			<div class="opt">
+				<span class="chip">
+					<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M7 8 A3 3 0 0 1 13 8" /><path d="M6 8.5 C4 10.5 4 16 10 16 C16 16 16 10.5 14 8.5 Z" /></svg>
+				</span>
+				<span class="lbl">4 · weight</span>
+			</div>
+			<!-- 5: spiky burst (pain / impact) -->
+			<div class="opt">
+				<span class="chip">
+					<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M10 2 L11.4 7 L16 5.4 L12.9 9.4 L18 11 L12.6 12 L14.5 17 L10 13.6 L5.5 17 L7.4 12 L2 11 L7.1 9.4 L4 5.4 L8.6 7 Z" /></svg>
+				</span>
+				<span class="lbl">5 · burst</span>
+			</div>
+			<!-- 6: hexagon with minus -->
+			<div class="opt">
+				<span class="chip">
+					<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M10 2.6 L16.4 6.3 V13.7 L10 17.4 L3.6 13.7 V6.3 Z" /><path d="M6.8 10 H13.2" stroke-linecap="round" /></svg>
+				</span>
+				<span class="lbl">6 · hex−</span>
+			</div>
+		</div>
+
+		<div class="ctx">
+			<span class="hdr"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10" cy="10" r="7.2" /><path d="M10 5.8 V10.6" /><circle cx="10" cy="13.6" r="0.5" fill="currentColor" stroke="none" /></svg>Debuffs <span class="ct">· 3</span></span>
+			<span class="hdr"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3.5" y="6" width="6" height="8" rx="3" /><rect x="10.5" y="6" width="6" height="8" rx="3" /></svg>Debuffs <span class="ct">· 3</span></span>
+			<span class="hdr"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M7 8 A3 3 0 0 1 13 8" /><path d="M6 8.5 C4 10.5 4 16 10 16 C16 16 16 10.5 14 8.5 Z" /></svg>Debuffs <span class="ct">· 3</span></span>
+			<span class="hdr"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M10 2.6 L16.4 6.3 V13.7 L10 17.4 L3.6 13.7 V6.3 Z" /><path d="M6.8 10 H13.2" stroke-linecap="round" /></svg>Debuffs <span class="ct">· 3</span></span>
+		</div>
+	</body>
+</html>

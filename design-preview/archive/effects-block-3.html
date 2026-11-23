@@ -1,0 +1,524 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Effects block — I–L (round-edit + short resource)</title>
+		<style>
+			@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap');
+			:root {
+				--bg: #0f1116;
+				--surface: #171a21;
+				--surface-2: #1f232c;
+				--border: #272c37;
+				--border-strong: #333a47;
+				--text: #e6e8ec;
+				--muted: #878f9d;
+				--accent: #cf2b40;
+				--accent-bright: #ef6b78;
+				--resource: #caa24a;
+				--good: #3bb8a6;
+				--font-d: 'Space Grotesk', sans-serif;
+				--font-m: 'JetBrains Mono', monospace;
+			}
+			body {
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--font-d);
+				margin: 0;
+				padding: 32px;
+			}
+			h1 {
+				font-size: 18px;
+				font-weight: 700;
+				margin: 0 0 4px;
+			}
+			.lead {
+				color: var(--muted);
+				font-size: 13px;
+				margin: 0 0 26px;
+				max-width: 820px;
+			}
+			.wrap {
+				display: grid;
+				grid-template-columns: repeat(2, 410px);
+				gap: 34px;
+			}
+			/* variant I gets its own full-width row so the open dropdown can sit BESIDE the card,
+			   not over the rows */
+			.variant.I {
+				grid-column: 1 / -1;
+			}
+			.I .card {
+				width: 410px;
+			}
+			.cap {
+				font-family: var(--font-m);
+				font-size: 11px;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: var(--accent-bright);
+				margin: 0 0 10px 2px;
+			}
+			.card {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 14px;
+				padding: 16px;
+				position: relative;
+			}
+			.phead {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				margin: 0 0 12px;
+			}
+			.ptitle {
+				font-weight: 600;
+				font-size: 12px;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: var(--muted);
+				margin-right: auto;
+			}
+			.pill-btn {
+				font-weight: 600;
+				font-size: 12px;
+				color: var(--muted);
+				background: transparent;
+				border: 1px solid var(--border);
+				border-radius: 7px;
+				padding: 5px 11px;
+				cursor: pointer;
+			}
+			.grip {
+				color: var(--border-strong);
+				font-size: 14px;
+			}
+			.x {
+				background: transparent;
+				border: 0;
+				color: var(--border-strong);
+				cursor: pointer;
+				font-size: 12px;
+			}
+			.dot {
+				width: 8px;
+				height: 8px;
+				border-radius: 50%;
+				flex: none;
+			}
+			.dot.pos {
+				background: var(--good);
+			}
+			.dot.neg {
+				background: var(--accent);
+			}
+			.dot.res {
+				background: var(--resource);
+			}
+			.nm {
+				font-weight: 600;
+				font-size: 13px;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+			.tag {
+				font-family: var(--font-m);
+				font-size: 10px;
+				border: 1px solid var(--border);
+				border-radius: 5px;
+				padding: 1px 6px;
+				color: var(--muted);
+				white-space: nowrap;
+			}
+			.tag.g {
+				color: var(--good);
+				border-color: #2c4a45;
+			}
+			.tag.r {
+				color: var(--accent-bright);
+				border-color: #5a2a2f;
+			}
+			/* compact resource chip — replaces the long "grant resource … 1 long" string */
+			.res {
+				font-family: var(--font-m);
+				font-size: 10px;
+				color: var(--resource);
+				border: 1px solid #5a4d28;
+				border-radius: 5px;
+				padding: 1px 6px;
+				white-space: nowrap;
+			}
+
+			/* ===== I: ticket rows + DURATION DROPDOWN (one shown open) ===== */
+			.I .t {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				padding: 9px 0;
+				border-top: 1px solid var(--border);
+			}
+			.I .t:first-of-type {
+				border-top: 0;
+			}
+			.I .tags {
+				display: flex;
+				gap: 5px;
+				margin-left: auto;
+			}
+			.I .dsel {
+				display: inline-flex;
+				align-items: center;
+				gap: 5px;
+				font-family: var(--font-m);
+				font-size: 10px;
+				color: var(--resource);
+				border: 1px solid var(--border-strong);
+				border-radius: 7px;
+				padding: 3px 7px;
+				cursor: pointer;
+			}
+			/* card + dropdown side by side (the menu is a normal flex sibling, not absolutely placed) */
+			.I .i-row {
+				display: flex;
+				align-items: flex-start;
+				gap: 18px;
+			}
+			.I .dmenu {
+				margin-top: 74px; /* drop it down to line up with the Bless row's control */
+				background: var(--surface-2);
+				border: 1px solid var(--border-strong);
+				border-radius: 9px;
+				box-shadow: 0 12px 30px #000a;
+				padding: 4px;
+				width: max-content;
+				height: max-content;
+			}
+			.I .dmenu div {
+				font-family: var(--font-m);
+				font-size: 11px;
+				padding: 5px 9px;
+				border-radius: 6px;
+				color: var(--text);
+				white-space: nowrap;
+			}
+			.I .dmenu div.on {
+				color: var(--resource);
+				background: #221c10;
+			}
+			/* stepper row at the top of the dropdown: − and + as two separate buttons */
+			.I .dmenu .steprow {
+				display: flex;
+				gap: 4px;
+				padding: 2px;
+				margin-bottom: 3px;
+				border-bottom: 1px solid var(--border);
+			}
+			.I .dmenu .steprow button {
+				flex: 1;
+				font-family: var(--font-m);
+				font-size: 14px;
+				color: var(--text);
+				background: var(--surface);
+				border: 1px solid var(--border-strong);
+				border-radius: 6px;
+				padding: 3px 0;
+				cursor: pointer;
+			}
+			.I .dmenu .steprow button:hover {
+				border-color: var(--resource);
+				color: var(--resource);
+			}
+
+			/* ===== J: zebra + INLINE click-to-edit rounds (dashed underline) ===== */
+			.J .z {
+				display: flex;
+				align-items: center;
+				gap: 9px;
+				padding: 8px 16px;
+				margin: 0 -16px;
+			}
+			.J .z:nth-child(even) {
+				background: var(--surface-2);
+			}
+			.J .tags {
+				display: flex;
+				gap: 5px;
+				margin-left: auto;
+			}
+			.J .rin {
+				font-family: var(--font-m);
+				font-size: 11px;
+				color: var(--resource);
+				border-bottom: 1px dashed var(--border-strong);
+				cursor: text;
+			}
+			.J .runit {
+				font-family: var(--font-m);
+				font-size: 10px;
+				color: var(--muted);
+			}
+
+			/* ===== K: countdown RING per row (click to set) + dividers ===== */
+			.K .g {
+				display: flex;
+				align-items: center;
+				gap: 11px;
+				padding: 8px 0;
+				border-top: 1px solid var(--border);
+			}
+			.K .g:first-of-type {
+				border-top: 0;
+			}
+			.K .ring {
+				flex: none;
+				position: relative;
+				width: 30px;
+				height: 30px;
+			}
+			.K .ring .n {
+				position: absolute;
+				inset: 0;
+				display: grid;
+				place-items: center;
+				font-family: var(--font-m);
+				font-weight: 700;
+				font-size: 10px;
+				color: var(--resource);
+			}
+			.K .body {
+				flex: 1;
+				min-width: 0;
+			}
+			.K .body .tags {
+				display: flex;
+				gap: 5px;
+				margin-top: 3px;
+			}
+
+			/* ===== L: compact chips (wrap) + DURATION chip w/ dropdown caret ===== */
+			.L .cg {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 7px;
+			}
+			.L .c {
+				display: inline-flex;
+				align-items: center;
+				gap: 7px;
+				background: var(--surface-2);
+				border: 1px solid var(--border);
+				border-radius: 999px;
+				padding: 5px 9px;
+			}
+			.L .c.neg {
+				border-color: #3a2529;
+			}
+			.L .c .nm {
+				font-size: 12px;
+			}
+			.L .c .dchip {
+				font-family: var(--font-m);
+				font-size: 10px;
+				color: var(--resource);
+				border-left: 1px solid var(--border);
+				padding-left: 7px;
+				cursor: pointer;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Effects &amp; conditions — I–L · round-edit + short resource</h1>
+		<p class="lead">
+			Fresh takes to mix later. Round editing shown as: <b>I</b> dropdown presets · <b>J</b> inline
+			click-to-edit · <b>K</b> ring click-to-set · <b>L</b> chip w/ caret. Grant-resource shortened
+			from “grant resource arcane recovery 1 long” → a compact <span class="res">⟳ 1/long</span> chip.
+		</p>
+		<div class="wrap">
+			<!-- ===== I ===== -->
+			<div class="variant I">
+				<p class="cap">I · rows + duration DROPDOWN (open beside)</p>
+				<div class="i-row">
+					<div class="card">
+						<div class="phead">
+							<span class="ptitle">Effects &amp; conditions</span>
+							<button class="pill-btn">＋ Add effect</button><span class="grip">⠿</span>
+						</div>
+						<div class="t">
+							<span class="dot pos"></span><span class="nm">Shield of Faith</span>
+							<span class="tags"><span class="tag g">AC +2</span></span>
+							<span class="dsel">100 rds ▾</span><button class="x">✕</button>
+						</div>
+						<div class="t">
+							<span class="dot pos"></span><span class="nm">Bless</span>
+							<span class="tags"><span class="tag g">saves +1d4</span></span>
+							<span class="dsel" style="border-color: var(--resource); color: var(--resource)"
+								>9 rds ▾</span
+							><button class="x">✕</button>
+						</div>
+						<div class="t">
+							<span class="dot neg"></span><span class="nm">Bane</span>
+							<span class="tags"><span class="tag r">saves −1d4</span></span>
+							<span class="dsel">9 rds ▾</span><button class="x">✕</button>
+						</div>
+						<div class="t">
+							<span class="dot res"></span><span class="nm">Arcane Recovery</span>
+							<span class="tags"><span class="res">⟳ 1/long</span></span>
+							<span class="dsel">∞ ▾</span><button class="x">✕</button>
+						</div>
+					</div>
+					<!-- the dropdown, laid out as a sibling BESIDE the card (the ↳ marks which row opened it) -->
+					<div class="dmenu">
+						<div class="steprow"><button>−</button><button>＋</button></div>
+						<div>1 round</div>
+						<div class="on">1 minute · 10 rds</div>
+						<div>10 minutes · 100 rds</div>
+						<div>1 hour · 600 rds</div>
+						<div>∞ until removed</div>
+						<div style="color: var(--muted)">Custom…</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- ===== J ===== -->
+			<div class="variant J">
+				<p class="cap">J · zebra + INLINE editable rounds</p>
+				<div class="card">
+					<div class="phead">
+						<span class="ptitle">Effects &amp; conditions</span>
+						<button class="pill-btn">＋ Add effect</button><span class="grip">⠿</span>
+					</div>
+					<div class="z">
+						<span class="dot pos"></span><span class="nm">Shield of Faith</span>
+						<span class="tags"><span class="tag g">AC +2</span></span>
+						<span class="rin">100</span><span class="runit">rds</span><button class="x">✕</button>
+					</div>
+					<div class="z">
+						<span class="dot pos"></span><span class="nm">Bless</span>
+						<span class="tags"><span class="tag g">saves +1d4</span></span>
+						<span class="rin">9</span><span class="runit">rds</span><button class="x">✕</button>
+					</div>
+					<div class="z">
+						<span class="dot neg"></span><span class="nm">Bane</span>
+						<span class="tags"><span class="tag r">saves −1d4</span></span>
+						<span class="rin">9</span><span class="runit">rds</span><button class="x">✕</button>
+					</div>
+					<div class="z">
+						<span class="dot neg"></span><span class="nm">Poisoned</span>
+						<span class="tags"><span class="tag r">disadv.</span></span>
+						<span class="rin">∞</span><span class="runit"></span><button class="x">✕</button>
+					</div>
+					<div class="z">
+						<span class="dot res"></span><span class="nm">Arcane Recovery</span>
+						<span class="tags"><span class="res">⟳ 1/long</span></span>
+						<span class="rin">∞</span><span class="runit"></span><button class="x">✕</button>
+					</div>
+				</div>
+			</div>
+
+			<!-- ===== K ===== -->
+			<div class="variant K">
+				<p class="cap">K · countdown RING (click to set)</p>
+				<div class="card">
+					<div class="phead">
+						<span class="ptitle">Effects &amp; conditions</span>
+						<button class="pill-btn">＋ Add effect</button><span class="grip">⠿</span>
+					</div>
+					<div class="g">
+						<span class="ring">
+							<svg width="30" height="30" viewBox="0 0 30 30">
+								<circle cx="15" cy="15" r="12" fill="none" stroke="#272c37" stroke-width="3" />
+								<circle cx="15" cy="15" r="12" fill="none" stroke="#caa24a" stroke-width="3" stroke-linecap="round" stroke-dasharray="75" stroke-dashoffset="0" transform="rotate(-90 15 15)" />
+							</svg>
+							<span class="n">100</span>
+						</span>
+						<div class="body">
+							<div class="nm" style="color: var(--good)">Shield of Faith</div>
+							<div class="tags"><span class="tag g">AC +2</span></div>
+						</div>
+						<button class="x">✕</button>
+					</div>
+					<div class="g">
+						<span class="ring">
+							<svg width="30" height="30" viewBox="0 0 30 30">
+								<circle cx="15" cy="15" r="12" fill="none" stroke="#272c37" stroke-width="3" />
+								<circle cx="15" cy="15" r="12" fill="none" stroke="#caa24a" stroke-width="3" stroke-linecap="round" stroke-dasharray="75" stroke-dashoffset="30" transform="rotate(-90 15 15)" />
+							</svg>
+							<span class="n">9</span>
+						</span>
+						<div class="body">
+							<div class="nm" style="color: var(--good)">Bless</div>
+							<div class="tags"><span class="tag g">all saves +1d4</span></div>
+						</div>
+						<button class="x">✕</button>
+					</div>
+					<div class="g">
+						<span class="ring">
+							<svg width="30" height="30" viewBox="0 0 30 30">
+								<circle cx="15" cy="15" r="12" fill="none" stroke="#272c37" stroke-width="3" />
+								<circle cx="15" cy="15" r="12" fill="none" stroke="#cf2b40" stroke-width="3" stroke-linecap="round" stroke-dasharray="75" stroke-dashoffset="30" transform="rotate(-90 15 15)" />
+							</svg>
+							<span class="n" style="color: var(--accent-bright)">9</span>
+						</span>
+						<div class="body">
+							<div class="nm" style="color: var(--accent-bright)">Bane</div>
+							<div class="tags"><span class="tag r">all saves −1d4</span></div>
+						</div>
+						<button class="x">✕</button>
+					</div>
+					<div class="g">
+						<span class="ring">
+							<svg width="30" height="30" viewBox="0 0 30 30">
+								<circle cx="15" cy="15" r="12" fill="none" stroke="#5a4d28" stroke-width="3" />
+							</svg>
+							<span class="n">∞</span>
+						</span>
+						<div class="body">
+							<div class="nm" style="color: var(--resource)">Arcane Recovery</div>
+							<div class="tags"><span class="res">⟳ 1/long</span></div>
+						</div>
+						<button class="x">✕</button>
+					</div>
+				</div>
+			</div>
+
+			<!-- ===== L ===== -->
+			<div class="variant L">
+				<p class="cap">L · compact chips (wrap) + duration caret</p>
+				<div class="card">
+					<div class="phead">
+						<span class="ptitle">Effects &amp; conditions</span>
+						<button class="pill-btn">＋ Add effect</button><span class="grip">⠿</span>
+					</div>
+					<div class="cg">
+						<span class="c"
+							><span class="dot pos"></span><span class="nm">Shield of Faith</span
+							><span class="dchip">100▾</span></span
+						>
+						<span class="c"
+							><span class="dot pos"></span><span class="nm">Bless</span
+							><span class="dchip">9▾</span></span
+						>
+						<span class="c"
+							><span class="dot pos"></span><span class="nm">Haste</span
+							><span class="dchip">6▾</span></span
+						>
+						<span class="c neg"
+							><span class="dot neg"></span><span class="nm">Bane</span
+							><span class="dchip">9▾</span></span
+						>
+						<span class="c neg"
+							><span class="dot neg"></span><span class="nm">Poisoned</span
+							><span class="dchip">∞▾</span></span
+						>
+						<span class="c"
+							><span class="dot res"></span><span class="nm">Arcane Recovery</span
+							><span class="dchip" style="color: var(--resource)">⟳1</span></span
+						>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

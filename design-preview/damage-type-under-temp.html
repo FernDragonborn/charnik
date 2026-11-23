@@ -1,0 +1,1284 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Hit points — W2: the hit on the number's line, healing and temporary hit points in one popover</title>
+		<link
+			rel="stylesheet"
+			href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap"
+		/>
+		<style>
+			/* Real token values from src/lib/styles/tokens.css (dark block); the panel rules are
+			   HpPanel.svelte's own, so a height measured here is the app's. WIDE windows only: a narrow
+			   one has no room for this line and is laid out in a pass of its own. */
+			:root {
+				--space-1: 0.25rem;
+				--space-1-5: 0.375rem;
+				--space-2: 0.5rem;
+				--space-2-5: 0.625rem;
+				--space-3: 0.75rem;
+				--space-4: 1rem;
+				--radius: 8px;
+				--radius-lg: 14px;
+				--radius-full: 999px;
+				--font-display: 'Space Grotesk', system-ui, sans-serif;
+				--font-body: 'Inter', system-ui, sans-serif;
+				--font-mono: 'Inter', system-ui, sans-serif;
+				--font-size-micro: 0.625rem;
+				--font-size-xs: 0.6875rem;
+				--font-size-body: 0.875rem;
+				--font-size-md: 1rem;
+				--font-size-h2: 1.875rem;
+				--tracking-label: 0.12em;
+				--color-bg: #0f1115;
+				--color-surface: #171a21;
+				--color-surface-2: #1f232c;
+				--color-border: #272c37;
+				--color-border-strong: #333a47;
+				--color-text: #e6e8ec;
+				--color-text-muted: #878f9d;
+				--color-accent: #cf2b40;
+				--color-accent-deep: #b3243a;
+				--color-accent-text: #ffffff;
+				--color-accent-soft: #241317;
+				--color-good: #3bb8a6;
+				--color-good-soft: #11302c;
+				--color-danger: #e0635a;
+				--color-danger-soft: #2a1512;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				padding: 20px;
+				background: var(--color-bg);
+				color: var(--color-text);
+				font-family: var(--font-body);
+				font-size: var(--font-size-body);
+			}
+			h2 {
+				font-family: var(--font-display);
+				font-size: var(--font-size-md);
+				margin: 22px 0 4px;
+			}
+			h2:first-child {
+				margin-top: 0;
+			}
+			.states {
+				display: grid;
+				grid-template-columns: repeat(3, 444px);
+				gap: 6px 16px;
+				align-items: start;
+			}
+			.caption {
+				font-size: var(--font-size-xs);
+				color: var(--color-text-muted);
+				margin: 8px 0 4px;
+			}
+			svg.hand-drawn,
+			svg.lucide {
+				flex: none;
+				vertical-align: -0.15em;
+			}
+
+			.hitpoints {
+				position: relative;
+				background: var(--color-surface);
+				border: 1px solid var(--color-border);
+				border-radius: var(--radius-lg);
+				padding: var(--space-3) var(--space-4);
+			}
+			.hitpoints-label {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				color: var(--color-text-muted);
+				margin-bottom: 2px;
+			}
+			.hitpoints-label > span:first-child {
+				font-family: var(--font-mono);
+				font-size: var(--font-size-micro);
+				letter-spacing: var(--tracking-label);
+				text-transform: uppercase;
+			}
+			.temptag {
+				font-family: var(--font-display);
+				font-weight: 600;
+				font-size: var(--font-size-xs);
+				padding: var(--space-1) var(--space-2);
+				border-radius: var(--radius-full);
+				background: var(--color-good-soft);
+				border: 1px solid var(--color-good);
+				color: var(--color-good);
+				white-space: nowrap;
+			}
+			.hitpoints-value {
+				font-family: var(--font-display);
+				font-weight: 700;
+				font-size: var(--font-size-h2);
+				white-space: nowrap;
+			}
+			.hitpoints-value small {
+				color: var(--color-text-muted);
+				font-size: var(--font-size-md);
+				font-weight: 500;
+			}
+			.hitpoints-value .temp {
+				font-weight: 600;
+				font-size: var(--font-size-body);
+				color: var(--color-good);
+				margin-inline-start: var(--space-1-5);
+			}
+			.hitpoints-bar {
+				flex: 1;
+				height: 9px;
+				border-radius: var(--radius-full);
+				background: var(--color-surface-2);
+				overflow: hidden;
+				border: 1px solid var(--color-border);
+				display: flex;
+			}
+			.hitpoints-bar > i {
+				display: block;
+				height: 100%;
+				background: var(--color-accent);
+			}
+			.hitpoints-bar > i.t {
+				background: var(--color-good);
+			}
+			.hp-number {
+				text-align: center;
+				font-family: var(--font-mono);
+				font-size: var(--font-size-body);
+				background: var(--color-surface-2);
+				border: 1px solid var(--color-border);
+				border-radius: var(--radius);
+				color: var(--color-text);
+				padding: var(--space-1);
+			}
+			.hp-btn {
+				font-family: var(--font-display);
+				font-weight: 600;
+				font-size: var(--font-size-xs);
+				padding: var(--space-1) var(--space-2-5);
+				border-radius: var(--radius);
+				white-space: nowrap;
+				text-align: center;
+			}
+			.hp-btn.damage {
+				background: var(--color-danger-soft);
+				border: 1px solid var(--color-danger);
+				color: var(--color-danger);
+			}
+			.hp-btn.heal {
+				background: var(--color-good-soft);
+				border: 1px solid var(--color-good);
+				color: var(--color-good);
+			}
+
+			/* ---- what ships: two columns, the select row, the always-reserved preview line ---- */
+			.hp-main {
+				display: flex;
+				gap: 15px;
+			}
+			.hp-readout {
+				flex: 1;
+				min-width: 0;
+				display: flex;
+				flex-direction: column;
+				justify-content: space-between;
+			}
+			.hp-readout .hitpoints-bar {
+				flex: none;
+				margin-top: var(--space-2);
+			}
+			.hp-controls {
+				flex: none;
+				width: 120px;
+				display: flex;
+				flex-direction: column;
+				gap: var(--space-1);
+				justify-content: space-between;
+				border-inline-start: 1px solid var(--color-border);
+				padding-inline-start: 15px;
+			}
+			.hp-type-row {
+				display: flex;
+				gap: var(--space-1-5);
+				margin-top: var(--space-1-5);
+			}
+			.hp-damage-type {
+				flex: 1;
+				padding: var(--space-1) var(--space-2);
+				font-size: var(--font-size-xs);
+				border-radius: var(--radius);
+				background: var(--color-surface-2);
+				border: 1px solid var(--color-border);
+			}
+			.hp-part-add {
+				display: inline-flex;
+				align-items: center;
+				padding: var(--space-1) var(--space-1-5);
+				border-radius: var(--radius);
+				background: var(--color-surface-2);
+				border: 1px solid var(--color-border);
+				color: var(--color-text-muted);
+			}
+			.hp-damage-preview {
+				margin: var(--space-1) 0 0;
+				min-height: 1lh;
+				font-size: var(--font-size-xs);
+			}
+
+			/* ---- W2 ---- */
+			/* the hit stands on the number's own line: what it is, how much, the one press */
+			.value-row {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: var(--space-2);
+			}
+			.hit {
+				display: inline-flex;
+				gap: var(--space-1);
+				align-items: stretch;
+			}
+			.hit .hp-number {
+				width: 3rem;
+			}
+			/* a damage type is its glyph and its mark; its name is the pointer's to ask for */
+			.type-chip {
+				align-self: center;
+				display: inline-flex;
+				align-items: center;
+				gap: 2px;
+				font-size: var(--font-size-xs);
+				line-height: 1.3;
+				padding: 1px var(--space-1-5);
+				border-radius: var(--radius-full);
+				background: var(--color-surface-2);
+				border: 1px solid var(--color-border);
+				color: var(--color-text-muted);
+				white-space: nowrap;
+			}
+			.type-chip b {
+				color: var(--color-good);
+				font-weight: 600;
+			}
+			.type-chip.vulnerable b {
+				color: var(--color-danger);
+			}
+			.type-chip.more b {
+				color: inherit;
+				font-weight: 500;
+			}
+			.type-chip.on {
+				border-color: var(--color-text-muted);
+				color: var(--color-text);
+			}
+			/* red is the press and nothing else; it says a number only when a defence changed it */
+			.minus {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				gap: 2px;
+				min-width: 1.75rem;
+				padding: var(--space-1) var(--space-1-5);
+				border-radius: var(--radius);
+				background: var(--color-danger-soft);
+				border: 1px solid var(--color-danger);
+				color: var(--color-danger);
+				font-family: var(--font-display);
+				font-weight: 600;
+			}
+			/* the bar's line keeps one height whatever stands on it, so nothing here moves the block */
+			.foot {
+				display: flex;
+				align-items: center;
+				gap: var(--space-2);
+				min-height: 1.375rem;
+				margin-top: var(--space-1);
+			}
+			.popover {
+				position: absolute;
+				z-index: 1;
+				padding: var(--space-2-5);
+				border: 1px solid var(--color-border);
+				border-radius: var(--radius);
+				background: var(--color-surface-2);
+				box-shadow: 0 8px 24px rgb(0 0 0 / 0.45);
+				font-size: var(--font-size-xs);
+			}
+			.popover .eyebrow {
+				font-size: var(--font-size-micro);
+				letter-spacing: var(--tracking-label);
+				text-transform: uppercase;
+				color: var(--color-text-muted);
+			}
+			.popover .field {
+				display: flex;
+				gap: var(--space-1);
+				margin: var(--space-1-5) 0;
+			}
+			.popover .field .hp-number {
+				flex: 1;
+				min-width: 0;
+				background: var(--color-surface);
+			}
+			.popover .ghost {
+				background: none;
+			}
+			.popover p {
+				margin: 0;
+				color: var(--color-text-muted);
+			}
+			.popover.green {
+				top: 2.5rem;
+				inset-inline-end: var(--space-4);
+				width: 15rem;
+			}
+			.popover.tip {
+				top: 4.5rem;
+				inset-inline-end: 6.5rem;
+				padding: var(--space-1-5) var(--space-2);
+			}
+			.popover.tip strong {
+				display: block;
+				color: var(--color-text);
+			}
+			/* ---- W2z: what the hit IS and what it is WORTH are one joined control — the type picks the
+			   factor, the player may overrule it, and with no type said the factor is theirs to press ---- */
+			.factor {
+				align-self: center;
+				display: inline-flex;
+				border: 1px solid var(--color-border);
+				border-radius: var(--radius);
+				overflow: hidden;
+			}
+			.factor > span {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				gap: 1px;
+				min-width: 1.375rem;
+				padding: 2px var(--space-1);
+				background: var(--color-surface-2);
+				color: var(--color-text-muted);
+				font-size: var(--font-size-xs);
+				font-weight: 600;
+			}
+			.factor > span + span {
+				border-inline-start: 1px solid var(--color-border);
+			}
+			.factor .less {
+				color: var(--color-good);
+			}
+			.factor .more {
+				color: var(--color-danger);
+			}
+			.factor .on {
+				background: var(--color-surface);
+				box-shadow: inset 0 0 0 1px var(--color-text-muted);
+			}
+			.factor .plain.on,
+			.factor .pick.on {
+				color: var(--color-text);
+			}
+			.factor .caret {
+				min-width: 0;
+				padding-inline: 2px;
+				font-weight: 500;
+			}
+			/* ---- W3: the hit said as the dice tray says a damage line — the amount, then the type that
+			   owns it, as one field; a type is the tray's own pill and opens the tray's own menu ---- */
+			.tray-field {
+				display: inline-flex;
+				align-items: center;
+				gap: var(--space-1-5);
+				padding: 2px 2px 2px var(--space-2);
+				background: var(--color-surface-2);
+				border: 1px solid var(--color-border);
+				border-radius: var(--radius);
+				font-family: var(--font-mono);
+			}
+			.tray-field.open {
+				border-color: var(--color-text-muted);
+				border-radius: var(--radius) var(--radius) 0 0;
+			}
+			.tray-field .typed {
+				color: var(--color-text-muted);
+				font-size: var(--font-size-xs);
+				border-inline-end: 1px solid var(--color-text);
+			}
+			.tray-field .ghost {
+				margin-inline-start: calc(-1 * var(--space-1-5));
+				padding-inline-end: var(--space-1-5);
+				color: var(--color-text-muted);
+				font-size: var(--font-size-xs);
+				opacity: 0.55;
+			}
+			.type-pill {
+				display: inline-flex;
+				align-items: center;
+				gap: var(--space-1);
+				padding: var(--space-1) var(--space-1-5);
+				border-radius: var(--radius);
+				background: var(--color-surface);
+				border: 1px solid var(--color-border-strong);
+				color: var(--color-text-muted);
+				font-family: var(--font-body);
+				font-size: var(--font-size-xs);
+				font-weight: 600;
+			}
+			.type-pill.said {
+				color: var(--color-text);
+			}
+			.type-pill .lucide {
+				opacity: 0.55;
+			}
+			.less {
+				color: var(--color-good);
+			}
+			.more {
+				color: var(--color-danger);
+			}
+			.hit.tray {
+				position: relative;
+			}
+			.tray-menu {
+				position: absolute;
+				z-index: 1;
+				top: 100%;
+				inset-inline-end: 0;
+				display: grid;
+				grid-auto-flow: column;
+				grid-template-rows: repeat(var(--type-rows), auto);
+				grid-template-columns: repeat(2, 7.5rem);
+				gap: 2px var(--space-2);
+				padding: var(--space-1-5) var(--space-2);
+				background: var(--color-surface);
+				border: 1px solid var(--color-text-muted);
+				border-radius: var(--radius) 0 var(--radius) var(--radius);
+				font-size: var(--font-size-xs);
+				color: var(--color-text-muted);
+			}
+			.tray-menu > span {
+				display: flex;
+				align-items: center;
+				gap: var(--space-2);
+				padding: var(--space-1) var(--space-2);
+				border-radius: var(--radius);
+			}
+			.tray-menu > span.on {
+				background: color-mix(in srgb, var(--color-text) 10%, var(--color-surface-2));
+				color: var(--color-text);
+			}
+			.tray-menu .name {
+				flex: 1;
+			}
+			.tray-menu .name b {
+				color: var(--color-text);
+			}
+			.tray-menu kbd {
+				padding: 1px var(--space-1);
+				border-radius: var(--radius-sm);
+				background: var(--color-bg);
+				font-size: var(--font-size-micro);
+			}
+			#tray {
+				padding-bottom: 9rem;
+			}
+			/* ---- THE NARROW WINDOW: a phone as much as a narrow desktop. The block is 361px, everything
+			   pressed is 44px tall, and the hit's line leaves the number's row for rows of its own ---- */
+			.narrow {
+				width: 361px;
+				min-height: 9.8125rem;
+			}
+			.pencil-inline {
+				display: inline-flex;
+				vertical-align: -2px;
+				margin-inline-start: var(--space-1-5);
+			}
+			.narrow .acts {
+				display: flex;
+				gap: var(--space-2);
+				margin-top: var(--space-2);
+			}
+			.narrow .tray-field {
+				flex: 1;
+				justify-content: space-between;
+				min-height: 2.75rem;
+				padding-inline-start: var(--space-3);
+				font-size: var(--font-size-md);
+			}
+			.narrow .type-pill {
+				align-self: stretch;
+				padding-inline: var(--space-2-5);
+			}
+			.narrow .tap {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				gap: var(--space-1-5);
+				min-width: 2.75rem;
+				min-height: 2.75rem;
+				padding-inline: var(--space-2-5);
+				border-radius: var(--radius);
+				border: 1px solid var(--color-border-strong);
+				background: var(--color-surface);
+				color: var(--color-text);
+				font-family: var(--font-display);
+				font-weight: 600;
+				font-size: var(--font-size-xs);
+				white-space: nowrap;
+			}
+			.narrow .tap.red {
+				background: var(--color-danger-soft);
+				border-color: var(--color-danger);
+				color: var(--color-danger);
+			}
+			.narrow .tap.green {
+				background: var(--color-good-soft);
+				border-color: var(--color-good);
+				color: var(--color-good);
+			}
+			.narrow .tap.roll {
+				border: 2px solid var(--color-text);
+				background: var(--color-bg);
+			}
+			.narrow.war {
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				gap: var(--space-2);
+			}
+			.narrow.war .war-line {
+				height: auto;
+				min-height: 2.75rem;
+			}
+			.narrow.war .acts {
+				position: relative;
+				justify-content: center;
+			}
+			.narrow.war .eyebrow {
+				position: relative;
+				display: block;
+				text-align: center;
+				font-family: var(--font-mono);
+				font-size: var(--font-size-micro);
+				letter-spacing: var(--tracking-label);
+				text-transform: uppercase;
+				color: var(--color-text-muted);
+				margin-bottom: var(--space-1);
+			}
+			.narrow.end {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: var(--space-1-5);
+			}
+			.narrow.end b {
+				font-family: var(--font-display);
+				font-weight: 800;
+				font-size: 1.75rem;
+				line-height: 1;
+				letter-spacing: 0.06em;
+				text-transform: uppercase;
+			}
+			.narrow.end small {
+				font-size: var(--font-size-xs);
+				text-align: center;
+				opacity: 0.7;
+			}
+			.narrow.end.stable {
+				background: var(--color-good);
+				border-color: var(--color-good);
+				color: var(--color-bg);
+			}
+			.narrow.end.dead {
+				background: black;
+				border-color: var(--color-border-strong);
+				color: white;
+			}
+			/* ---- the pencil: where the player picks the motion the block plays at 0 hit points. A tab on
+			   the block's own side, the block's frame carried round it — there only while the pointer or
+			   the focus is on the block, and always where there is no pointer to rest ---- */
+			.with-tab {
+				position: relative;
+			}
+			.pencil-tab {
+				position: absolute;
+				top: var(--space-3);
+				inset-inline-end: 100%;
+				margin-inline-end: -1px;
+				display: inline-flex;
+				padding: var(--space-1) var(--space-1-5);
+				background: var(--color-surface);
+				border: 1px solid var(--color-border);
+				border-inline-end: 0;
+				border-radius: var(--radius) 0 0 var(--radius);
+				color: var(--color-text-muted);
+				opacity: 0;
+			}
+			.pencil-tab.down {
+				border-color: var(--color-accent);
+			}
+			.with-tab:hover .pencil-tab,
+			.with-tab:focus-within .pencil-tab,
+			.with-tab.pointed .pencil-tab {
+				opacity: 1;
+			}
+			@media (hover: none) {
+				.pencil-tab {
+					opacity: 1;
+				}
+			}
+			#pencil .states {
+				padding-inline-start: 2rem;
+			}
+			/* the list never covers the block: the block is where the choice is seen */
+			.popover.motions {
+				top: 0;
+				inset-inline-end: calc(100% + 2rem);
+				width: 13rem;
+			}
+			.popover.motions .row {
+				display: flex;
+				align-items: center;
+				gap: var(--space-2);
+				padding: var(--space-1) var(--space-1-5);
+				border-radius: var(--radius-sm);
+				color: var(--color-text-muted);
+			}
+			.popover.motions .row::before {
+				content: '';
+				width: 7px;
+				height: 7px;
+				border-radius: var(--radius-full);
+				border: 1px solid var(--color-text-muted);
+			}
+			.popover.motions .row.on {
+				color: var(--color-text);
+				background: var(--color-surface);
+			}
+			.popover.motions .row.on::before {
+				background: var(--color-text);
+				border-color: var(--color-text);
+			}
+			.popover.motions p {
+				margin-top: var(--space-1-5);
+			}
+			.maximum {
+				margin-inline-start: var(--space-1-5);
+				letter-spacing: 0;
+				text-transform: none;
+				font-size: var(--font-size-xs);
+			}
+			/* ---- 0 hit points as a tug of war: rescue pulls from the left, death from the right, at the
+			   colours' full strength. The fronts lean into each other, and the block itself tightens as
+			   the failures mount — never as the successes do ---- */
+			.hitpoints.war {
+				overflow: hidden;
+				border-color: var(--color-accent);
+			}
+			.war.tense {
+				border-width: 2px;
+				padding: calc(var(--space-3) - 1px) calc(var(--space-4) - 1px);
+				box-shadow: 0 0 28px color-mix(in srgb, var(--color-accent) 65%, transparent);
+			}
+			.war .ground {
+				position: absolute;
+				inset-block: 0;
+				--lean: 16px;
+				/* a side is 32% of the line; a front leans a little past its last pip */
+				--side: calc(var(--space-4) + (100% - 2 * var(--space-4)) * 0.32);
+				width: calc(var(--side) * var(--earned) / 3 + var(--lean) * min(1, var(--earned)));
+			}
+			.war .ground.good {
+				inset-inline-start: 0;
+				background: var(--color-good);
+				clip-path: polygon(0 0, 100% 0, calc(100% - var(--lean)) 100%, 0 100%);
+			}
+			.war .ground.bad {
+				inset-inline-end: 0;
+				background: var(--color-accent);
+				clip-path: polygon(var(--lean) 0, 100% 0, 100% 100%, 0 100%);
+			}
+			.war-line {
+				position: relative;
+				display: grid;
+				grid-template-columns: 32% 36% 32%;
+				align-items: center;
+				height: 100%;
+			}
+			.war-side {
+				display: grid;
+				grid-template-columns: repeat(3, 1fr);
+				justify-items: center;
+				row-gap: var(--space-1);
+				font-family: var(--font-mono);
+				font-size: var(--font-size-micro);
+				font-weight: 600;
+				letter-spacing: var(--tracking-label);
+				text-transform: uppercase;
+			}
+			.war-side.good {
+				--tone: var(--color-good);
+				--on: var(--color-bg);
+			}
+			.war-side.bad {
+				--tone: var(--color-accent);
+				--on: var(--color-accent-text);
+			}
+			.war-side:not(.glyphs) > span:last-child {
+				grid-column: 1 / -1;
+				justify-self: stretch;
+				color: var(--tone);
+			}
+			.war-side.bad:not(.glyphs) > span:last-child {
+				text-align: end;
+			}
+			/* once a side has ground under it, its word stands on that ground */
+			.war-side.held:not(.glyphs) > span:last-child {
+				color: var(--on);
+			}
+			.war-pip {
+				width: 1.625rem;
+				height: 1.625rem;
+				border-radius: var(--radius-full);
+				border: 3px solid var(--tone);
+				background: var(--color-surface);
+			}
+			.war-pip.earned {
+				border-color: var(--on);
+				background: var(--on);
+			}
+			.war-roll {
+				justify-self: center;
+				display: inline-flex;
+				align-items: center;
+				gap: var(--space-1-5);
+				padding: var(--space-2) var(--space-2-5);
+				border-radius: var(--radius);
+				border: 2px solid var(--color-text);
+				background: var(--color-bg);
+				color: var(--color-text);
+				font-family: var(--font-display);
+				font-weight: 700;
+				font-size: var(--font-size-body);
+				white-space: nowrap;
+			}
+			/* T1: the header stays as it is; the war is a band under it, edge to edge */
+			.war-band {
+				position: relative;
+				overflow: hidden;
+				height: calc(4.0625rem + var(--space-3) - var(--space-1));
+				margin: var(--space-1) calc(-1 * var(--space-4)) calc(-1 * var(--space-3));
+				padding: 0 var(--space-4);
+				border-top: 1px solid var(--color-accent);
+			}
+			/* T2: the whole block is the field; what is not the war stands in the middle of it */
+			.war.field .war-line {
+				height: 5.6875rem;
+			}
+			.war-middle {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: var(--space-1);
+			}
+			.war-middle .eyebrow {
+				font-family: var(--font-mono);
+				font-size: var(--font-size-micro);
+				letter-spacing: var(--tracking-label);
+				text-transform: uppercase;
+				color: var(--color-text-muted);
+				white-space: nowrap;
+			}
+			/* ---- T3: the app's own hit-point bar, grown to hold the fight — the same capsule, the same
+			   crimson it fills with, the same teal temporary hit points wear ---- */
+			.hitpoints.barwar {
+				border-color: var(--color-accent);
+			}
+			.capsule {
+				position: relative;
+				overflow: hidden;
+				height: 3.6875rem;
+				margin-top: var(--space-2);
+				border-radius: var(--radius-full);
+				border: 1px solid var(--color-border-strong);
+				background: var(--color-surface-2);
+				--inset: 1.125rem;
+			}
+			.barwar.tense .capsule {
+				border-color: var(--color-accent);
+				box-shadow: 0 0 22px color-mix(in srgb, var(--color-accent) 70%, transparent);
+			}
+			.capsule .fill {
+				position: absolute;
+				inset-block: 0;
+				width: calc(var(--inset) * min(1, var(--earned)) + (100% - 2 * var(--inset)) * 0.32 * var(--earned) / 3);
+			}
+			.capsule .fill.good {
+				inset-inline-start: 0;
+				background: var(--color-good);
+				box-shadow: 1px 0 0 var(--color-surface);
+			}
+			.capsule .fill.bad {
+				inset-inline-end: 0;
+				background: var(--color-accent);
+				box-shadow: -1px 0 0 var(--color-surface);
+			}
+			.capsule .war-line {
+				padding-inline: var(--inset);
+			}
+			.capsule .war-side:not(.glyphs) > span:last-child,
+			.heraldic .war-side:not(.glyphs) > span:last-child {
+				display: none;
+			}
+			.capsule .war-pip {
+				width: 1.375rem;
+				height: 1.375rem;
+				border-width: 2px;
+				background: var(--color-surface-2);
+			}
+			.capsule .war-pip.earned {
+				background: var(--on);
+			}
+			/* the roll is the app's own button, not a new kind of one */
+			.app-roll {
+				justify-self: center;
+				display: inline-flex;
+				align-items: center;
+				gap: var(--space-1-5);
+				padding: var(--space-1-5) var(--space-2-5);
+				border-radius: var(--radius);
+				border: 1px solid var(--color-border-strong);
+				background: var(--color-surface);
+				color: var(--color-text);
+				font-family: var(--font-display);
+				font-weight: 600;
+				font-size: var(--font-size-xs);
+				white-space: nowrap;
+			}
+			/* ---- T4: the field of T2 cut like a coat of arms — each side a chevron driven at the
+			   other, edged in the sheet's own text colour ---- */
+			.heraldic .front {
+				position: absolute;
+				inset-block: 0;
+				--lean: 18px;
+				--side: calc(var(--space-4) + (100% - 2 * var(--space-4)) * 0.32);
+				width: calc(var(--side) * var(--earned) / 3 + var(--lean) * min(1, var(--earned)));
+			}
+			.heraldic .front.good {
+				inset-inline-start: 0;
+				filter: drop-shadow(2px 0 0 var(--color-text));
+			}
+			.heraldic .front.bad {
+				inset-inline-end: 0;
+				filter: drop-shadow(-2px 0 0 var(--color-text));
+			}
+			.heraldic .front b {
+				position: absolute;
+				inset: 0;
+			}
+			.heraldic .front.good b {
+				background: var(--color-good);
+				clip-path: polygon(0 0, calc(100% - var(--lean)) 0, 100% 50%, calc(100% - var(--lean)) 100%, 0 100%);
+			}
+			.heraldic .front.bad b {
+				background: var(--color-accent);
+				clip-path: polygon(var(--lean) 0, 100% 0, 100% 100%, var(--lean) 100%, 0 50%);
+			}
+			.heraldic .war-pip {
+				border-width: 2px;
+			}
+			/* ---- a save is a glyph: wings under a halo on the side of rescue, a skull on the side of
+			   death. Line art in the app's own stroke; the skull is the one necrotic damage already wears ---- */
+			.war-glyph {
+				display: inline-flex;
+				color: var(--tone);
+				opacity: 0.5;
+			}
+			.war-glyph.earned {
+				color: var(--on);
+				opacity: 1;
+			}
+			.specimens {
+				display: flex;
+				align-items: center;
+				gap: var(--space-4);
+				margin: var(--space-2) 0;
+				color: var(--color-text);
+			}
+			.specimens > span {
+				display: inline-flex;
+				flex-direction: column;
+				align-items: center;
+				gap: var(--space-1);
+				font-size: var(--font-size-xs);
+				color: var(--color-text-muted);
+			}
+			.specimens svg {
+				color: var(--color-text);
+			}
+			.specimens .sizes {
+				display: inline-flex;
+				align-items: center;
+				gap: var(--space-2);
+			}
+			.specimens .on-ground {
+				display: inline-flex;
+				padding: var(--space-1);
+				border-radius: var(--radius);
+				background: var(--color-good);
+			}
+			.specimens .on-ground svg {
+				color: var(--color-bg);
+			}
+			.specimens .on-ground.death {
+				background: var(--color-accent);
+			}
+			.specimens .on-ground.death svg {
+				color: var(--color-accent-text);
+			}
+		</style>
+	</head>
+	<body>
+		<div id="root"></div>
+		<script>
+			const GLYPHS = {"slashing":["m11 19-6-6","m5 21-2-2","m8 16-4 4","M9.5 17.5 21 6V3h-3L6.5 14.5"],"piercing":["M5 19 20 4","M20 4 13.8 5.9","M20 4 18.1 10.2"],"bludgeoning":["m15 12-9.373 9.373a1 1 0 0 1-3.001-3L12 9","m18 15 4-4","m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172v-.344a2 2 0 0 0-.586-1.414l-1.657-1.657A6 6 0 0 0 12.516 3H9l1.243 1.243A6 6 0 0 1 12 8.485V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5"],"fire":["M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"],"cold":["m10 20-1.25-2.5L6 18","M10 4 8.75 6.5 6 6","m14 20 1.25-2.5L18 18","m14 4 1.25 2.5L18 6","m17 21-3-6h-4","m17 3-3 6 1.5 3","M2 12h6.5L10 9","m20 10-1.5 2 1.5 2","M22 12h-6.5L14 15","m4 10 1.5 2L4 14","m7 21 3-6-1.5-3","m7 3 3 6h4"],"lightning":["M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z"],"thunder":["M12 20h.01","M2 8.82a15 15 0 0 1 20 0","M5 12.859a10 10 0 0 1 14 0","M8.5 16.429a5 5 0 0 1 7 0"],"acid":["M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z","M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"],"poison":["M10 11.9a2 2 0 1 0 4 0a2 2 0 1 0-4 0","M6.7 3.4c-.9 2.5 0 5.2 2.2 6.7C6.5 9 3.7 9.6 2 11.6","m8.9 10.1 1.4.8","M17.3 3.4c.9 2.5 0 5.2-2.2 6.7 2.4-1.2 5.2-.6 6.9 1.5","m15.1 10.1-1.4.8","M16.7 20.8c-2.6-.4-4.6-2.6-4.7-5.3-.2 2.6-2.1 4.8-4.7 5.2","M12 13.9v1.6","M13.5 5.4c-1-.2-2-.2-3 0","M17 16.4c.7-.7 1.2-1.6 1.5-2.5","M5.5 13.9c.3.9.8 1.8 1.5 2.5"],"necrotic":["m12.5 17-.5-1-.5 1h1z","M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z","M14 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0","M8 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0"],"radiant":["M8 12a4 4 0 1 0 8 0a4 4 0 1 0-8 0","M12 2v2","M12 20v2","m4.93 4.93 1.41 1.41","m17.66 17.66 1.41 1.41","M2 12h2","M20 12h2","m6.34 17.66-1.41 1.41","m19.07 4.93-1.41 1.41"],"psychic":["M12 18V5","M15 13a4.17 4.17 0 0 1-3-4 4.17 4.17 0 0 1-3 4","M17.598 6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5","M17.997 5.125a4 4 0 0 1 2.526 5.77","M18 18a4 4 0 0 0 2-7.464","M19.967 17.483A4 4 0 1 1 12 18a4 4 0 1 1-7.967-.517","M6 18a4 4 0 0 1-2-7.464","M6.003 5.125a4 4 0 0 0-2.526 5.77"],"force":["M2 12a10 10 0 1 0 20 0a10 10 0 1 0-20 0","M11 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0"]};
+			const COPY = {"en":{"hitPoints":"Hit points","tempHp":"Temp HP","temp":"temp","heal":"Heal","damage":"Damage","untyped":"untyped","wasCritical":"That hit was a critical","deathSave":"Death save","success":"Success","failure":"Failure","resist":"Resistant: {raw} → {final}","note":"Separate pool — teal in the HP bar. Doesn't stack; takes the higher value.","types":{"slashing":"Slashing","piercing":"Piercing","bludgeoning":"Bludgeoning","fire":"Fire","cold":"Cold","lightning":"Lightning","thunder":"Thunder","acid":"Acid","poison":"Poison","necrotic":"Necrotic","radiant":"Radiant","psychic":"Psychic","force":"Force"}},"uk":{"hitPoints":"Очки здоров’я","tempHp":"Тимч. ОЗ","temp":"тимч.","heal":"Зцілити","damage":"Шкода","untyped":"без типу","wasCritical":"Це був критичний удар","deathSave":"Кидок від смерті","success":"Успіх","failure":"Провал","resist":"Опір: {raw} → {final}","note":"Окремий запас — бірюзовий на смузі ЗД. Не додається; лишається більше значення.","types":{"slashing":"рубляча","piercing":"колюча","bludgeoning":"дробильна","fire":"вогонь","cold":"холод","lightning":"блискавка","thunder":"грім","acid":"кислота","poison":"отрута","necrotic":"некротична","radiant":"промениста","psychic":"психічна","force":"силова"}}};
+			const DICE = ["M9 2.5 L15.5 6 L15.5 13 L9 16.5 L2.5 13 L2.5 6 Z","M9 6 L12.2 11 L5.8 11 Z","M17.5 11 L23 21 L12 21 Z"];
+			const LUCIDE = {
+				plus: ['M5 12h14', 'M12 5v14'],
+				minus: ['M5 12h14'],
+				ellipsis: ['M11 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0', 'M18 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0', 'M4 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0'],
+			};
+			const svg = (cls, paths, size, width = 2) =>
+				'<svg class="' + cls + '" viewBox="0 0 24 24" width="' + size + '" height="' + size + '" fill="none" stroke="currentColor" stroke-width="' + width + '" stroke-linecap="round" stroke-linejoin="round">' +
+				paths.map((d) => '<path d="' + d + '"/>').join('') + '</svg>';
+			const damageIcon = (type) => svg('hand-drawn', GLYPHS[type], 14);
+			const icon = (name, size = 13) => svg('lucide', LUCIDE[name], size);
+			const MARK = { resist: '½', immune: '∅', vulnerable: '×2' };
+			// what stands on the line; a sheet with more keeps the rest in the menu
+			const SHOWN = 2;
+
+			const label = (L, pill) => '<div class="hitpoints-label"><span>' + L.hitPoints + '</span><span class="temptag">' + icon('plus') + ' ' + pill + '</span></div>';
+			const value = (L, s) =>
+				'<div class="hitpoints-value">' + (s.cur ?? 38) + '<small>&nbsp;/ ' + (s.max ?? 73) + '</small>' +
+				(s.tempHp ? '<span class="temp">+' + s.tempHp + ' ' + L.temp + '</span>' : '') + '</div>';
+			const bar = (s) => '<div class="hitpoints-bar"><i style="width:' + Math.round((100 * (s.cur ?? 38)) / ((s.max ?? 73) + (s.tempHp ?? 0))) + '%"></i>' + (s.tempHp ? '<i class="t" style="width:7%"></i>' : '') + '</div>';
+
+			const shipped = (L, s) =>
+				'<div class="hitpoints"><div class="hp-main"><div class="hp-readout">' + label(L, L.tempHp) + value(L, s) + bar(s) + '</div>' +
+				'<div class="hp-controls"><span class="hp-btn heal">' + icon('plus') + ' ' + L.heal + '</span><span class="hp-number">' + s.amount + '</span><span class="hp-btn damage">− ' + L.damage + '</span></div></div>' +
+				'<div class="hp-type-row"><span class="hp-damage-type">' + L.untyped + '</span><span class="hp-part-add">' + icon('plus', 12) + '</span></div>' +
+				'<p class="hp-damage-preview">&nbsp;</p></div>';
+
+			const chips = (s) => {
+				const hidden = s.defs.length - SHOWN;
+				return s.defs.slice(0, SHOWN).map(([type, kind]) => '<span class="type-chip ' + kind + (s.on === type ? ' on' : '') + '">' + damageIcon(type) + '<b>' + MARK[kind] + '</b></span>').join('') +
+					'<span class="type-chip more' + (s.other ? ' on' : '') + '">' + (s.other ? damageIcon(s.other) : icon('ellipsis', 14)) + (hidden > 0 ? '<b>' + hidden + '</b>' : '') + '</span>';
+			};
+			const hit = (L, s) =>
+				'<span class="hit">' + chips(s) +
+				'<span class="hp-number">' + s.amount + '</span><span class="minus">' + icon('minus', 16) + (s.total !== s.amount ? '<b>' + s.total + '</b>' : '') + '</span></span>';
+			const greenMenu = (L) =>
+				'<div class="popover green"><div class="eyebrow">' + L.hitPoints + '</div><div class="field"><span class="hp-number">8</span>' +
+				'<span class="hp-btn heal">' + L.heal + '</span><span class="hp-btn heal ghost">' + L.tempHp + '</span></div><p>' + L.note + '</p></div>';
+			// asked for by a resting pointer, or by focus: the name, where the defence comes from, what it would take
+			const tip = (L, s) =>
+				'<div class="popover tip"><strong>' + L.types[s.tip] + '</strong><p>' + s.tipSource + '</p><p>' + L.resist.replace('{raw}', s.amount).replace('{final}', Math.floor(s.amount / 2)) + '</p></div>';
+			const w2 = (L, s) =>
+				'<div class="hitpoints">' + label(L, L.heal + ' · ' + L.tempHp) +
+				'<div class="value-row">' + value(L, s) + hit(L, s) + '</div>' +
+				'<div class="foot">' + bar(s) + '</div>' +
+				(s.menu ? greenMenu(L) : '') + (s.tip ? tip(L, s) : '') + '</div>';
+
+			const EN = COPY.en;
+			const UK = COPY.uk;
+			const ONE = [['fire', 'resist']];
+			const TWO = [['fire', 'resist'], ['poison', 'immune']];
+			const THREE = [['fire', 'resist'], ['poison', 'immune'], ['bludgeoning', 'vulnerable']];
+			const MANY = [['fire', 'resist'], ['poison', 'immune'], ['bludgeoning', 'vulnerable'], ['cold', 'resist'], ['psychic', 'immune'], ['necrotic', 'resist']];
+			const STRESS = { cur: 138, max: 173, tempHp: 12 };
+			const STATES = [
+				['the commonest sheet: no defence at all', EN, { defs: [], amount: 12, total: 12 }],
+				['one resistance, at rest', EN, { defs: ONE, amount: 12, total: 12 }],
+				['one resistance, and the hit is fire', EN, { defs: ONE, on: 'fire', amount: 12, total: 6 }],
+				['the pointer rests on the type: its name, its source, what it would take', EN, { defs: ONE, amount: 12, total: 12, tip: 'fire', tipSource: 'Hellish Resistance' }],
+				['another type said from the menu: lightning', EN, { defs: ONE, other: 'lightning', amount: 12, total: 12 }],
+				['three digits and temporary hit points', EN, { ...STRESS, defs: ONE, amount: 12, total: 12 }],
+				['Ukrainian, three digits, the hit is fire', UK, { ...STRESS, defs: ONE, on: 'fire', amount: 12, total: 6 }],
+				['the green control pressed: one number, healing or temporary hit points', EN, { defs: ONE, amount: 12, total: 12, menu: true }],
+				['the same in Ukrainian', UK, { defs: ONE, amount: 12, total: 12, menu: true }],
+				['EDGE · two defences', EN, { defs: TWO, amount: 12, total: 12 }],
+				['EDGE · three, one a vulnerability, the hit is fire', EN, { defs: THREE, on: 'fire', amount: 12, total: 6 }],
+				['EDGE · six defences: two stand, four in the menu', EN, { defs: MANY, amount: 12, total: 12 }],
+				['EDGE · Ukrainian, six defences, three digits', UK, { ...STRESS, defs: MANY, amount: 12, total: 12 }],
+			];
+			const section = (id, title, states, render) =>
+				'<h2>' + title + '</h2><div class="states" data-variant="' + id + '">' +
+				states.map(([caption, L, s]) => '<div><p class="caption">' + caption + '</p>' + render(L, s) + '</div>').join('') + '</div>';
+
+
+			LUCIDE.chevronDown = ['m6 9 6 6 6-6'];
+			const FACTORS = [['immune', '∅', 'less'], ['resist', '½', 'less'], ['plain', '1', 'plain'], ['vulnerable', '×2', 'more']];
+			const TAKES = { immune: () => 0, resist: (n) => Math.floor(n / 2), plain: (n) => n, vulnerable: (n) => n * 2 };
+			// the factor a said type brings, unless the player pressed another
+			const factorOf = (s) => s.factor ?? (s.on ? s.defs.find(([type]) => type === s.on)[1] : 'plain');
+			// the sheet's first defended type is one press away; the caret holds every other type
+			const typeAndFactor = (s) => {
+				const said = s.on || s.other;
+				const face = said || (s.defs[0] && s.defs[0][0]);
+				return '<span class="factor"><span class="pick' + (said ? ' on' : '') + '">' + (face ? damageIcon(face) : icon('ellipsis', 14)) + '</span>' +
+					'<span class="caret">' + icon('chevronDown', 11) + (s.defs.length > 1 ? s.defs.length - 1 : '') + '</span>' +
+					FACTORS.map(([key, mark, tone]) => '<span class="' + tone + (factorOf(s) === key ? ' on' : '') + '">' + mark + '</span>').join('') + '</span>';
+			};
+			const hitByFactor = (L, s) => {
+				const total = TAKES[factorOf(s)](s.amount);
+				return '<span class="hit">' + typeAndFactor(s) + '<span class="hp-number">' + s.amount + '</span><span class="minus">' + icon('minus', 16) + (total !== s.amount ? '<b>' + total + '</b>' : '') + '</span></span>';
+			};
+			const w2z = (L, s) =>
+				'<div class="hitpoints">' + label(L, L.heal + ' · ' + L.tempHp) +
+				'<div class="value-row">' + value(L, s) + hitByFactor(L, s) + '</div>' +
+				'<div class="foot">' + bar(s) + '</div>' + (s.menu ? greenMenu(L) : '') + '</div>';
+			const FACTOR_STATES = [
+				['the commonest sheet: no defence, no type said', EN, { defs: [], amount: 12 }],
+				['one resistance, at rest: its glyph is one press away', EN, { defs: ONE, amount: 12 }],
+				['fire pressed: the sheet resists it, so ½ is lit', EN, { defs: ONE, on: 'fire', amount: 12 }],
+				['fire pressed, and the player overrules it to 1', EN, { defs: ONE, on: 'fire', factor: 'plain', amount: 12 }],
+				['no type said, the player presses ½ themselves', EN, { defs: ONE, factor: 'resist', amount: 12 }],
+				['another type from the caret: lightning', EN, { defs: ONE, other: 'lightning', amount: 12 }],
+				['three digits and temporary hit points', EN, { ...STRESS, defs: ONE, amount: 12 }],
+				['Ukrainian, three digits, the hit is fire', UK, { ...STRESS, defs: ONE, on: 'fire', amount: 12 }],
+				['the green control pressed', EN, { defs: ONE, amount: 12, menu: true }],
+				['EDGE · three defences, the hit is bludgeoning: vulnerable', EN, { defs: THREE, on: 'bludgeoning', amount: 12 }],
+				['EDGE · six defences: one glyph stands, five behind the caret', EN, { defs: MANY, amount: 12 }],
+				['EDGE · Ukrainian, six defences, three digits', UK, { ...STRESS, defs: MANY, amount: 12 }],
+			];
+
+
+			// ---- the order on the hit's line: the table says "12 fire", so the amount may stand first ----
+			const amountOf = (s) => '<span class="hp-number">' + s.amount + '</span>';
+			const minusOf = (s, total) => '<span class="minus">' + icon('minus', 16) + (total !== s.amount ? '<b>' + total + '</b>' : '') + '</span>';
+			const frame = (L, s, line) =>
+				'<div class="hitpoints">' + label(L, L.heal + ' · ' + L.tempHp) +
+				'<div class="value-row">' + value(L, s) + '<span class="hit">' + line + '</span></div><div class="foot">' + bar(s) + '</div></div>';
+			const w2AmountFirst = (L, s) => frame(L, s, amountOf(s) + chips(s) + minusOf(s, s.total));
+			const w2zAmountFirst = (L, s) => frame(L, s, amountOf(s) + typeAndFactor(s) + minusOf(s, TAKES[factorOf(s)](s.amount)));
+			const pick = (states, indexes) => indexes.map((index) => states[index]);
+			const ORDER_W2 = pick(STATES, [0, 2, 12]);
+			const ORDER_W2Z = pick(FACTOR_STATES, [0, 2, 11]);
+
+
+			// ---- W3: the dice tray's damage line — the amount, then the type that owns it ----
+			const TONE = { immune: 'less', resist: 'less', vulnerable: 'more' };
+			const defenceOf = (s, type) => (s.defs.find(([defended]) => defended === type) || [])[1];
+			const markOf = (s, type) => (defenceOf(s, type) ? '<b class="' + TONE[defenceOf(s, type)] + '">' + MARK[defenceOf(s, type)] + '</b>' : '');
+			const typePill = (s) =>
+				'<span class="type-pill' + (s.on ? ' said' : '') + '">' + (s.on ? damageIcon(s.on) + markOf(s, s.on) : '') + icon('chevronDown', 10) + '</span>';
+			// the sheet's defended types lead, as the tray's active effects do; typing narrows the list
+			const typeMenu = (L, s) => {
+				const typed = (s.typed || '').toLowerCase();
+				const rows = [...s.defs.map(([type]) => type), ...Object.keys(GLYPHS).filter((type) => !defenceOf(s, type))]
+					.filter((type) => L.types[type].toLowerCase().startsWith(typed));
+				return '<span class="tray-menu" style="--type-rows:' + Math.ceil(rows.length / 2) + '">' + rows.map((type, row) =>
+					'<span' + (row === 0 ? ' class="on"' : '') + '>' + damageIcon(type) + '<span class="name"><b>' + L.types[type].slice(0, typed.length) + '</b>' + L.types[type].slice(typed.length) + '</span>' +
+					markOf(s, type) + (row === 0 ? '<kbd>↵</kbd>' : '') + '</span>').join('') + '</span>';
+			};
+			const w3 = (L, s) => {
+				const total = TAKES[defenceOf(s, s.on) || 'plain'](s.amount);
+				const ghost = s.typed ? L.types[s.defs[0][0]].slice(s.typed.length).toLowerCase() : '';
+				return '<div class="hitpoints">' + label(L, L.heal + ' · ' + L.tempHp) + '<div class="value-row">' + value(L, s) +
+					'<span class="hit tray"><span class="tray-field' + (s.menu ? ' open' : '') + '">' + s.amount +
+					(s.typed ? '<span class="typed">' + s.typed + '</span><span class="ghost">' + ghost + '</span>' : typePill(s)) + '</span>' +
+					minusOf(s, total) + (s.menu ? typeMenu(L, s) : '') + '</span></div><div class="foot">' + bar(s) + '</div></div>';
+			};
+			const TRAY_STATES = [
+				['the commonest sheet: the amount, and a type one press away', EN, { defs: [], amount: 12 }],
+				['fire said: the sheet resists it', EN, { defs: ONE, on: 'fire', amount: 12 }],
+				['a type the sheet does not defend: lightning', EN, { defs: ONE, on: 'lightning', amount: 12 }],
+				['EDGE · Ukrainian, six defences, three digits, the hit is fire', UK, { ...STRESS, defs: MANY, on: 'fire', amount: 12 }],
+				['EDGE · vulnerable: bludgeoning', EN, { defs: THREE, on: 'bludgeoning', amount: 12 }],
+				['EDGE · immune: poison', EN, { defs: THREE, on: 'poison', amount: 12 }],
+				['the pill pressed: every type, the defended one leading', EN, { defs: ONE, amount: 12, menu: true }],
+				['typed, never leaving the field: 12 f ↵', EN, { defs: ONE, amount: 12, menu: true, typed: 'f' }],
+				['EDGE · six defences, the pill pressed', UK, { defs: MANY, amount: 12, menu: true }],
+			];
+
+
+			// rescue counts inward from the left edge, death inward from the right
+			const warSide = (tone, word, earned, inward) => {
+				const pips = [0, 1, 2].map((index) => '<span class="war-pip' + (index < earned ? ' earned' : '') + '"></span>');
+				return '<div class="war-side ' + tone + (earned ? ' held' : '') + '">' + (inward ? pips : pips.reverse()).join('') + '<span>' + word + '</span></div>';
+			};
+			const grounds = (s) => '<i class="ground good" style="--earned:' + s.successes + '"></i><i class="ground bad" style="--earned:' + s.failures + '"></i>';
+			const warRoll = (L) => '<span class="war-roll">' + svg('hand-drawn', DICE, 20, 1.4) + L.deathSave + '</span>';
+			const wayBack = (L) => '<span class="temptag">' + icon('plus') + ' ' + L.heal + ' · ' + L.tempHp + '</span>';
+			const tense = (s) => (s.failures === 2 ? ' tense' : '');
+			const warBand = (L, s) =>
+				'<div class="hitpoints war' + tense(s) + '"><div class="hitpoints-label"><span>' + L.hitPoints + '<span class="maximum">0 / ' + (s.max ?? 73) + '</span></span>' + wayBack(L) + '</div>' +
+				'<div class="war-band">' + grounds(s) + '<div class="war-line">' + warSide('good', L.success, s.successes, true) + warRoll(L) + warSide('bad', L.failure, s.failures, false) + '</div></div></div>';
+			const warField = (L, s) =>
+				'<div class="hitpoints war field' + tense(s) + '">' + grounds(s) + '<div class="war-line">' + warSide('good', L.success, s.successes, true) +
+				'<div class="war-middle"><span class="eyebrow">' + L.hitPoints + ' 0 / ' + (s.max ?? 73) + '</span>' + warRoll(L) + wayBack(L) + '</div>' +
+				warSide('bad', L.failure, s.failures, false) + '</div></div>';
+			const WAR_STATES = [
+				['just dropped: nothing rolled yet', EN, { successes: 0, failures: 0 }],
+				['one success', EN, { successes: 1, failures: 0 }],
+				['one failure', EN, { successes: 0, failures: 1 }],
+				['two failures and nothing saved: one roll from death', EN, { successes: 0, failures: 2 }],
+				['two and two: the next roll decides', EN, { successes: 2, failures: 2 }],
+				['Ukrainian, two successes, one failure', UK, { successes: 2, failures: 1 }],
+			];
+
+
+			const appRoll = (L) => '<span class="app-roll">' + svg('hand-drawn', DICE, 18, 1.4) + L.deathSave + '</span>';
+			// T3: the header as it always is; under it the bar, as tall as the fight needs
+			const warBar = (L, s) =>
+				'<div class="hitpoints barwar' + tense(s) + '"><div class="hitpoints-label"><span>' + L.hitPoints + '<span class="maximum">0 / ' + (s.max ?? 73) + '</span></span>' + wayBack(L) + '</div>' +
+				'<div class="capsule"><i class="fill good" style="--earned:' + s.successes + '"></i><i class="fill bad" style="--earned:' + s.failures + '"></i>' +
+				'<div class="war-line">' + glyphSides(s, WINGS_B, 24)[0] + appRoll(L) + glyphSides(s, WINGS_B, 24)[1] + '</div></div></div>';
+			// T4: T2's field, its fronts chevrons with a light edge, its roll the app's own button
+			const warHeraldic = (L, s) =>
+				'<div class="hitpoints war field heraldic' + tense(s) + '"><i class="front good" style="--earned:' + s.successes + '"><b></b></i><i class="front bad" style="--earned:' + s.failures + '"><b></b></i>' +
+				'<div class="war-line">' + glyphSides(s, WINGS_B, 28)[0] +
+				'<div class="war-middle"><span class="eyebrow">' + L.hitPoints + ' 0 / ' + (s.max ?? 73) + '</span>' + appRoll(L) + wayBack(L) + '</div>' +
+				glyphSides(s, WINGS_B, 28)[1] + '</div></div>';
+
+
+			const HALO = 'M8.4 3.6a3.6 1.3 0 1 0 7.2 0a3.6 1.3 0 1 0-7.2 0';
+			// wings B: the lower edge scalloped into feathers, the tips raised
+			const WINGS_B = [HALO, 'M12 13.4C9.6 10 6.2 8.3 2.6 8.2c.2 2.3 1.3 3.9 2.9 4.8-.5.9-.2 1.9.8 2.6.5 1.2 1.8 1.9 3 1.8.7 1 1.7 1.8 2.7 2.1',
+				'M12 13.4c2.4-3.4 5.8-5.1 9.4-5.2-.2 2.3-1.3 3.9-2.9 4.8.5.9.2 1.9-.8 2.6-.5 1.2-1.8 1.9-3 1.8-.7 1-1.7 1.8-2.7 2.1', 'M12 13.4v6.1'];
+			const SKULL = GLYPHS.necrotic;
+			const glyphSide = (tone, paths, size, earned, inward) => {
+				const pips = [0, 1, 2].map((index) => '<span class="war-glyph' + (index < earned ? ' earned' : '') + '">' + svg('hand-drawn', paths, size) + '</span>');
+				return '<div class="war-side glyphs ' + tone + (earned ? ' held' : '') + '">' + (inward ? pips : pips.reverse()).join('') + '</div>';
+			};
+			const glyphSides = (s, wings, size) => [glyphSide('good', wings, size, s.successes, true), glyphSide('bad', SKULL, size, s.failures, false)];
+			// T2 as it stands, the pips drawn as what they mean
+			const warFieldGlyphs = (wings) => (L, s) => {
+				const [rescue, death] = glyphSides(s, wings, 28);
+				return '<div class="hitpoints war field' + tense(s) + '">' + grounds(s) + '<div class="war-line">' + rescue +
+					'<div class="war-middle"><span class="eyebrow">' + L.hitPoints + ' 0 / ' + (s.max ?? 73) + '</span>' + warRoll(L) + wayBack(L) + '</div>' + death + '</div></div>';
+			};
+
+
+			// the wing: two feathers a side, drawn to fill its square so the silhouette survives 24px
+			const WING_PAIR = ['M12 12.5C9.4 8.6 5.6 6.9 1.8 7c.2 2.9 1.6 4.9 3.6 6-.4 1.3.3 2.6 1.6 3.3.9 1.6 2.9 2.4 5 4.2',
+				'M12 12.5c2.6-3.9 6.4-5.6 10.2-5.5-.2 2.9-1.6 4.9-3.6 6 .4 1.3-.3 2.6-1.6 3.3-.9 1.6-2.9 2.4-5 4.2', 'M12 12.5v8'];
+			// the halo, an ellipse of half-width and half-height (rx, ry) about (12, cy)
+			const halo = (rx, ry, cy) => 'M' + (12 - rx) + ' ' + cy + 'a' + rx + ' ' + ry + ' 0 1 0 ' + 2 * rx + ' 0a' + rx + ' ' + ry + ' 0 1 0-' + 2 * rx + ' 0';
+			const WINGS_B2 = [halo(4, 1.4, 3.4), ...WING_PAIR];
+			const WINGS_OPEN = [halo(4.4, 1.9, 3.7), ...WING_PAIR];
+			const WINGS_OPENER = [halo(4.6, 2.3, 4), ...WING_PAIR];
+			const WING_DRAWINGS = [['1 · B2 as it was', WINGS_B2], ['2 · the halo taller', WINGS_OPEN], ['3 · the halo taller still', WINGS_OPENER]];
+			// each drawing large, at its two working sizes, and standing on the ground it is earned on
+			const wingSheet = '<div class="specimens">' + WING_DRAWINGS.map(([name, paths]) =>
+				'<span>' + svg('hand-drawn', paths, 96) + '<span class="sizes">' + svg('hand-drawn', paths, 28) + svg('hand-drawn', paths, 24) +
+				'<i class="on-ground">' + svg('hand-drawn', paths, 28) + '</i></span>' + name + '</span>').join('') +
+				'<span>' + svg('hand-drawn', SKULL, 96) + '<span class="sizes">' + svg('hand-drawn', SKULL, 28) + svg('hand-drawn', SKULL, 24) +
+				'<i class="on-ground death">' + svg('hand-drawn', SKULL, 28) + '</i></span>the skull, kept</span></div>';
+			const heraldicWith = (wings) => (L, s) => warHeraldic(L, s).split(svg('hand-drawn', WINGS_B, 28)).join(svg('hand-drawn', wings, 28));
+			const IN_USE = [
+				['nothing rolled', EN, { successes: 0, failures: 0 }],
+				['one success', EN, { successes: 1, failures: 0 }],
+				['two and two', EN, { successes: 2, failures: 2 }],
+			];
+
+			// ---- the pencil: the block's own options, the first of them the motion at 0 hit points ----
+			LUCIDE.pencil = ['M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z', 'm15 5 4 4'];
+			const MOTIONS = ['No animation', 'Pressure', 'Waves', 'Burning edge', 'Hatch', 'Rays & Hellfire', 'Liquid', 'Arrows'];
+			const motionMenu = '<div class="popover motions"><div class="eyebrow">At 0 hit points</div>' +
+				MOTIONS.map((name) => '<div class="row' + (name === 'Rays & Hellfire' ? ' on' : '') + '">' + name + '</div>').join('') +
+				'<p>Reduce motion in the app’s settings overrides this.</p></div>';
+			const withPencil = (L, s) => {
+				if (s.blank) return '';
+				const block = s.down ? warFieldGlyphs(WINGS_B)(L, { successes: 1, failures: 1 }) : w3(L, { defs: ONE, amount: 12 });
+				return '<div class="with-tab' + (s.pointed ? ' pointed' : '') + '"' + (s.menu ? ' style="margin-bottom:9rem"' : '') + '>' + block +
+					'<span class="pencil-tab' + (s.down ? ' down' : '') + '">' + icon('pencil', 12) + '</span>' + (s.menu ? motionMenu : '') + '</div>';
+			};
+			// pressed, the block shows its 0 hit points face playing the chosen motion; the list opens
+			// leftward, so the cell before it is left empty
+			const PENCIL_STATES = [
+				['at rest: no pencil — put the pointer on the block', EN, {}],
+				['the pointer on the block', EN, { pointed: true }],
+				['at 0 hit points, the pointer on the block', EN, { pointed: true, down: true }],
+				['', EN, { blank: true }],
+				['', EN, { blank: true }],
+				['pressed: the block plays what is picked', EN, { pointed: true, down: true, menu: true }],
+			];
+
+
+			// ---- the narrow window ----
+			const WORDS = {
+				en: { dead: 'Dead', stable: 'Stabilized', revived: 'I was revived', cause: 'Three failed death saves' },
+				uk: { dead: 'Смерть', stable: 'Стабілізовано', revived: 'Мене воскресили', cause: 'Три провалені рятівні кидки від смерті' },
+			};
+			const wordsOf = (L) => (L === UK ? WORDS.uk : WORDS.en);
+			const pencilInLabel = (L) => '<div class="hitpoints-label"><span>' + L.hitPoints + '<span class="pencil-inline">' + icon('pencil', 12) + '</span></span></div>';
+			const narrowField = (s) => '<span class="tray-field">' + s.amount + typePill(s) + '</span>';
+			const taken = (s) => TAKES[defenceOf(s, s.on) || 'plain'](s.amount);
+			const dice = svg('hand-drawn', DICE, 20, 1.4);
+			const healWords = (L) => icon('plus', 14) + L.heal + ' · ' + L.tempHp;
+			// one row under the bar — the hit's field, the minus, healing as its plus
+			const narrowIcons = (L, s) =>
+				'<div class="hitpoints narrow">' + pencilInLabel(L) + value(L, s) + '<div class="foot">' + bar(s) + '</div>' +
+				'<div class="acts">' + narrowField(s) + '<span class="tap red">' + icon('minus', 18) + (taken(s) !== s.amount ? taken(s) : '') + '</span>' +
+				'<span class="tap green">' + icon('plus', 18) + '</span></div></div>';
+			const narrowDown = (L, s, middle, under) => {
+				const [rescue, death] = glyphSides(s, WINGS_B, 28);
+				return '<div class="hitpoints war field narrow">' + grounds(s) + '<span class="eyebrow">' + L.hitPoints + ' 0 / 73</span>' +
+					'<div class="war-line">' + rescue + '<div class="war-middle">' + middle + '</div>' + death + '</div>' + under + '</div>';
+			};
+			const narrowDownIcons = (L, s) =>
+				narrowDown(L, s, '<span class="acts" style="margin:0"><span class="tap roll">' + dice + '</span><span class="tap green">' + icon('plus', 18) + '</span></span>', '');
+			const narrowEnd = (L, s) =>
+				'<div class="hitpoints narrow end ' + s.end + '"><b>' + wordsOf(L)[s.end] + '</b>' +
+				(s.end === 'dead' ? '<small>' + wordsOf(L).cause + '</small><span class="tap">' + wordsOf(L).revived + '</span>' : '<span class="tap green">' + healWords(L) + '</span>') + '</div>';
+			const narrowAny = (up, down) => (L, s) => (s.end ? narrowEnd(L, s) : s.successes === undefined ? up(L, s) : down(L, s));
+			const NARROW_STATES = [
+				['on its feet', EN, { defs: ONE, amount: 12 }],
+				['Ukrainian, three digits, six defences, the hit is fire', UK, { ...STRESS, defs: MANY, on: 'fire', amount: 12 }],
+				['at 0 hit points, Ukrainian', UK, { successes: 1, failures: 2 }],
+			];
+			const NARROW_ENDS = [
+				['three successes', EN, { end: 'stable' }],
+				['three failures', EN, { end: 'dead' }],
+				['three failures, Ukrainian', UK, { end: 'dead' }],
+			];
+
+
+			document.getElementById('root').innerHTML =
+				section('shipped', 'What ships today', [['at rest', EN, { amount: 12 }]], shipped) +
+				section('w2', 'W2 · the hit on the number’s line; healing and temporary hit points in one popover', STATES, w2) +
+				'<div id="z">' + section('w2z', 'W2z · the same sheet, the hit said as a type and a factor in one joined control', FACTOR_STATES, w2z) + '</div>' +
+				'<div id="order">' +
+				section('order-w2-a', 'W2 · type first (today)', ORDER_W2, w2) +
+				section('order-w2-b', 'W2 · amount first', ORDER_W2, w2AmountFirst) +
+				section('order-w2z-a', 'W2z · type first (today)', ORDER_W2Z, w2z) +
+				section('order-w2z-b', 'W2z · amount first', ORDER_W2Z, w2zAmountFirst) +
+				'</div>' +
+				'<div id="tray">' + section('w3', 'W3 · the hit said as the dice tray says a damage line: the amount, then its type', TRAY_STATES, w3) + '</div>' +
+				'<div id="pencil">' + section('pencil', 'The pencil · a tab on the side, there while the pointer is on the block', PENCIL_STATES, withPencil) + '</div>' +
+				'<div id="narrow">' +
+				section('narrow-a', 'Narrow · one row under the bar', NARROW_STATES, narrowAny(narrowIcons, narrowDownIcons)) +
+				section('narrow-end', 'Narrow · the end faces', NARROW_ENDS, narrowAny()) +
+				'</div>' +
+				'<div id="down">' +
+				section('t1', 'T1 · a tug of war in a band under the header', WAR_STATES, warBand) +
+				section('t2', 'T2 · the whole block is the field', WAR_STATES, warField) +
+				section('t3', 'T3 · the app’s own hit-point bar, grown to hold the fight; wings B and skulls', WAR_STATES, warBar) +
+				section('t4', 'T4 · T2 cut like a coat of arms: chevrons with a light edge; wings B and skulls', WAR_STATES, warHeraldic) +
+				'<div id="wings"><h2>The wing is B2; the halo opens — large, at 28 and 24px, and on its ground</h2>' + wingSheet +
+				WING_DRAWINGS.map(([name, paths]) => section('wing-' + name[0], 'In use · ' + name, IN_USE, heraldicWith(paths))).join('') + '</div>' +
+				section('t6', 'T6 · T2 exactly, the saves as wings and skulls', WAR_STATES, warFieldGlyphs(WINGS_B)) +
+				'</div>';
+		</script>
+	</body>
+</html>

@@ -1,0 +1,558 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Effects block — 4 redesign mockups</title>
+		<style>
+			@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+			:root {
+				--bg: #0f1116;
+				--surface: #171a21;
+				--surface-2: #1f232c;
+				--border: #272c37;
+				--border-strong: #333a47;
+				--text: #e6e8ec;
+				--muted: #878f9d;
+				--accent: #cf2b40;
+				--accent-bright: #ef6b78;
+				--accent-deep: #b3243a;
+				--resource: #caa24a;
+				--good: #3bb8a6;
+				--good-soft: #11302c;
+				--accent-soft: #241317;
+				--font-d: 'Space Grotesk', sans-serif;
+				--font-m: 'JetBrains Mono', monospace;
+			}
+			body {
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--font-d);
+				margin: 0;
+				padding: 32px;
+			}
+			h1 {
+				font-size: 18px;
+				font-weight: 700;
+				margin: 0 0 4px;
+			}
+			.lead {
+				color: var(--muted);
+				font-size: 13px;
+				margin: 0 0 26px;
+			}
+			.wrap {
+				display: grid;
+				grid-template-columns: repeat(2, 400px);
+				gap: 30px 34px;
+			}
+			.variant > .cap {
+				font-family: var(--font-m);
+				font-size: 11px;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--accent-bright);
+				margin: 0 0 10px 2px;
+			}
+			/* shared panel chrome */
+			.card {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 14px;
+				padding: 16px;
+			}
+			.phead {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				margin: 0 0 12px;
+			}
+			.ptitle {
+				font-family: var(--font-d);
+				font-weight: 600;
+				font-size: 12px;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: var(--muted);
+				margin-right: auto;
+			}
+			.pill-btn {
+				font-family: var(--font-d);
+				font-weight: 600;
+				font-size: 12px;
+				color: var(--muted);
+				background: transparent;
+				border: 1px solid var(--border);
+				border-radius: 7px;
+				padding: 5px 11px;
+				cursor: pointer;
+			}
+			.grip {
+				color: var(--border-strong);
+				font-size: 14px;
+			}
+			.x {
+				background: transparent;
+				border: 0;
+				color: var(--border-strong);
+				cursor: pointer;
+				font-size: 12px;
+			}
+			.dot {
+				width: 8px;
+				height: 8px;
+				border-radius: 50%;
+				flex: none;
+			}
+			.dot.pos {
+				background: var(--good);
+			}
+			.dot.neg {
+				background: var(--accent);
+			}
+			.tag {
+				font-family: var(--font-m);
+				font-size: 10px;
+				border: 1px solid var(--border);
+				border-radius: 5px;
+				padding: 1px 6px;
+				color: var(--muted);
+			}
+			.tag.g {
+				color: var(--good);
+				border-color: var(--good);
+			}
+			.tag.r {
+				color: var(--accent-bright);
+				border-color: var(--accent);
+			}
+			.durpill {
+				display: inline-flex;
+				align-items: center;
+				gap: 3px;
+				font-family: var(--font-m);
+				font-size: 10px;
+				color: var(--resource);
+				border: 1px solid var(--resource);
+				border-radius: 999px;
+				padding: 1px 4px;
+			}
+			.durpill .step {
+				color: var(--muted);
+				cursor: pointer;
+				padding: 0 2px;
+			}
+			.num {
+				width: 22px;
+				text-align: center;
+			}
+
+			/* ============ A: refined rows ============ */
+			.A .row {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				padding: 9px 0;
+				border-top: 1px solid var(--border);
+			}
+			.A .row:first-of-type {
+				border-top: 0;
+			}
+			.A .name {
+				font-family: var(--font-d);
+				font-weight: 600;
+				font-size: 13px;
+			}
+			.A .name.pos {
+				color: var(--good);
+				background: none;
+				width: auto;
+				height: auto;
+			}
+			.A .name.neg {
+				color: var(--accent-bright);
+				background: none;
+				width: auto;
+				height: auto;
+			}
+			.A .mid {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				flex: 1;
+				min-width: 0;
+			}
+			.A .tags {
+				display: flex;
+				gap: 5px;
+				margin-left: auto;
+			}
+
+			/* ============ B: mini-cards ============ */
+			.B .stack {
+				display: flex;
+				flex-direction: column;
+				gap: 9px;
+			}
+			.B .ec {
+				background: var(--surface-2);
+				border: 1px solid var(--border);
+				border-left: 3px solid var(--good);
+				border-radius: 10px;
+				padding: 9px 11px;
+			}
+			.B .ec.neg {
+				border-left-color: var(--accent);
+			}
+			.B .top {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+			.B .name {
+				font-weight: 600;
+				font-size: 13px;
+				color: var(--good);
+			}
+			.B .ec.neg .name {
+				color: var(--accent-bright);
+			}
+			.B .bot {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				margin-top: 7px;
+			}
+			.B .bot .tags {
+				display: flex;
+				gap: 5px;
+				margin-right: auto;
+			}
+
+			/* ============ C: buffs / debuffs split ============ */
+			.C .grouphdr {
+				font-family: var(--font-m);
+				font-size: 9px;
+				letter-spacing: 0.14em;
+				text-transform: uppercase;
+				padding: 10px 0 6px;
+			}
+			.C .grouphdr.buff {
+				color: var(--good);
+			}
+			.C .grouphdr.debuff {
+				color: var(--accent-bright);
+			}
+			.C .row {
+				display: flex;
+				align-items: center;
+				gap: 9px;
+				padding: 7px 0;
+			}
+			.C .name {
+				font-weight: 600;
+				font-size: 13px;
+				flex: none;
+			}
+			.C .tags {
+				display: flex;
+				gap: 5px;
+			}
+			.C .dur {
+				margin-left: auto;
+				display: flex;
+				align-items: center;
+				gap: 7px;
+			}
+			.C .bar {
+				width: 52px;
+				height: 5px;
+				border-radius: 3px;
+				background: var(--surface-2);
+				overflow: hidden;
+			}
+			.C .bar > i {
+				display: block;
+				height: 100%;
+				background: var(--resource);
+			}
+			.C .rds {
+				font-family: var(--font-m);
+				font-size: 10px;
+				color: var(--muted);
+				width: 40px;
+			}
+
+			/* ============ D: table ============ */
+			.D table {
+				width: 100%;
+				border-collapse: collapse;
+			}
+			.D th {
+				font-family: var(--font-m);
+				font-size: 9px;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: var(--muted);
+				text-align: left;
+				font-weight: 400;
+				padding: 0 6px 6px 0;
+			}
+			.D td {
+				padding: 8px 6px 8px 0;
+				border-top: 1px solid var(--border);
+				font-size: 13px;
+				vertical-align: middle;
+			}
+			.D .nm {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				font-weight: 600;
+			}
+			.D .nm.pos {
+				color: var(--good);
+			}
+			.D .nm.neg {
+				color: var(--accent-bright);
+			}
+			.D td.dur {
+				white-space: nowrap;
+			}
+			.D td.act {
+				text-align: right;
+				width: 20px;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Effects &amp; conditions block — 4 redesigns</h1>
+		<p class="lead">Same 4 active effects. Pick a letter (or mix).</p>
+		<div class="wrap">
+			<!-- ============ VARIANT A ============ -->
+			<div class="variant A">
+				<p class="cap">A · refined rows</p>
+				<div class="card">
+					<div class="phead">
+						<span class="ptitle">Effects &amp; conditions</span>
+						<button class="pill-btn">＋ Add effect</button>
+						<span class="grip">⠿</span>
+					</div>
+					<div class="row">
+						<span class="dot pos"></span>
+						<div class="mid">
+							<span class="name pos">Shield of Faith</span>
+							<span class="tags"><span class="tag g">AC +2</span></span>
+						</div>
+						<span class="durpill"
+							><span class="step">−</span><span class="num">100</span><span class="step">＋</span
+							></span
+						>
+						<button class="x">✕</button>
+					</div>
+					<div class="row">
+						<span class="dot pos"></span>
+						<div class="mid">
+							<span class="name pos">Bless</span>
+							<span class="tags"><span class="tag g">all saves +1d4</span></span>
+						</div>
+						<span class="durpill"
+							><span class="step">−</span><span class="num">10</span><span class="step">＋</span
+							></span
+						>
+						<button class="x">✕</button>
+					</div>
+					<div class="row">
+						<span class="dot neg"></span>
+						<div class="mid">
+							<span class="name neg">Bane</span>
+							<span class="tags"><span class="tag r">all saves −1d4</span></span>
+						</div>
+						<span class="durpill"
+							><span class="step">−</span><span class="num">10</span><span class="step">＋</span
+							></span
+						>
+						<button class="x">✕</button>
+					</div>
+					<div class="row">
+						<span class="dot pos"></span>
+						<div class="mid">
+							<span class="name pos">Arcane Recovery</span>
+							<span class="tags"><span class="tag">resource</span></span>
+						</div>
+						<span class="durpill"
+							><span class="step">−</span><span class="num">∞</span><span class="step">＋</span></span
+						>
+						<button class="x">✕</button>
+					</div>
+				</div>
+			</div>
+
+			<!-- ============ VARIANT B ============ -->
+			<div class="variant B">
+				<p class="cap">B · mini-cards (accent bar)</p>
+				<div class="card">
+					<div class="phead">
+						<span class="ptitle">Effects &amp; conditions</span>
+						<button class="pill-btn">＋ Add effect</button>
+						<span class="grip">⠿</span>
+					</div>
+					<div class="stack">
+						<div class="ec">
+							<div class="top">
+								<span class="name">Shield of Faith</span><span class="x" style="margin-left: auto"
+									>✕</span
+								>
+							</div>
+							<div class="bot">
+								<span class="tags"><span class="tag g">AC +2</span></span>
+								<span class="durpill"
+									><span class="step">−</span><span class="num">100</span><span class="step"
+										>＋</span
+									></span
+								>
+							</div>
+						</div>
+						<div class="ec">
+							<div class="top">
+								<span class="name">Bless</span><span class="x" style="margin-left: auto">✕</span>
+							</div>
+							<div class="bot">
+								<span class="tags"><span class="tag g">all saves +1d4</span></span>
+								<span class="durpill"
+									><span class="step">−</span><span class="num">10</span><span class="step">＋</span
+									></span
+								>
+							</div>
+						</div>
+						<div class="ec neg">
+							<div class="top">
+								<span class="name">Bane</span><span class="x" style="margin-left: auto">✕</span>
+							</div>
+							<div class="bot">
+								<span class="tags"><span class="tag r">all saves −1d4</span></span>
+								<span class="durpill"
+									><span class="step">−</span><span class="num">10</span><span class="step">＋</span
+									></span
+								>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- ============ VARIANT C ============ -->
+			<div class="variant C">
+				<p class="cap">C · buffs / debuffs split + duration bar</p>
+				<div class="card">
+					<div class="phead">
+						<span class="ptitle">Effects &amp; conditions</span>
+						<button class="pill-btn">＋ Add effect</button>
+						<span class="grip">⠿</span>
+					</div>
+					<div class="grouphdr buff">✦ Buffs</div>
+					<div class="row">
+						<span class="name" style="color: var(--good)">Shield of Faith</span>
+						<span class="tags"><span class="tag g">AC +2</span></span>
+						<span class="dur"
+							><span class="bar"><i style="width: 100%"></i></span
+							><span class="rds">100 rds</span></span
+						>
+					</div>
+					<div class="row">
+						<span class="name" style="color: var(--good)">Bless</span>
+						<span class="tags"><span class="tag g">+1d4</span></span>
+						<span class="dur"
+							><span class="bar"><i style="width: 60%"></i></span
+							><span class="rds">10 rds</span></span
+						>
+					</div>
+					<div class="row">
+						<span class="name" style="color: var(--good)">Arcane Recovery</span>
+						<span class="tags"><span class="tag">resource</span></span>
+						<span class="dur"
+							><span class="bar"><i style="width: 100%; opacity: 0.4"></i></span
+							><span class="rds">∞</span></span
+						>
+					</div>
+					<div class="grouphdr debuff">☠ Debuffs</div>
+					<div class="row">
+						<span class="name" style="color: var(--accent-bright)">Bane</span>
+						<span class="tags"><span class="tag r">−1d4</span></span>
+						<span class="dur"
+							><span class="bar"><i style="width: 60%; background: var(--accent)"></i></span
+							><span class="rds">10 rds</span></span
+						>
+					</div>
+				</div>
+			</div>
+
+			<!-- ============ VARIANT D ============ -->
+			<div class="variant D">
+				<p class="cap">D · table (aligned columns)</p>
+				<div class="card">
+					<div class="phead">
+						<span class="ptitle">Effects &amp; conditions</span>
+						<button class="pill-btn">＋ Add effect</button>
+						<span class="grip">⠿</span>
+					</div>
+					<table>
+						<thead>
+							<tr>
+								<th>Effect</th>
+								<th>Modifier</th>
+								<th>Rounds</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><span class="nm pos"><span class="dot pos"></span>Shield of Faith</span></td>
+								<td><span class="tag g">AC +2</span></td>
+								<td class="dur">
+									<span class="durpill"
+										><span class="step">−</span><span class="num">100</span
+										><span class="step">＋</span></span
+									>
+								</td>
+								<td class="act"><button class="x">✕</button></td>
+							</tr>
+							<tr>
+								<td><span class="nm pos"><span class="dot pos"></span>Bless</span></td>
+								<td><span class="tag g">all saves +1d4</span></td>
+								<td class="dur">
+									<span class="durpill"
+										><span class="step">−</span><span class="num">10</span
+										><span class="step">＋</span></span
+									>
+								</td>
+								<td class="act"><button class="x">✕</button></td>
+							</tr>
+							<tr>
+								<td><span class="nm neg"><span class="dot neg"></span>Bane</span></td>
+								<td><span class="tag r">all saves −1d4</span></td>
+								<td class="dur">
+									<span class="durpill"
+										><span class="step">−</span><span class="num">10</span
+										><span class="step">＋</span></span
+									>
+								</td>
+								<td class="act"><button class="x">✕</button></td>
+							</tr>
+							<tr>
+								<td><span class="nm pos"><span class="dot pos"></span>Arcane Recovery</span></td>
+								<td><span class="tag">resource</span></td>
+								<td class="dur">
+									<span class="durpill"
+										><span class="step">−</span><span class="num">∞</span
+										><span class="step">＋</span></span
+									>
+								</td>
+								<td class="act"><button class="x">✕</button></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

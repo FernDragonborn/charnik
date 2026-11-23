@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="uk" data-theme="dark">
+	<head>
+		<meta charset="utf-8" />
+		<title>Starting equipment — variants</title>
+		<link rel="stylesheet" href="../src/lib/styles/tokens.css" />
+		<link rel="stylesheet" href="../src/lib/styles/app.css" />
+		<link rel="stylesheet" href="../src/lib/styles/components.css" />
+		<link rel="stylesheet" href="../src/lib/styles/build.css" />
+		<style>
+			body {
+				background: var(--color-bg);
+				color: var(--color-text);
+				font-family: var(--font-body);
+				margin: 0;
+				padding: var(--space-5);
+			}
+			.variants {
+				display: grid;
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+				gap: var(--space-5);
+				align-items: start;
+			}
+			.vlabel {
+				font-family: var(--font-display);
+				font-size: var(--font-size-h6);
+				margin: 0 0 var(--space-1);
+			}
+			.vnote {
+				color: var(--color-text-muted);
+				font-size: var(--font-size-sm);
+				margin: 0 0 var(--space-3);
+			}
+			.frame {
+				border: 1px solid var(--color-border);
+				border-radius: var(--radius-md);
+				padding: var(--space-4);
+				background: var(--color-bg);
+			}
+			.eyebrow {
+				font-size: var(--font-size-micro);
+				letter-spacing: var(--tracking-label);
+				text-transform: uppercase;
+				color: var(--color-text-muted);
+			}
+			.ititle {
+				font-family: var(--font-display);
+				font-size: var(--font-size-lg);
+				font-weight: 700;
+				margin: var(--space-2) 0 var(--space-1);
+			}
+			.blurb {
+				color: var(--color-text-muted);
+				font-size: var(--font-size-xs);
+				margin: 0 0 var(--space-4);
+			}
+			.source {
+				display: flex;
+				align-items: baseline;
+				gap: var(--space-2);
+				margin: var(--space-4) 0 var(--space-2);
+			}
+			.source b {
+				font-size: var(--font-size-body);
+			}
+			.source span {
+				color: var(--color-text-muted);
+				font-size: var(--font-size-xs);
+			}
+			/* V1 — a card per alternative */
+			.alts {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+				grid-auto-flow: column;
+				gap: var(--space-2);
+				margin-bottom: var(--space-2);
+			}
+			.alt {
+				border: 1px solid var(--color-border);
+				border-radius: var(--radius);
+				background: var(--color-surface);
+				padding: var(--space-2) var(--space-2-5);
+				font-size: var(--font-size-xs);
+				text-align: left;
+				color: var(--color-text);
+				cursor: pointer;
+			}
+			.alt.on {
+				border-color: var(--color-accent);
+				box-shadow: inset 0 0 0 1px var(--color-accent);
+			}
+			.alt .letter {
+				font-family: var(--font-display);
+				font-weight: 700;
+				font-size: var(--font-size-body);
+				display: block;
+				margin-bottom: var(--space-1);
+			}
+			.alt ul {
+				margin: 0;
+				padding: 0;
+				list-style: none;
+				line-height: 1.55;
+			}
+			.gold {
+				color: var(--color-resource);
+				font-weight: 600;
+			}
+			.ask {
+				display: inline-block;
+				border: 1px dashed var(--color-accent);
+				border-radius: var(--radius-xs);
+				padding: 0 var(--space-1);
+				color: var(--color-accent);
+			}
+			.ask.done {
+				border-style: solid;
+				border-color: var(--color-border);
+				color: var(--color-text);
+			}
+			/* V2 — a segmented switch per line */
+			.line {
+				display: grid;
+				grid-template-columns: auto 1fr;
+				gap: var(--space-1) var(--space-3);
+				align-items: center;
+				padding: var(--space-2) 0;
+				border-bottom: 1px solid var(--color-border);
+				font-size: var(--font-size-xs);
+			}
+			.seg {
+				display: inline-flex;
+				border: 1px solid var(--color-border);
+				border-radius: var(--radius);
+				overflow: hidden;
+			}
+			.seg button {
+				border: 0;
+				background: var(--color-surface);
+				color: var(--color-text-muted);
+				font: inherit;
+				font-weight: 700;
+				padding: var(--space-1) var(--space-2-5);
+			}
+			.seg button.on {
+				background: var(--color-accent);
+				color: var(--color-bg);
+			}
+			.fixed {
+				color: var(--color-text-muted);
+				font-style: italic;
+			}
+			/* V3 — on the sheet */
+			.sheetcard {
+				border: 1px solid var(--color-border);
+				border-radius: var(--radius-md);
+				background: var(--color-surface);
+				padding: var(--space-4);
+			}
+			.cardhead {
+				display: flex;
+				align-items: center;
+				gap: var(--space-2);
+				margin-bottom: var(--space-3);
+			}
+			.cardhead .spacer {
+				flex: 1;
+			}
+			.kitbar {
+				border: 1px dashed var(--color-border-strong, var(--color-border));
+				border-radius: var(--radius);
+				padding: var(--space-2) var(--space-3);
+				margin-bottom: var(--space-3);
+				font-size: var(--font-size-xs);
+			}
+			.kitbar .row {
+				display: flex;
+				gap: var(--space-2);
+				align-items: center;
+				margin: var(--space-1) 0;
+				flex-wrap: wrap;
+			}
+			.item {
+				display: flex;
+				justify-content: space-between;
+				font-size: var(--font-size-sm);
+				padding: var(--space-1) 0;
+				border-bottom: 1px solid var(--color-border);
+			}
+			.tag {
+				font-size: var(--font-size-micro);
+				color: var(--color-text-muted);
+				border: 1px solid var(--color-border);
+				border-radius: var(--radius-full);
+				padding: 0 var(--space-1-5);
+			}
+			.foot {
+				margin-top: var(--space-3);
+				font-size: var(--font-size-xs);
+				color: var(--color-text-muted);
+			}
+		</style>
+	</head>
+	<body>
+		<div class="variants">
+			<!-- ───────────── V1 ───────────── -->
+			<section>
+				<h2 class="vlabel">1 · Картка на кожен варіант</h2>
+				<p class="vnote">
+					Пункт «Лишилось» відкриває інспектор. Кожен рядок книги — ряд карток A / B / C зі
+					змістом; клік бере варіант одразу, інший клік міняє. «Будь-яка зброя» питає в самій картці.
+				</p>
+				<div class="frame">
+					<div class="eyebrow">Інспектор</div>
+					<div class="ititle">Стартове спорядження</div>
+					<p class="blurb">
+						Що ви несете на 1-му рівні. Обраний варіант одразу лягає в Спорядження, золото — в гаманець.
+					</p>
+
+					<div class="source"><b>Fighter</b><span>D&amp;D 5.5e · оберіть A, B або C</span></div>
+					<div class="alts">
+						<button class="alt on">
+							<span class="letter">A</span>
+							<ul>
+								<li>Chain Mail</li>
+								<li>Greatsword</li>
+								<li>Flail</li>
+								<li>8 × Javelin</li>
+								<li>Dungeoneer's Pack</li>
+								<li class="gold">4 зм</li>
+							</ul>
+						</button>
+						<button class="alt">
+							<span class="letter">B</span>
+							<ul>
+								<li>Studded Leather Armor</li>
+								<li>Scimitar · Shortsword</li>
+								<li>Longbow · Arrows · Quiver</li>
+								<li>Dungeoneer's Pack</li>
+								<li class="gold">11 зм</li>
+							</ul>
+						</button>
+						<button class="alt">
+							<span class="letter">C</span>
+							<ul>
+								<li class="gold">155 зм</li>
+							</ul>
+						</button>
+					</div>
+
+					<div class="source"><b>Fighter</b><span>D&amp;D 5e · чотири вибори</span></div>
+					<div class="alts">
+						<button class="alt on"><span class="letter">a</span>Chain mail</button>
+						<button class="alt"><span class="letter">b</span>Leather armor · Longbow · Arrows</button>
+					</div>
+					<div class="alts">
+						<button class="alt on">
+							<span class="letter">a</span><span class="ask done">Longsword</span> · Shield
+						</button>
+						<button class="alt">
+							<span class="letter">b</span><span class="ask">бойова зброя ▾</span> ×2
+						</button>
+					</div>
+					<div class="alts">
+						<button class="alt"><span class="letter">a</span>Light crossbow · Bolts</button>
+						<button class="alt on"><span class="letter">b</span>2 × Handaxe</button>
+					</div>
+					<div class="alts">
+						<button class="alt"><span class="letter">a</span>Dungeoneer's pack</button>
+						<button class="alt on"><span class="letter">b</span>Explorer's pack</button>
+					</div>
+				</div>
+			</section>
+
+			<!-- ───────────── V2 ───────────── -->
+			<section>
+				<h2 class="vlabel">2 · Перемикач на рядок</h2>
+				<p class="vnote">
+					Той самий інспектор, щільніше: рядок книги — перемикач A | B | C і зміст обраного поруч.
+					Решту варіантів видно, лише перемкнувши.
+				</p>
+				<div class="frame">
+					<div class="eyebrow">Інспектор</div>
+					<div class="ititle">Стартове спорядження</div>
+					<p class="blurb">
+						Що ви несете на 1-му рівні. Обраний варіант одразу лягає в Спорядження, золото — в гаманець.
+					</p>
+
+					<div class="source"><b>Fighter</b><span>D&amp;D 5.5e</span></div>
+					<div class="line">
+						<span class="seg"><button class="on">A</button><button>B</button><button>C</button></span>
+						<span
+							>Chain Mail · Greatsword · Flail · 8 × Javelin · Dungeoneer's Pack ·
+							<span class="gold">4 зм</span></span
+						>
+					</div>
+
+					<div class="source"><b>Fighter</b><span>D&amp;D 5e</span></div>
+					<div class="line">
+						<span class="seg"><button class="on">a</button><button>b</button></span>
+						<span>Chain mail</span>
+					</div>
+					<div class="line">
+						<span class="seg"><button>a</button><button class="on">b</button></span>
+						<span><span class="ask">бойова зброя ▾</span> · <span class="ask">бойова зброя ▾</span></span>
+					</div>
+					<div class="line">
+						<span class="seg"><button>a</button><button class="on">b</button></span>
+						<span>2 × Handaxe</span>
+					</div>
+					<div class="line">
+						<span class="seg"><button>a</button><button class="on">b</button></span>
+						<span>Explorer's pack</span>
+					</div>
+				</div>
+			</section>
+
+			<!-- ───────────── V3 ───────────── -->
+			<section>
+				<h2 class="vlabel">3 · Просто на листі</h2>
+				<p class="vnote">
+					Без інспектора: картка Спорядження сама несе смугу набору, поки персонаж створюється. Речі з
+					набору позначені й міняються разом із вибором.
+				</p>
+				<div class="frame">
+					<div class="sheetcard">
+						<div class="cardhead">
+							<span class="eyebrow">Спорядження</span><span class="spacer"></span
+							><span class="eyebrow">7 речей</span><button class="pill-btn">+ Додати</button>
+						</div>
+						<div class="kitbar">
+							<div class="row">
+								<b>Набір класу</b><span class="seg"
+									><button class="on">A</button><button>B</button><button>C</button></span
+								>
+								<b>Набір бекграунду</b><span class="seg"
+									><button class="on">A</button><button>B</button></span
+								>
+							</div>
+						</div>
+						<div class="item"><span>Chain Mail</span><span class="tag">набір</span></div>
+						<div class="item"><span>Greatsword</span><span class="tag">набір</span></div>
+						<div class="item"><span>Flail</span><span class="tag">набір</span></div>
+						<div class="item"><span>Javelin × 8</span><span class="tag">набір</span></div>
+						<div class="item"><span>Dungeoneer's Pack</span><span class="tag">набір</span></div>
+						<div class="item"><span>Spear</span><span class="tag">набір</span></div>
+						<div class="item"><span>Healer's Kit</span><span class="tag">набір</span></div>
+						<p class="foot">Гаманець: <span class="gold">18 зм</span> (4 з класу, 14 з бекграунду)</p>
+					</div>
+				</div>
+			</section>
+		</div>
+	</body>
+</html>

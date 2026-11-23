@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<title>Рамка фокусу · вікно питання</title>
+<style>
+	/* the question window's own palette, copied from static/table-question.html */
+	.dark { --bg: #0f1116; --border-strong: #333a47; --text: #e6e8ec; --muted: #878f9d; --body: #c7cbd2; --halo: rgba(230, 232, 236, 0.28); --cap-bg: rgba(230, 232, 236, 0.12); }
+	.light { --bg: #eef0ee; --border-strong: #c3c9bd; --text: #1b2024; --muted: #5a6570; --body: #2c343b; --halo: rgba(27, 32, 36, 0.22); --cap-bg: rgba(27, 32, 36, 0.1); }
+	body { margin: 0; padding: 24px; background: #1a1d24; color: #e6e8ec; font: 14px/1.5 'Inter', system-ui, 'Segoe UI', sans-serif; }
+	h2 { margin: 28px 0 4px; font: 600 18px 'Space Grotesk', system-ui, sans-serif; }
+	.why { margin: 0 0 12px; color: #9aa2af; max-width: 900px; }
+	.row { display: flex; flex-wrap: wrap; gap: 16px; }
+	.cap { margin: 0 0 6px; color: #9aa2af; font-size: 12px; }
+	.win { width: 340px; background: var(--bg); color: var(--text); padding: 22px 24px 20px; border: 1px solid #000; }
+	.ask { color: var(--muted); font-size: 13px; margin: 0; }
+	.win h1 { margin: 2px 0 12px; font: 600 26px/1.15 'Space Grotesk', system-ui, sans-serif; }
+	.win p.b { margin: 0; color: var(--body); font-size: 13px; }
+	footer { position: relative; display: flex; justify-content: space-between; margin-top: 18px; }
+	button { position: relative; z-index: 1; min-width: 96px; padding: 8px 18px; border-radius: 4px; border: 1px solid var(--border-strong); background: transparent; color: var(--text); font: 600 13px 'Inter', system-ui, sans-serif; outline: none; }
+	button.allow { background: var(--text); border-color: var(--text); color: var(--bg); }
+	.ind { position: absolute; pointer-events: none; transition: left 0.22s ease, width 0.22s ease, opacity 0.3s ease; opacity: 0; }
+	.ready .ind { opacity: 1; }
+	.key { display: none; }
+
+	/* D · a soft halo, no line — still: indistinguishable from the button's look when it never moves */
+	.vD .ind { display: none; }
+	.vD .f { box-shadow: 0 0 0 3px var(--halo); }
+	/* E · D's halo as one thing that travels: it fades in on opening and slides to the other answer */
+	.vE .ind { top: 0; bottom: 0; border-radius: 4px; box-shadow: 0 0 0 3px var(--halo); }
+	/* F · under the focused answer, the key that presses it: Enter */
+	.vF .ind { display: none; }
+	.vF .key, .vH .key { display: block; position: absolute; left: 0; right: 0; top: calc(100% + 6px); text-align: center; font: 500 11px 'Inter', system-ui, sans-serif; color: var(--muted); opacity: 0; transition: opacity 0.2s ease; }
+	.vF .f .key, .vH .f .key { opacity: 1; }
+	.vF .win, .vH .win { padding-bottom: 34px; }
+	/* G · a short bar under the focused answer, like a tab's marker, sliding between them */
+	.vG .ind { bottom: -7px; height: 2px; border-radius: 1px; background: var(--muted); }
+	/* H · E and F together: the halo travels, and the key under it says what it means */
+	.vH .ind { top: 0; bottom: 0; border-radius: 4px; box-shadow: 0 0 0 3px var(--halo); }
+	/* G on a dialog with a link-style answer — the one in the service dialogs' mock */
+	footer .left { display: flex; gap: 14px; align-items: center; }
+	button.link { border: 0; padding: 8px 0; min-width: 0; background: none; color: var(--muted); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+	.vG1 .ind, .vG2 .ind, .vG3 .ind { bottom: -7px; height: 2px; border-radius: 1px; background: var(--muted); }
+	/* G2 · on a link the marker IS its underline: it takes the text's colour and weight instead of a second line */
+	.vG2 .link.f { color: var(--text); text-decoration-thickness: 2px; }
+	.vG2.on-link .ind { opacity: 0; }
+	/* G3 · the bar sits lower, clear of any underline */
+	.vG3 .ind { bottom: -11px; }
+</style>
+</head>
+<body>
+<p class="why">Вікно «Відкрити стіл?». Фокус перескакує між відповідями сам кожні дві секунди — так видно, як рамка рухається; на кнопки можна й клікати. Перезавантажте сторінку, щоб побачити, як вікно відкривається (фокус на «Скасувати»).</p>
+<div id="variants"></div>
+<script>
+	const variants = [
+		['H', 'Сяйво, що рухається, і клавіша під ним', 'Вибрано. Сяйво з’являється при відкритті й перепливає на іншу відповідь; підпис під ним каже, що натисне Enter.'],
+	];
+	const keycap = '<span class="key">↵ Enter</span>';
+	const win = (theme) => `<div><p class="cap">${theme === 'dark' ? 'темна' : 'світла'}</p>
+		<div class="win ${theme}"><p class="ask">Відкрити стіл?</p><h1>П’ятничний стіл</h1>
+		<p class="b">Charnik вийде в мережу, щоб запрошені вами гравці могли під’єднатися до цього застосунку.</p>
+		<footer><span class="ind"></span><button class="deny f">Скасувати${keycap}</button><button class="allow">Відкрити стіл${keycap}</button></footer></div></div>`;
+	const health = (theme) => `<div><p class="cap">${theme === 'dark' ? 'темна' : 'світла'}</p>
+		<div class="win ${theme}" style="width:520px"><p class="ask">Дані контенту змінились поза Charnik</p><h1>3 файли</h1>
+		<p class="b">Їхній вміст більше не збігається з відбитком, який у них записано. Так робити можна, і нічого не втрачено.</p>
+		<footer><span class="ind"></span><span class="left"><button class="f">Пропустити поки що${keycap}</button><button class="link">Більше не питати${keycap}</button></span><button class="allow">Так, записати мої зміни${keycap}</button></footer></div></div>`;
+	const linkVariants = [
+		['H', 'H на посиланні', 'Сяйво навколо посилання і підпис клавіші під ним.'],
+	];
+	document.getElementById('variants').innerHTML = variants.map(([id, title, why]) =>
+		`<section class="v${id}"><h2>${id} · ${title}</h2><p class="why">${why}</p><div class="row">${win('dark')}${win('light')}</div></section>`).join('') +
+		'<h2 style="margin-top:44px">G на діалозі з кнопкою-посиланням</h2>' +
+		linkVariants.map(([id, title, why]) =>
+		`<section class="v${id}"><h2>${id} · ${title}</h2><p class="why">${why}</p><div class="row">${health('dark')}${health('light')}</div></section>`).join('');
+
+	const place = (footer) => {
+		const focused = footer.querySelector('.f');
+		const ind = footer.querySelector('.ind');
+		const at = focused.getBoundingClientRect(), box = footer.getBoundingClientRect();
+		// a link has no edge of its own, so a halo around it is given a little room
+		const room = focused.classList.contains('link') ? 6 : 0;
+		ind.style.left = at.left - box.left - room + 'px';
+		ind.style.width = at.width + 2 * room + 'px';
+		footer.closest('section').classList.toggle('on-link', focused.classList.contains('link'));
+	};
+	const focusOn = (footer, button) => {
+		footer.querySelectorAll('button').forEach((b) => b.classList.toggle('f', b === button));
+		place(footer);
+	};
+	const footers = [...document.querySelectorAll('footer')];
+	footers.forEach((footer) => {
+		place(footer);
+		footer.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => focusOn(footer, b)));
+	});
+	// the ring arrives a moment after the window does, so its arrival is seen
+	setTimeout(() => footers.forEach((f) => f.classList.add('ready')), 400);
+	// the focus walks the answers in order, as Tab would
+	setInterval(() => footers.forEach((f) => {
+		const all = [...f.querySelectorAll('button')];
+		focusOn(f, all[(all.findIndex((b) => b.classList.contains('f')) + 1) % all.length]);
+	}), 2000);
+</script>
+</body>
+</html>

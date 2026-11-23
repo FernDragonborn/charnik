@@ -1,0 +1,942 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>0 hit points — motion</title>
+		<link
+			rel="stylesheet"
+			href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap"
+		/>
+		<style>
+			/* Real token values from src/lib/styles/tokens.css (dark block). Motion lives on THIS face of
+			   the block and nowhere else on the sheet, and stands still under prefers-reduced-motion. */
+			:root {
+				--space-1: 0.25rem;
+				--space-1-5: 0.375rem;
+				--space-2: 0.5rem;
+				--space-2-5: 0.625rem;
+				--space-3: 0.75rem;
+				--space-4: 1rem;
+				--radius: 8px;
+				--radius-lg: 14px;
+				--radius-full: 999px;
+				--font-display: 'Space Grotesk', system-ui, sans-serif;
+				--font-body: 'Inter', system-ui, sans-serif;
+				--font-size-micro: 0.625rem;
+				--font-size-xs: 0.6875rem;
+				--font-size-body: 0.875rem;
+				--font-size-md: 1rem;
+				--tracking-label: 0.12em;
+				--color-bg: #0f1116;
+				--color-surface: #171a21;
+				--color-surface-2: #1f232c;
+				--color-border: #272c37;
+				--color-border-strong: #333a47;
+				--color-text: #e6e8ec;
+				--color-text-muted: #878f9d;
+				--color-accent: #cf2b40;
+				--color-accent-text: #ffffff;
+				--color-good: #3bb8a6;
+				--color-good-soft: #11302c;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				padding: 24px;
+				background: var(--color-bg);
+				color: var(--color-text);
+				font-family: var(--font-body);
+				font-size: var(--font-size-body);
+			}
+			h2 {
+				font-family: var(--font-display);
+				font-size: var(--font-size-md);
+				margin: 28px 0 2px;
+			}
+			h2:first-of-type {
+				margin-top: 0;
+			}
+			p.about {
+				margin: 0 0 10px;
+				max-width: 60rem;
+				color: var(--color-text-muted);
+				font-size: var(--font-size-xs);
+			}
+			.row {
+				display: grid;
+				grid-template-columns: repeat(3, 444px);
+				gap: 6px 16px;
+			}
+			.caption {
+				font-size: var(--font-size-xs);
+				color: var(--color-text-muted);
+				margin: 8px 0 4px;
+			}
+			svg {
+				flex: none;
+				display: block;
+			}
+
+			.field {
+				position: relative;
+				overflow: hidden;
+				height: 117px;
+				padding: var(--space-3) var(--space-4);
+				background: var(--color-surface);
+				border: 1px solid var(--color-accent);
+				border-radius: var(--radius-lg);
+			}
+			.line {
+				position: relative;
+				display: grid;
+				grid-template-columns: 32% 36% 32%;
+				align-items: center;
+				height: 100%;
+			}
+			.side {
+				display: grid;
+				grid-template-columns: repeat(3, 1fr);
+				justify-items: center;
+			}
+			.side.good {
+				--tone: var(--color-good);
+				--on: var(--color-bg);
+				--idle: 0.62;
+			}
+			.side.bad {
+				--tone: var(--color-accent);
+				--on: var(--color-accent-text);
+				--idle: 0.5;
+			}
+			.save {
+				padding: 0;
+				border: 0;
+				background: none;
+				cursor: pointer;
+				color: var(--tone);
+				opacity: var(--idle);
+				transition: color 0.35s, opacity 0.35s, transform 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
+			}
+			.save.earned {
+				color: var(--on);
+				opacity: 1;
+				transform: scale(1.08);
+			}
+			.middle {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: var(--space-1);
+			}
+			.eyebrow {
+				font-size: var(--font-size-micro);
+				letter-spacing: var(--tracking-label);
+				text-transform: uppercase;
+				color: var(--color-text-muted);
+				white-space: nowrap;
+			}
+			.roll {
+				display: inline-flex;
+				align-items: center;
+				gap: var(--space-1-5);
+				padding: var(--space-1-5) var(--space-2-5);
+				border-radius: var(--radius);
+				border: 1px solid var(--color-border-strong);
+				background: var(--color-surface);
+				font-family: var(--font-display);
+				font-weight: 600;
+				font-size: var(--font-size-xs);
+				white-space: nowrap;
+			}
+			.back {
+				display: inline-flex;
+				align-items: center;
+				gap: var(--space-1);
+				padding: var(--space-1) var(--space-2);
+				border-radius: var(--radius-full);
+				border: 1px solid var(--color-good);
+				background: var(--color-good-soft);
+				color: var(--color-good);
+				font-family: var(--font-display);
+				font-weight: 600;
+				font-size: var(--font-size-xs);
+				white-space: nowrap;
+			}
+
+			/* a side's ground: a third of its 32% per save, and it FLOWS to its new mark */
+			.ground {
+				position: absolute;
+				inset-block: 0;
+				--side: calc(var(--space-4) + (100% - 2 * var(--space-4)) * 0.32);
+				width: calc(var(--side) * var(--earned) / 3 + var(--reach) * min(1, var(--earned)));
+				transition: width 0.7s cubic-bezier(0.3, 1.35, 0.5, 1), visibility 0s;
+			}
+			/* a side with no saves has no ground — and it leaves only once it has drained */
+			.ground[data-earned='0'] {
+				visibility: hidden;
+				transition: width 0.7s cubic-bezier(0.3, 1.35, 0.5, 1), visibility 0s 0.7s;
+			}
+			.ground.good {
+				inset-inline-start: 0;
+				color: var(--color-good);
+			}
+			.ground.bad {
+				inset-inline-end: 0;
+				color: var(--color-accent);
+			}
+
+			/* ---- two failures: the block is lit, and the light DRIFTS — two glows trading places, so the
+			   whole shifts like something alive and its brightness never drops. It does not blink ---- */
+			.field.tense {
+				animation: glow-drift 5.5s ease-in-out infinite alternate;
+			}
+			@keyframes glow-drift {
+				from {
+					box-shadow:
+						-7px 0 26px color-mix(in srgb, var(--color-accent) 75%, transparent),
+						7px 0 22px color-mix(in srgb, var(--color-accent) 45%, transparent);
+				}
+				to {
+					box-shadow:
+						-7px 0 22px color-mix(in srgb, var(--color-accent) 45%, transparent),
+						7px 0 26px color-mix(in srgb, var(--color-accent) 75%, transparent);
+				}
+			}
+
+			/* ---- M1 · LIQUID: each side is a body of liquid. Its surface — the edge facing the other
+			   side — is a smooth swell that never lies still, and drops pull out of it and are drawn
+			   back: the body, the swell and the drops are fused by one filter, so where they meet they
+			   neck and merge the way a liquid does instead of overlapping like shapes ---- */
+			.liquid .ground {
+				--reach: 12px;
+			}
+			.liquid .body {
+				position: absolute;
+				inset: 0;
+				filter: url(#fuse);
+			}
+			.liquid .fill {
+				position: absolute;
+				inset: 0;
+				background: currentColor;
+			}
+			/* the swell: one period of a sine as a mask, sliding along the surface */
+			.liquid .swell {
+				position: absolute;
+				inset-block: 0;
+				width: 24px;
+				background: currentColor;
+				mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='80'%3E%3Cpath d='M0 0H12C22 13.3 22 26.7 12 40C2 53.3 2 66.7 12 80H0Z'/%3E%3C/svg%3E") 0 0 / 24px 80px repeat-y;
+				animation: swell 5s linear infinite;
+			}
+			.liquid .swell.second {
+				mask-size: 24px 124px;
+				animation: swell-second 7.5s linear infinite reverse;
+			}
+			.liquid .good .swell {
+				inset-inline-start: calc(100% - 12px);
+			}
+			.liquid .bad .swell {
+				inset-inline-end: calc(100% - 12px);
+				transform: scaleX(-1);
+			}
+			@keyframes swell {
+				to {
+					mask-position: 0 80px;
+				}
+			}
+			@keyframes swell-second {
+				to {
+					mask-position: 0 124px;
+				}
+			}
+			/* a drop: it leaves the surface, hangs by a neck, and is taken back */
+			.liquid .drop {
+				position: absolute;
+				top: var(--y);
+				width: var(--d);
+				height: var(--d);
+				margin-top: calc(var(--d) / -2);
+				border-radius: var(--radius-full);
+				background: currentColor;
+				animation: var(--pull) var(--t) ease-in-out var(--wait) infinite alternate;
+			}
+			.liquid .good .drop {
+				--pull: pull-right;
+				inset-inline-start: calc(100% - var(--d));
+			}
+			.liquid .bad .drop {
+				--pull: pull-left;
+				inset-inline-end: calc(100% - var(--d));
+			}
+			@keyframes pull-right {
+				to {
+					transform: translate(var(--far), var(--sway));
+				}
+			}
+			@keyframes pull-left {
+				to {
+					transform: translate(calc(-1 * var(--far)), var(--sway));
+				}
+			}
+			.bubbles {
+				position: absolute;
+				inset: 0;
+				overflow: hidden;
+				container-type: inline-size;
+			}
+			.bubbles i {
+				position: absolute;
+				top: var(--y);
+				width: var(--d);
+				height: var(--d);
+				border-radius: var(--radius-full);
+				background: color-mix(in srgb, currentColor, white 42%);
+				opacity: 0;
+				animation: var(--drift) var(--t) linear var(--wait) infinite;
+			}
+			.good .bubbles i {
+				--drift: rise-right;
+				inset-inline-start: calc(-1 * var(--d));
+			}
+			.bad .bubbles i {
+				--drift: rise-left;
+				inset-inline-end: calc(-1 * var(--d));
+			}
+			@keyframes rise-right {
+				12% {
+					opacity: 0.8;
+				}
+				82% {
+					opacity: 0.8;
+				}
+				100% {
+					opacity: 0;
+					transform: translate(calc(100cqw + var(--d)), var(--sway));
+				}
+			}
+			@keyframes rise-left {
+				12% {
+					opacity: 0.8;
+				}
+				82% {
+					opacity: 0.8;
+				}
+				100% {
+					opacity: 0;
+					transform: translate(calc(-100cqw - var(--d)), var(--sway));
+				}
+			}
+
+			/* ---- M2 · ARROWS: each side is a chevron driven at the other, and chevrons keep marching
+			   through it toward the middle — slowly: it is pressure, not speed ---- */
+			.arrows .ground {
+				--reach: 18px;
+				/* the point of the chevron stands in the gap between two glyphs — 3px past the line that
+				   divides their thirds — so the earned glyph is wholly on its ground and the next is untouched */
+				width: calc((var(--space-4) + 3px) * min(1, var(--earned)) + (100% - 2 * var(--space-4)) * 0.32 * var(--earned) / 3);
+				filter: drop-shadow(var(--edge) 0 0 var(--color-text));
+			}
+			.arrows .ground.good {
+				--edge: 2px;
+			}
+			.arrows .ground.bad {
+				--edge: -2px;
+			}
+			.arrows .ground b {
+				position: absolute;
+				inset: 0;
+				overflow: hidden;
+				background: currentColor;
+			}
+			.arrows .ground.good b {
+				clip-path: polygon(0 0, calc(100% - var(--reach)) 0, 100% 50%, calc(100% - var(--reach)) 100%, 0 100%);
+			}
+			.arrows .ground.bad b {
+				clip-path: polygon(var(--reach) 0, 100% 0, 100% 100%, var(--reach) 100%, 0 50%);
+			}
+			/* a marching chevron is two bands of stripes, one leaning each way, meeting on the midline */
+			.arrows .ground b::before,
+			.arrows .ground b::after {
+				content: '';
+				position: absolute;
+				inset-inline: -60px;
+				height: 50%;
+				--stripe: 26px;
+				/* how far a stripe set must travel sideways to land on itself */
+				--step: calc(var(--stripe) / 0.9063);
+				background-image: repeating-linear-gradient(var(--lean), transparent 0 17px, rgb(255 255 255 / 0.2) 17px var(--stripe));
+				animation: march 2.4s linear infinite;
+			}
+			.arrows .ground b::before {
+				top: 0;
+			}
+			.arrows .ground b::after {
+				bottom: 0;
+			}
+			/* a stripe runs square to its gradient's line: 65deg draws "\", 115deg draws "/" — and a
+			   chevron aimed at the middle is "\" over "/" on the left, "/" over "\" on the right */
+			.arrows .ground.good b::before,
+			.arrows .ground.bad b::after {
+				--lean: 65deg;
+			}
+			.arrows .ground.good b::after,
+			.arrows .ground.bad b::before {
+				--lean: 115deg;
+			}
+			.arrows .ground.good b::before,
+			.arrows .ground.good b::after {
+				--toward: var(--step);
+			}
+			.arrows .ground.bad b::before,
+			.arrows .ground.bad b::after {
+				--toward: calc(-1 * var(--step));
+			}
+			@keyframes march {
+				to {
+					transform: translateX(var(--toward));
+				}
+			}
+
+			/* ---- M3 · THE BAR AS A VESSEL: the app's own hit-point bar, grown to hold the fight, and
+			   what fills it is liquid — rescue from one end, death from the other ---- */
+			.field.bar .head {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				height: 1.625rem;
+			}
+			.capsule {
+				position: relative;
+				overflow: hidden;
+				height: 3.5625rem;
+				margin-top: var(--space-2);
+				border-radius: var(--radius-full);
+				border: 1px solid var(--color-border-strong);
+				background: var(--color-surface-2);
+				--inset: 1.125rem;
+			}
+			.bar .line {
+				padding-inline: var(--inset);
+			}
+			.bar .ground {
+				--side: calc(var(--inset) + (100% - 2 * var(--inset)) * 0.32);
+			}
+			.bar .save svg {
+				width: 1.5rem;
+				height: 1.5rem;
+			}
+			/* the pulse is the vessel's, not the whole block's */
+			.field.bar.tense {
+				animation: none;
+			}
+			.bar.tense .capsule {
+				border-color: var(--color-accent);
+				animation: glow-drift 5.5s ease-in-out infinite alternate;
+			}
+
+			/* ---- THE SLANTED FILL, MOVING. T2's flat ground with its one lean, and four ways the death side
+			   says "a little more and it has you". Everything that loops is transform or opacity, and all of
+			   it tightens with each failure; the rescue side is a quiet echo or stands still ---- */
+			.slant {
+				--reach: 16px;
+			}
+			.slant .slab {
+				position: absolute;
+				inset-block: 0;
+				background: currentColor;
+				overflow: hidden;
+			}
+			.slant .good .slab {
+				inset-inline: -14px 0;
+				clip-path: polygon(0 0, 100% 0, calc(100% - var(--reach)) 100%, 0 100%);
+			}
+			.slant .bad .slab {
+				inset-inline: 0 -14px;
+				clip-path: polygon(var(--reach) 0, 100% 0, 100% 100%, 0 100%);
+			}
+			.slant .bad[data-earned='1'] {
+				--level: 1;
+			}
+			.slant .bad[data-earned='2'],
+			.slant .bad[data-earned='3'] {
+				--level: 2;
+			}
+
+			/* M4 · PRESSURE: the front leans in slowly, slips back fast and leans in again, further each
+			   failure; ahead of it a shadow reaches across the empty middle and breathes */
+			.press .bad .slab {
+				animation: press-in calc(6.2s - var(--level) * 1.7s) infinite;
+			}
+			@keyframes press-in {
+				0% {
+					transform: translateX(0);
+					animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+				}
+				82% {
+					transform: translateX(calc(var(--level) * -5px));
+					animation-timing-function: cubic-bezier(0.5, 0, 0.2, 1);
+				}
+				100% {
+					transform: translateX(0);
+				}
+			}
+			.press .bad .shade {
+				position: absolute;
+				inset-block: 0;
+				--far: calc(var(--level) * 70px);
+				inset-inline: calc(-1 * var(--far)) 0;
+				background: linear-gradient(to left, color-mix(in srgb, currentColor 50%, transparent) calc(100% - var(--far)), transparent);
+				animation: shade-breathe calc(6.2s - var(--level) * 1.7s) ease-in-out infinite alternate;
+			}
+			@keyframes shade-breathe {
+				from {
+					opacity: 0.3;
+				}
+				to {
+					opacity: 0.85;
+				}
+			}
+
+			/* M5 · WAVES: the front's own edge peels off it and travels toward the middle, fading; one
+			   failure sends them slowly, two send them close together and further */
+			.waves .wave {
+				position: absolute;
+				inset-block: 0;
+				inset-inline-start: 0;
+				width: calc(var(--reach) + 2px + var(--level) * 2px);
+				background: currentColor;
+				clip-path: polygon(var(--reach) 0, 100% 0, calc(100% - var(--reach)) 100%, 0 100%);
+				opacity: 0;
+				--pace: calc(5.4s - var(--level) * 1.8s);
+				--to: calc(var(--level) * -60px);
+				animation: wave-out var(--pace) cubic-bezier(0.2, 0.6, 0.4, 1) calc(var(--pace) * var(--turn) / -3) infinite;
+			}
+			@keyframes wave-out {
+				0% {
+					transform: translateX(0);
+					opacity: 0.75;
+				}
+				100% {
+					transform: translateX(var(--to));
+					opacity: 0;
+				}
+			}
+
+			/* M6 · BURNING EDGE: the front is a blade of light that wavers and never goes out — two layers
+			   on paces that do not divide each other — and sparks leave it for the middle */
+			.burn .edge {
+				position: absolute;
+				inset-block: 0;
+				inset-inline-start: 0;
+				width: calc(var(--reach) + 2px + var(--level) * 2px);
+				background: color-mix(in srgb, currentColor 35%, white);
+				clip-path: polygon(var(--reach) 0, 100% 0, calc(100% - var(--reach)) 100%, 0 100%);
+				animation: waver 1.3s ease-in-out infinite alternate;
+			}
+			.burn .edge.second {
+				transform: translateX(-3px);
+				animation-duration: 2.1s;
+			}
+			@keyframes waver {
+				from {
+					opacity: 0.25;
+				}
+				to {
+					opacity: 1;
+				}
+			}
+			.burn .spark,
+			.omen .spark {
+				position: absolute;
+				top: var(--y);
+				inset-inline-start: calc(var(--reach) * (1 - var(--yf)));
+				width: var(--d);
+				height: var(--d);
+				background: color-mix(in srgb, currentColor 45%, white);
+				opacity: 0;
+				animation: spark-out calc(var(--t) / var(--level)) ease-out var(--wait) infinite;
+			}
+			@keyframes spark-out {
+				0% {
+					transform: translate(0, 0) rotate(45deg);
+					opacity: 1;
+				}
+				100% {
+					transform: translate(calc(var(--level) * var(--far)), var(--rise)) rotate(225deg);
+					opacity: 0;
+				}
+			}
+
+			/* M7 · HATCH: stripes cut at the front's own lean march through the ground toward the middle */
+			.hatch .slab::after {
+				content: '';
+				position: absolute;
+				inset-block: 0;
+				inset-inline: -40px;
+				background: repeating-linear-gradient(97.8deg, transparent 0 9px, rgb(0 0 0 / 0.28) 9px 16px);
+				animation: hatch-march calc(3.6s - var(--level, 1) * 1.1s) linear infinite;
+			}
+			.hatch .good .slab::after {
+				animation-direction: reverse;
+				animation-duration: 3.6s;
+				opacity: 0.6;
+			}
+			@keyframes hatch-march {
+				to {
+					transform: translateX(-16.15px);
+				}
+			}
+
+			/* M8 · RAYS AND HELLFIRE: each side moves as what it is. Rescue is light falling from above —
+			   shafts breaking through cloud, each coming and going on its own pace — and it spills a little
+			   past its front. Death is a dark ground on fire: tongues rise from its floor, taller with each
+			   failure, and embers climb out of it */
+			/* each side's scene is laid out ONCE, in pixels from the block's own edge and as wide as the
+			   block can get; the ground is a window onto it. A wider ground uncovers more shafts and more
+			   flames — nothing in it stretches or moves when a save is given */
+			.omen .scene {
+				position: absolute;
+				inset-block: 0;
+				width: 720px;
+			}
+			.omen .good .scene {
+				inset-inline-start: 14px;
+			}
+			.omen .bad .scene {
+				inset-inline-end: 14px;
+			}
+			.omen .cloudbreak {
+				position: absolute;
+				inset: 0;
+				background:
+					radial-gradient(ellipse 170px 64px at 90px 0, rgb(255 255 255 / 0.5), transparent),
+					radial-gradient(ellipse 150px 54px at 330px 0, rgb(255 255 255 / 0.42), transparent),
+					radial-gradient(ellipse 180px 60px at 580px 0, rgb(255 255 255 / 0.5), transparent);
+				animation: shade-breathe 7s ease-in-out infinite alternate;
+			}
+			/* a shaft: soft at both edges, bright where it leaves the cloud and gone before the floor. It
+			   comes, thins, comes again and goes, each on its own long pace, drifting as the cloud does */
+			.omen .shaft {
+				position: absolute;
+				top: -12%;
+				inset-inline-start: var(--x);
+				width: var(--w);
+				height: 150%;
+				background: linear-gradient(to right, transparent, rgb(255 255 255 / 0.75) 45%, rgb(255 255 255 / 0.75) 55%, transparent);
+				mask-image: linear-gradient(to bottom, black 15%, transparent 92%);
+				rotate: var(--lean);
+				transform-origin: 50% 0;
+				opacity: 0;
+				animation: shaft-break var(--t) ease-in-out var(--wait) infinite;
+			}
+			@keyframes shaft-break {
+				0% {
+					transform: translateX(-7px);
+					opacity: 0;
+				}
+				28% {
+					opacity: var(--peak);
+				}
+				52% {
+					opacity: calc(var(--peak) * 0.4);
+				}
+				72% {
+					opacity: var(--peak);
+				}
+				100% {
+					transform: translateX(9px);
+					opacity: 0;
+				}
+			}
+			.omen .glory {
+				position: absolute;
+				inset-block: 0;
+				inset-inline: 0 -70px;
+				background: linear-gradient(to right, color-mix(in srgb, currentColor 45%, transparent) calc(100% - 70px), transparent);
+				animation: shade-breathe 4.6s ease-in-out infinite alternate;
+			}
+			.omen .bad .slab {
+				background: color-mix(in srgb, currentColor 42%, black);
+			}
+			.omen .flame {
+				position: absolute;
+				bottom: -6px;
+				inset-inline-end: var(--x);
+				width: var(--w);
+				height: calc(var(--h) * (0.35 + var(--level) * 0.325));
+				background: currentColor;
+				clip-path: polygon(50% 0, 60% 20%, 78% 42%, 92% 68%, 100% 100%, 0 100%, 6% 70%, 20% 46%, 30% 30%, 40% 18%);
+				transform-origin: 50% 100%;
+				animation: flame-lick var(--t) ease-in-out var(--wait) infinite alternate;
+			}
+			.omen .flame.core {
+				background: color-mix(in srgb, currentColor 72%, white);
+			}
+			@keyframes flame-lick {
+				0% {
+					transform: scaleY(0.62) skewX(-5deg);
+					opacity: 0.75;
+				}
+				35% {
+					transform: scaleY(1) skewX(6deg);
+					opacity: 1;
+				}
+				65% {
+					transform: scaleY(0.78) skewX(-7deg);
+				}
+				100% {
+					transform: scaleY(0.94) skewX(4deg);
+					opacity: 0.9;
+				}
+			}
+			.omen .ember {
+				position: absolute;
+				bottom: 0;
+				inset-inline-end: var(--x);
+				width: var(--d);
+				height: var(--d);
+				border-radius: 50%;
+				background: color-mix(in srgb, currentColor 40%, white);
+				opacity: 0;
+				animation: ember-rise calc(var(--t) / var(--level)) ease-out var(--wait) infinite;
+			}
+			@keyframes ember-rise {
+				0% {
+					transform: translate(0, 0);
+					opacity: 1;
+				}
+				100% {
+					transform: translate(var(--sway), -105px);
+					opacity: 0;
+				}
+			}
+
+			/* ---- THE THIRD SAVE ends it, and the end is one face whatever motion led to it: the side that
+			   won takes the whole block, still moving as itself, and the block says what happened. Death
+			   then goes black under a white word; rescue keeps its ground. The way back up stays ---- */
+			.ground[data-earned='3'] {
+				z-index: 1;
+				width: calc(100% + var(--reach, 16px) + 48px);
+				transition-duration: 0.9s;
+			}
+			.line {
+				transition: opacity 0.35s;
+			}
+			.over .line {
+				opacity: 0;
+				pointer-events: none;
+			}
+			.verdict {
+				position: absolute;
+				inset: 0;
+				z-index: 2;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: var(--space-1-5);
+				padding: 0;
+				border: 0;
+				background-color: transparent;
+				font: inherit;
+				cursor: pointer;
+				opacity: 0;
+				pointer-events: none;
+				transition: opacity 0.3s;
+			}
+			.bar .verdict {
+				flex-direction: row;
+			}
+			.over .verdict {
+				opacity: 1;
+				pointer-events: auto;
+				transition: opacity 0.7s 0.6s;
+			}
+			.verdict b {
+				font-family: var(--font-display);
+				font-weight: 800;
+				font-size: 1.75rem;
+				line-height: 1;
+				letter-spacing: 0.06em;
+				text-transform: uppercase;
+			}
+			.stable .verdict {
+				color: var(--color-bg);
+			}
+			.dead .verdict {
+				background-color: black;
+				color: white;
+			}
+			.field.stable {
+				border-color: var(--color-good);
+			}
+			.field.dead {
+				border-color: var(--color-border-strong);
+				transition: border-color 0.7s 0.6s;
+			}
+
+			@media (prefers-reduced-motion: reduce) {
+				.field,
+				.field * ,
+				.field *::before,
+				.field *::after {
+					animation: none !important;
+					transition: none !important;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+			<filter id="fuse" x="-60%" y="-10%" width="220%" height="120%" color-interpolation-filters="sRGB">
+				<feGaussianBlur in="SourceGraphic" stdDeviation="5" />
+				<feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9" />
+			</filter>
+		</svg>
+		<h2>M1 · liquid</h2>
+		<p class="about">Each side is a body of liquid whose surface faces the other side and never lies still; drops pull out of it and are drawn back, and bubbles rise through it toward that surface. Press a wing or a skull to give or take a save — the liquid flows to its new mark. At two failures the block is lit, and the light drifts without ever dimming.</p>
+		<div class="row" data-motion="liquid"></div>
+		<h2>M2 · arrows</h2>
+		<p class="about">Each side is a chevron driven at the other, and chevrons keep marching through it toward the middle. Slowly: it is pressure, not speed. The same presses, the same light.</p>
+		<div class="row" data-motion="arrows"></div>
+		<h2>M3 · the bar as a vessel</h2>
+		<p class="about">The app’s own hit-point bar, grown to hold the fight, with the header the block always has. What fills it is the same liquid: lapping surfaces, bubbles toward the middle, and at two failures the vessel itself carries the drifting light.</p>
+		<div class="row" data-motion="bar"></div>
+		<h2>M4 · pressure</h2>
+		<p class="about">The slanted fill of T2. The death side leans in slowly, slips back and leans in again, and a shadow reaches ahead of it across the middle. Each failure makes it lean further and sooner. Press the skulls: none, one, two.</p>
+		<div class="row" data-motion="press"></div>
+		<h2>M5 · waves</h2>
+		<p class="about">The front’s own edge peels off and travels toward the middle, fading. One failure sends them slowly; two send them close together and further.</p>
+		<div class="row" data-motion="waves"></div>
+		<h2>M6 · burning edge</h2>
+		<p class="about">The front is a blade of light that wavers and never goes out, and sparks leave it for the middle.</p>
+		<div class="row" data-motion="burn"></div>
+		<h2>M7 · hatch</h2>
+		<p class="about">Stripes cut at the front’s own lean march through both grounds toward the middle; the death side’s quicken with each failure.</p>
+		<div class="row" data-motion="hatch"></div>
+		<h2>M8 · rays and hellfire</h2>
+		<p class="about">Each side moves as what it is. Rescue is light breaking through cloud: soft shafts that come, thin and go, each on its own pace, spilling a little past the front. Death is a dark ground on fire: tongues rise from its floor, taller with each failure, embers climb out of it, and sparks leave its front for the middle.</p>
+		<div class="row" data-motion="omen"></div>
+		<script>
+			const SKULL = ["m12.5 17-.5-1-.5 1h1z","M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z","M14 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0","M8 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0"];
+			const DICE = ["M9 2.5 L15.5 6 L15.5 13 L9 16.5 L2.5 13 L2.5 6 Z","M9 6 L12.2 11 L5.8 11 Z","M17.5 11 L23 21 L12 21 Z"];
+			const COPY = {"en":{"hitPoints":"Hit points","tempHp":"Temp HP","heal":"Heal","deathSave":"Death save","dead":"Dead","stable":"Stabilized"},"uk":{"hitPoints":"Очки здоров’я","tempHp":"Тимч. ОЗ","heal":"Зцілити","deathSave":"Кидок від смерті","dead":"Смерть","stable":"Стабілізовано"}};
+			const WING_PAIR = ['M12 12.5C9.4 8.6 5.6 6.9 1.8 7c.2 2.9 1.6 4.9 3.6 6-.4 1.3.3 2.6 1.6 3.3.9 1.6 2.9 2.4 5 4.2',
+				'M12 12.5c2.6-3.9 6.4-5.6 10.2-5.5-.2 2.9-1.6 4.9-3.6 6 .4 1.3-.3 2.6-1.6 3.3-.9 1.6-2.9 2.4-5 4.2', 'M12 12.5v8'];
+			const WINGS = ['M7.4 4a4.6 2.3 0 1 0 9.2 0a4.6 2.3 0 1 0-9.2 0', ...WING_PAIR];
+			const PLUS = ['M5 12h14', 'M12 5v14'];
+			const svg = (paths, size, width = 2) =>
+				'<svg viewBox="0 0 24 24" width="' + size + '" height="' + size + '" fill="none" stroke="currentColor" stroke-width="' + width + '" stroke-linecap="round" stroke-linejoin="round">' +
+				paths.map((d) => '<path d="' + d + '"/>').join('') + '</svg>';
+			// a handful of bubbles, each with its own height, size, pace and wait, so they never fall into step
+			const BUBBLES = [[18, 5, 3.4, 0, -6], [44, 8, 4.6, 1.1, 5], [70, 4, 2.9, 0.5, -3], [30, 6, 5.2, 2.3, 7], [84, 7, 3.9, 1.7, -5], [58, 4, 3.1, 2.9, 4]];
+			const bubbles = '<span class="bubbles">' + BUBBLES.map(([y, d, t, wait, sway]) =>
+				'<i style="--y:' + y + '%;--d:' + d + 'px;--t:' + t + 's;--wait:' + wait + 's;--sway:' + sway + 'px"></i>').join('') + '</span>';
+			// drops along the surface, each with its own height, size, reach, pace and wait
+			const DROPS = [[22, 20, 15, 3.1, 0, -4], [52, 26, 19, 4.3, 0.8, 5], [80, 18, 13, 2.7, 1.5, -3], [38, 14, 21, 3.7, 2.1, 4]];
+			const body = '<span class="body"><span class="fill"></span><span class="swell"></span><span class="swell second"></span>' + DROPS.map(([y, d, far, t, wait, sway]) =>
+				'<span class="drop" style="--y:' + y + '%;--d:' + d + 'px;--far:' + far + 'px;--t:' + t + 's;--wait:-' + wait + 's;--sway:' + sway + 'px"></span>').join('') + '</span>';
+			// the slanted fill: what moves on the death side, per motion; the rescue side is the slab alone
+			const SPARKS = [[12, 3, 34, 1.9, 0, -8], [34, 4, 52, 2.6, 0.7, 6], [55, 3, 40, 2.2, 1.3, -5], [72, 4, 58, 3.1, 0.3, 9], [90, 3, 36, 2.4, 1.9, -7]];
+			const sparks = SPARKS.map(([y, d, far, t, wait, rise]) =>
+				'<span class="spark" style="--y:' + y + '%;--yf:' + y / 100 + ';--d:' + d + 'px;--far:-' + far + 'px;--t:' + t + 's;--wait:-' + wait + 's;--rise:' + rise + 'px"></span>').join('');
+			const SLANTED = {
+				press: '<span class="shade"></span>',
+				waves: [0, 1, 2].map((turn) => '<span class="wave" style="--turn:' + turn + '"></span>').join(''),
+				burn: '<span class="edge"></span><span class="edge second"></span>' + sparks,
+				hatch: '',
+			};
+			// [x%, width px, height %, pace s, wait s]; a core is the same tongue, smaller and lighter, inside it
+			// a scene is drawn across the widest block; each property cycles on a length of its own, so no
+			// two neighbours match and the row never reads as a pattern
+			const cycle = (values, index) => values[index % values.length];
+			const flame = (cls, x, w, h, t, wait) => '<span class="flame' + cls + '" style="--x:' + x + 'px;--w:' + w + 'px;--h:' + h + '%;--t:' + t + 's;--wait:-' + wait + 's"></span>';
+			const flames = Array.from({ length: 20 }, (unused, index) => {
+				const [x, w, h] = [index * 36 - 12 + cycle([0, 7, -5, 4, -8], index), cycle([34, 30, 36, 32, 38, 30], index), cycle([78, 96, 70, 100, 82, 64, 90], index)];
+				const [t, wait] = [cycle([1.3, 1.7, 1.1, 1.5, 1.9], index), cycle([0, 0.4, 0.9, 0.2, 0.7, 1.1, 0.5], index)];
+				return flame('', x, w, h, t, wait) + flame(' core', x + w * 0.25, w * 0.5, h * 0.6, t * 0.8, wait);
+			}).join('');
+			const embers = Array.from({ length: 12 }, (unused, index) =>
+				'<span class="ember" style="--x:' + (index * 58 + cycle([10, 32, 4, 44, 20], index)) + 'px;--d:' + cycle([3, 2, 3, 2, 3], index) + 'px;--t:' + cycle([2.6, 3.4, 2.9, 3.8, 3.1, 2.3], index) +
+				's;--wait:-' + cycle([0, 1.2, 0.6, 2, 1.6, 0.3, 2.4], index) + 's;--sway:' + cycle([8, -6, 5, -9, 6], index) + 'px"></span>').join('');
+			const shafts = Array.from({ length: 16 }, (unused, index) =>
+				'<span class="shaft" style="--x:' + (index * 46 - 24 + cycle([0, 12, -8, 6], index)) + 'px;--w:' + cycle([26, 12, 34, 16, 28, 12], index) + 'px;--lean:' + cycle([-22, -19, -17, -20, -15], index) +
+				'deg;--t:' + cycle([9, 13, 11, 8, 12, 10], index) + 's;--wait:-' + cycle([0, 4, 7.5, 2.5, 9, 5.5, 1.5], index) + 's;--peak:' + cycle([0.8, 0.55, 0.7, 0.6, 0.75], index) + '"></span>').join('');
+			// a motion that dresses both sides writes each side whole, slab included
+			const DRESSED = {
+				omen: {
+					good: '<span class="glory"></span><span class="slab"><span class="scene"><span class="cloudbreak"></span>' + shafts + '</span></span>',
+					bad: '<span class="slab"><span class="scene">' + flames + embers + '</span></span>' + sparks,
+				},
+			};
+			const ground = (motion, tone, earned) => '<i class="ground ' + tone + '" style="--earned:' + earned + '">' +
+				(motion in DRESSED ? DRESSED[motion][tone] : motion in SLANTED ? (tone === 'bad' ? SLANTED[motion] : '') + '<span class="slab"></span>' : motion === 'arrows' ? '<b></b>' : body + bubbles) + '</i>';
+			const side = (tone, paths, earned, inward) => {
+				const saves = [0, 1, 2].map((index) => '<button class="save' + (index < earned ? ' earned' : '') + '" data-side="' + tone + '" data-index="' + index + '">' + svg(paths, 28) + '</button>');
+				return '<div class="side ' + tone + '">' + (inward ? saves : saves.reverse()).join('') + '</div>';
+			};
+			const draw = (panel) => {
+				const { motion, locale } = panel.dataset;
+				const state = panel.state;
+				const L = COPY[locale];
+				const vessel = motion === 'bar';
+				// the third save of either kind ends it; until then two failures light the block
+				const over = state.bad === 3 ? 'dead' : state.good === 3 ? 'stable' : '';
+				panel.className = 'field ' + (vessel ? 'bar liquid' : motion in SLANTED || motion in DRESSED ? 'slant ' + motion : motion) + (over ? ' over ' + over : state.bad === 2 ? ' tense' : '');
+				// the grounds are kept between presses so their width can flow instead of jump
+				if (!panel.querySelector('.ground')) {
+					const fight = ground(motion, 'good', 0) + ground(motion, 'bad', 0) + '<div class="line"></div><button class="verdict"></button>';
+					panel.innerHTML = vessel ? '<div class="head"></div><div class="capsule">' + fight + '</div>' : fight;
+				}
+				for (const [tone, earned] of [['good', state.good], ['bad', state.bad]]) {
+					const side = panel.querySelector('.ground.' + tone);
+					side.style.setProperty('--earned', earned);
+					side.dataset.earned = earned;
+				}
+				const eyebrow = '<span class="eyebrow">' + L.hitPoints + ' 0 / 73</span>';
+				const roll = '<span class="roll">' + svg(DICE, 18, 1.4) + L.deathSave + '</span>';
+				const back = '<span class="back">' + svg(PLUS, 13) + L.heal + ' · ' + L.tempHp + '</span>';
+				if (vessel) panel.querySelector('.head').innerHTML = eyebrow + back;
+				// the word stays while the face fades out, so only a new verdict rewrites it
+				if (over) panel.querySelector('.verdict').innerHTML = '<b>' + L[over] + '</b>' + (vessel ? '' : back);
+				panel.querySelector('.line').innerHTML = side('good', WINGS, state.good, true) +
+					(vessel ? '<div class="middle">' + roll + '</div>' : '<div class="middle">' + eyebrow + roll + back + '</div>') + side('bad', SKULL, state.bad, false);
+			};
+			const STATES = [
+				['one success — press the glyphs', 'en', 1, 0],
+				['two failures: one roll from death', 'en', 0, 2],
+				['two and two, Ukrainian', 'uk', 2, 2],
+			];
+			for (const row of document.querySelectorAll('.row')) {
+				for (const [caption, locale, good, bad] of STATES) {
+					const cell = document.createElement('div');
+					cell.innerHTML = '<p class="caption">' + caption + '</p><div data-motion="' + row.dataset.motion + '" data-locale="' + locale + '"></div>';
+					const panel = cell.lastElementChild;
+					panel.state = { good, bad };
+					row.append(cell);
+					draw(panel);
+				}
+			}
+			// pressing the last earned save takes it back; pressing any other sets the count to it
+			document.addEventListener('click', (event) => {
+				// pressing the verdict takes the third save back
+				const verdict = event.target.closest('.verdict');
+				if (verdict) {
+					const ended = verdict.closest('.field');
+					ended.state[ended.state.bad === 3 ? 'bad' : 'good'] = 2;
+					draw(ended);
+					return;
+				}
+				const save = event.target.closest('.save');
+				if (!save) return;
+				const panel = save.closest('.field');
+				const count = Number(save.dataset.index) + 1;
+				panel.state[save.dataset.side] = panel.state[save.dataset.side] === count ? count - 1 : count;
+				draw(panel);
+			});
+		</script>
+	</body>
+</html>

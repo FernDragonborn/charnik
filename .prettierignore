@@ -10,3 +10,5 @@ docs
 срншоти для 1го рандун правок
 # local Claude Code tooling config (not project source)
 .claude
+# design mocks, drawn by hand and pasted renders
+design-preview

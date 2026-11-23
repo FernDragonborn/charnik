@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<title>Service dialogs, GM requests</title>
+<style>
+	:root {
+		--bg: #0f1116; --surface: #171a21; --surface-2: #1d212a; --border: #272c37; --border-strong: #333a47;
+		--text: #e6e8ec; --muted: #878f9d; --body-text: #c7cbd2; --accent: #cf2b40; --accent-deep: #b3243a;
+		--accent-soft: #241317; --danger-text: #ff6b7d; --gold: #e0a339;
+		--display: 'Space Grotesk', system-ui, 'Segoe UI', sans-serif;
+		--body: 'Inter', system-ui, 'Segoe UI', sans-serif;
+		--mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+	}
+	* { box-sizing: border-box; }
+	body { margin: 0; padding: 32px; background: #0a0c10; color: var(--text); font: 14px/1.5 var(--body); }
+	h2.variant { font: 600 22px var(--display); margin: 0 0 4px; }
+	p.why { color: var(--muted); margin: 0 0 20px; max-width: 980px; }
+	section.v { margin-bottom: 48px; }
+	.row { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; }
+	.cap { color: var(--muted); font-size: 12px; margin: 0 0 6px; }
+	button { padding: 8px 18px; border-radius: 4px; border: 1px solid var(--border-strong); background: transparent; color: var(--text); font: 600 13px var(--body); white-space: nowrap; }
+	button.yes { background: var(--text); color: var(--bg); border-color: var(--text); }
+	button.link { border: 0; padding: 8px 0; color: var(--muted); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+	button.small { padding: 5px 12px; font-size: 12px; }
+
+	/* ---- service dialogs, C1 ---- */
+	.dlg { width: 600px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 8px; position: relative; padding: 22px 24px 20px; }
+	.dlg .lang { position: absolute; top: 14px; right: 14px; font: 600 11px var(--body); color: #4fb7a5; border: 1px solid #2f6b61; border-radius: 4px; padding: 2px 6px; }
+	.ask { margin: 0; color: var(--muted); font-size: 13px; }
+	.fact { margin: 2px 0 12px; font: 600 26px/1.15 var(--display); }
+	.dlg p { margin: 0 0 10px; color: var(--body-text); }
+	.files { margin: 4px 0 12px; border-top: 1px solid var(--border); }
+	.files div { display: grid; grid-template-columns: 1fr auto auto; gap: 18px; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--border); }
+	.files code { font: 13px var(--mono); color: var(--text); }
+	.files span { color: var(--muted); font-size: 12px; white-space: nowrap; }
+	.files b { color: var(--text); font-weight: 600; }
+	footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 16px; }
+	footer .left, footer .right { display: flex; gap: 14px; align-items: center; }
+
+	/* ---- the play row: pass time + playbar, as on the play screen ---- */
+	.play { width: 1040px; }
+	.play-row { display: grid; grid-template-columns: 1fr 310px; gap: 12px; }
+	.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+	.pass { display: flex; align-items: center; gap: 10px; padding: 0 16px; height: 56px; }
+	.pass .eb { font: 600 10px var(--body); letter-spacing: .1em; color: var(--muted); }
+	.pass .pill { font: 600 11px var(--body); padding: 4px 10px; border-radius: 999px; background: var(--surface-2); color: var(--body-text); }
+	.bar { display: flex; align-items: stretch; height: 56px; overflow: hidden; }
+	.bar .last { flex: 1; display: flex; align-items: center; padding: 0 14px; color: var(--muted); font-size: 12px; }
+	.bar .cue { display: flex; align-items: center; gap: 6px; padding: 0 14px; border-left: 1px solid var(--border); color: var(--muted); font-size: 12px; position: relative; }
+	.below { margin-top: 18px; color: var(--muted); font: 600 10px var(--body); letter-spacing: .1em; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+
+	/* the request, shared */
+	.req-who { color: var(--muted); font-size: 12px; }
+	.req-what { font: 600 16px/1.2 var(--display); color: var(--text); }
+	.req-dc { font: 600 12px var(--body); color: var(--gold); margin-left: 6px; }
+
+	/* attention: three slow breaths of the accent, then it holds still */
+	@keyframes breathe { 0%, 100% { box-shadow: 0 0 0 0 #cf2b4000; border-color: var(--accent-deep); } 50% { box-shadow: 0 0 0 6px #cf2b4033; border-color: var(--accent); } }
+	@keyframes arrive { from { transform: translateY(-6px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+	/* R1 · the playbar's own slot becomes the request */
+	.r1 .bar { border-color: var(--accent-deep); background: var(--accent-soft); animation: breathe 1.6s ease-in-out 3; }
+	.r1 .bar .last { flex-direction: column; align-items: flex-start; justify-content: center; gap: 0; }
+	.r1 .bar .act { display: flex; align-items: center; gap: 6px; padding: 0 10px; border-left: 1px solid #3a1c22; }
+
+	/* R2 · a line of its own under the row, the whole width */
+	.r2-gone .reqline { display: flex; align-items: center; gap: 16px; margin-top: 10px; padding: 10px 16px; background: var(--accent-soft); border: 1px solid var(--accent-deep); border-radius: 8px; animation: arrive .25s ease-out, breathe 1.6s ease-in-out .25s 3; }
+	.r2-gone .reqline .txt { flex: 1; display: flex; align-items: baseline; gap: 10px; }
+	.r2-gone .reqline .acts { display: flex; gap: 8px; }
+
+	/* R3 · only the log cue speaks; the request is the top of the log */
+	.r3 .cue { color: var(--text) !important; background: var(--accent-soft); }
+	.r3 .cue .dot { position: absolute; top: 12px; right: 10px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: breathe 1.6s ease-in-out infinite; }
+	.r3 .last { color: var(--text) !important; }
+	.r3 .menu { position: absolute; right: 0; top: 64px; width: 360px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 8px; padding: 12px; box-shadow: 0 10px 30px #0009; }
+	.r3 .menu .top { padding: 10px 12px; border: 1px solid var(--accent-deep); background: var(--accent-soft); border-radius: 6px; }
+	.r3 .menu .top .acts { display: flex; gap: 8px; margin-top: 8px; }
+	.r3 .menu .past { padding: 8px 12px; color: var(--muted); font-size: 12px; border-bottom: 1px solid var(--border); }
+	.r3 .wrap { position: relative; }
+
+	/* H1 · R1's slot with the log kept: the fast answer in the row, the rest in the log */
+	.h1 .bar { border-color: var(--accent-deep); background: var(--accent-soft); animation: breathe 1.6s ease-in-out 3; }
+	.h1 .bar .last { white-space: nowrap; min-width: 0; flex-direction: column; align-items: flex-start; justify-content: center; cursor: pointer; }
+	.h1 .bar .act { display: flex; align-items: center; padding: 0 8px; border-left: 1px solid #3a1c22; }
+	.h1 .bar .cue { border-left-color: #3a1c22; color: var(--text); }
+	/* H2 · the playbar widens while a request waits, so both answers and the log fit */
+	.h2 .play-row { grid-template-columns: 1fr 500px; }
+	.h2 .bar { border-color: var(--accent-deep); background: var(--accent-soft); animation: breathe 1.6s ease-in-out 3; }
+	.h2 .bar .last { flex-direction: column; align-items: flex-start; justify-content: center; }
+	.h2 .bar .act { display: flex; align-items: center; gap: 6px; padding: 0 10px; border-left: 1px solid #3a1c22; }
+	.h2 .bar .cue { border-left-color: #3a1c22; color: var(--text); }
+	.h2 .pass .pill:nth-of-type(n+4) { display: none; }
+</style>
+</head>
+<body>
+
+<section class="v">
+	<h2 class="variant">Службові діалоги · C1, без прапорця</h2>
+	<p class="why">Дрібно вгорі — що сталося, великим — про що саме, далі пояснення й деталі. Прапорця, смуги збоку й бейджа немає. «Ні» та «більше не питати» зліва, головна дія справа.</p>
+	<div class="row">
+		<div>
+			<p class="cap">Здоров'я контенту · файли змінили поза Charnik</p>
+			<div class="dlg"><span class="lang">UK</span>
+				<p class="ask">Дані контенту змінились поза Charnik</p>
+				<p class="fact">3 файли</p>
+				<p>Їхній вміст більше не збігається з відбитком, який у них записано. Так робити можна, і нічого не втрачено; ми лише хочемо впевнитись, що зміни ваші.</p>
+				<div class="files">
+					<div><code>homebrew/items.csv</code><span>у шапці <b>12 лист.</b></span><span>змінено <b>22 лист.</b></span></div>
+					<div><code>homebrew/spells.csv</code><span>у шапці <b>3 жовт.</b></span><span>змінено <b>21 лист.</b></span></div>
+					<div><code>homebrew/feats.csv</code><span>у шапці <b>невідомо</b></span><span>змінено <b>20 лист.</b></span></div>
+				</div>
+				<footer><span class="left"><button>Пропустити поки що</button><button class="link">Більше не питати</button></span><button class="yes">Так, записати мої зміни</button></footer>
+			</div>
+		</div>
+		<div>
+			<p class="cap">Здоров'я контенту · набору правил немає на диску</p>
+			<div class="dlg"><span class="lang">UK</span>
+				<p class="ask">Набору правил немає на диску</p>
+				<p class="fact">SRD 5.2 · D&amp;D 5.5e</p>
+				<p>Видалити — ваше право. Але якщо на заміну нічого не поставили, то не буде ні видів, ні класів, ні заклять, ні предметів, а все, що персонажі звідти брали, лишиться порожнім.</p>
+				<footer><button class="link">Так і задумано — більше не питати</button><button class="yes">Повернути</button></footer>
+			</div>
+		</div>
+	</div>
+</section>
+
+<section class="v">
+	<h2 class="variant">Запит ведучого · у журнал, не на весь екран</h2>
+	<p class="why">Аркуш лишається видимим і робочим. Запит з'являється там, де гравець і так дивиться на кидки, — у рядку журналу на бойовому екрані — і привертає увагу трьома повільними «вдихами» рамки, а потім стоїть спокійно до відповіді. На інших екранах — крапка біля «Бій» у меню. Відкрийте HTML у браузері, щоб побачити рух.</p>
+
+	<p class="cap">R1 · рядок «останній кидок» сам стає запитом</p>
+	<div class="play r1">
+		<div class="play-row">
+			<div class="card pass"><span class="eb">ПЛИН ЧАСУ</span><span class="pill">+1 раунд</span><span class="pill">+1 хв</span><span class="pill">+10 хв</span><span class="pill">+1 год</span></div>
+			<div class="card bar">
+				<div class="last"><span class="req-who">Ведучий просить</span><span class="req-what">Рятівний СПР<span class="req-dc">СК 15</span></span></div>
+				<div class="act"><button class="small">Ні</button><button class="small yes">Кинути</button></div>
+			</div>
+		</div>
+		<div class="below">БІЙ</div>
+	</div>
+	<p class="why" style="margin-top:8px">Найменше місця, але вужче: «Зібрати в лотку» не влазить і переходить у натискання на сам запит.</p>
+
+	<p class="cap" style="margin-top:28px">R3 · говорить лише кнопка журналу, запит — перший у журналі</p>
+	<div class="play r3">
+		<div class="play-row">
+			<div class="card pass"><span class="eb">ПЛИН ЧАСУ</span><span class="pill">+1 раунд</span><span class="pill">+1 хв</span><span class="pill">+10 хв</span><span class="pill">+1 год</span></div>
+			<div class="wrap">
+				<div class="card bar"><div class="last">Ведучий просить кидок</div><div class="cue">журнал ›<span class="dot"></span></div></div>
+				<div class="menu">
+					<div class="top"><span class="req-who">Ведучий просить</span><div class="req-what">Рятівний кидок Спритності<span class="req-dc">СК 15</span></div>
+						<div class="acts"><button class="small">Відхилити</button><button class="small">У лоток</button><button class="small yes">Кинути</button></div></div>
+					<div class="past">Lira · Атлетика 14</div>
+					<div class="past">Ви · Сприйняття 12</div>
+				</div>
+			</div>
+		</div>
+		<div class="below" style="margin-top:200px">БІЙ</div>
+	</div>
+	<p class="why" style="margin-top:8px">Найтихіше: нічого не зсувається, але щоб відповісти, треба відкрити журнал — один зайвий клік, і запит легше пропустити.</p>
+
+	<p class="cap" style="margin-top:28px">H1 · R1, але кнопка журналу лишається: «Кинути» в рядку, «Відхилити» й «У лоток» — у журналі (натиск на запит або на «журнал»)</p>
+	<div class="play h1">
+		<div class="play-row">
+			<div class="card pass"><span class="eb">ПЛИН ЧАСУ</span><span class="pill">+1 раунд</span><span class="pill">+1 хв</span><span class="pill">+10 хв</span><span class="pill">+1 год</span></div>
+			<div class="card bar">
+				<div class="last"><span class="req-who">Ведучий просить</span><span class="req-what">Рятівний СПР<span class="req-dc">СК 15</span></span></div>
+				<div class="act"><button class="small yes">Кинути</button></div>
+				<div class="cue">журнал ›</div>
+			</div>
+		</div>
+		<div class="below">БІЙ</div>
+	</div>
+	<p class="why" style="margin-top:8px">Найчастіша відповідь — один клік у рядку. Відмова й лоток рідші, тож для них один клік у журнал, де запит стоїть першим (як у R3).</p>
+
+	<p class="cap" style="margin-top:28px">H2 · рядок ширшає, поки запит чекає: «Ні», «Кинути» і журнал — усе на місці</p>
+	<div class="play h2">
+		<div class="play-row">
+			<div class="card pass"><span class="eb">ПЛИН ЧАСУ</span><span class="pill">+1 раунд</span><span class="pill">+1 хв</span><span class="pill">+10 хв</span><span class="pill">+1 год</span></div>
+			<div class="card bar">
+				<div class="last"><span class="req-who">Ведучий просить</span><span class="req-what">Рятівний кидок Спритності<span class="req-dc">СК 15</span></span></div>
+				<div class="act"><button class="small">Ні</button><button class="small yes">Кинути</button></div>
+				<div class="cue">журнал ›</div>
+			</div>
+		</div>
+		<div class="below">БІЙ</div>
+	</div>
+	<p class="why" style="margin-top:8px">Обидві відповіді без зайвого кліку, назва кидку повна. Ціна — «Плин часу» на час запиту ховає дві кнопки праворуч. «У лоток» — через журнал.</p>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,581 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Narrow desktop — the screens</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../src/lib/styles/tokens.css" />
+<style>
+	/* A mock, so sizes are literal; every colour is a token. */
+	body { margin: 24px; background: var(--color-bg); color: var(--color-text); font: 14px/1.35 var(--font-body); }
+	h1 { font: 600 22px var(--font-display); margin: 0 0 6px; }
+	h2 { font: 600 18px var(--font-display); margin: 36px 0 12px; }
+	.lede { color: var(--color-text-muted); max-width: 980px; margin: 0; }
+	.board { display: flex; gap: 28px; align-items: flex-start; }
+	figure { margin: 0; flex: none; }
+	figcaption { margin-bottom: 8px; max-width: 512px; min-height: 44px; }
+	figcaption.wide { max-width: 768px; }
+	figcaption b { font: 600 16px var(--font-display); display: block; }
+	figcaption span { color: var(--color-text-muted); font-size: 12px; }
+
+	/* the window: a third of a 1536-wide desktop, full height — and a half of it */
+	.win { width: 512px; height: 864px; background: var(--color-bg); border: 1px solid var(--color-border-strong); border-radius: 10px;
+		overflow: hidden; display: flex; flex-direction: column; position: relative; font-size: 13px; }
+	.win.half { width: 768px; }
+	.win.short { height: 330px; }
+	/* kept on purpose, and not the answer: a frame that will be drawn again */
+	.redo { font: 600 10px var(--font-body); font-style: normal; letter-spacing: var(--tracking-label); text-transform: uppercase; padding: 2px 8px; margin-inline-start: 6px; vertical-align: 3px; border-radius: var(--radius-full); background: var(--color-warning); color: var(--color-warning-text); }
+	figure:has(.redo) .win { outline: 2px dashed var(--color-warning); outline-offset: 3px; }
+	/* one column on its own, for what only the Spells tab has to answer */
+	.solo { width: 256px; height: 620px; display: flex; position: relative; font-size: 13px; }
+	svg.ic { flex: none; vertical-align: -3px; }
+	.push { margin-inline-start: auto; }
+
+	/* ---------- what never scrolls ---------- */
+	.appbar { flex: none; height: 40px; display: flex; align-items: center; gap: 4px; padding: 0 12px; }
+	.appbar .logo { font: 700 16px var(--font-display); margin-inline-end: 8px; } .appbar .logo i { color: var(--color-accent); font-style: normal; }
+	.appbar a { padding: 5px 8px; border-radius: var(--radius-sm); color: var(--color-text-muted); }
+	.appbar a.on { color: var(--color-text); background: var(--color-surface-2); }
+	.iconbtn { width: 28px; height: 28px; display: grid; place-items: center; border-radius: var(--radius); color: var(--color-text-muted); }
+
+	/* the character: one block — who, how hurt, the three numbers, what is on them */
+	.head { flex: none; margin: 0 8px; padding: 12px 14px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
+	.headline { display: flex; align-items: center; gap: 14px; }
+	.who { flex: 1; min-width: 0; }
+	.who span { display: block; color: var(--color-accent-bright); font-size: 10px; letter-spacing: var(--tracking-label); text-transform: uppercase; white-space: nowrap; }
+	.who b { display: block; font: 700 18px/1.2 var(--font-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+	.who b i { font-style: normal; font-size: 13px; color: var(--color-text-muted); margin-inline-start: 5px; vertical-align: 2px; }
+	.who.open b { text-decoration: underline; text-decoration-color: var(--color-border-strong); text-underline-offset: 4px; }
+	.hp { width: 142px; flex: none; padding: 4px 8px 6px; margin: -4px -8px -6px; border: 1px solid transparent; border-radius: var(--radius); }
+	.hp.open { border-color: var(--color-border-strong); background: var(--color-surface-2); }
+	.hp .num { font: 700 22px/1 var(--font-display); white-space: nowrap; }
+	/* at 0 hit points the number's line becomes the saves, and the block keeps its height */
+	.saves { display: flex; align-items: center; gap: 3px; height: 22px; }
+	.saves .mark { width: 12px; height: 12px; }
+	.mark.save { color: var(--color-good-line); } .mark.save.on { color: var(--color-good); }
+	.mark.fail { color: var(--color-border-strong); } .mark.fail.on { color: var(--color-accent-bright); }
+	.mini { width: 22px; height: 22px; flex: none; display: grid; place-items: center; border-radius: var(--radius-sm); border: 1px solid var(--color-border-strong); color: var(--color-text); font-size: 14px; }
+	.saves .mini { width: 20px; height: 20px; }
+	.mini.roll { border-color: var(--color-text); margin-inline-start: auto; }
+	.mini.back { margin-inline-start: auto; color: var(--color-text-muted); }
+	.mini.heal { color: var(--color-good); border-color: var(--color-good); background: var(--color-good-soft); margin-inline-end: auto; }
+	.saves .word { font: 700 15px var(--font-display); }
+	.saves .word.good { color: var(--color-good); }
+	.saves .link { margin-inline-start: auto; font-size: 11px; color: var(--color-text-muted); white-space: nowrap; }
+	.saves .btn { margin-inline-start: auto; padding: 2px 8px; font-size: 11px; }
+	.hp.down { border-color: var(--color-accent); }
+	.hp.dead { border-color: var(--color-border-strong); background: var(--color-bg); }
+	.hp.down .bar i, .hp.down .bar u, .hp.dead .bar i, .hp.dead .bar u, .hp.stable .bar i, .hp.stable .bar u { width: 0; }
+	.hp .num small { font-weight: 400; font-size: 13px; color: var(--color-text-muted); }
+	.hp .num em { font-style: normal; font-size: 11px; font-weight: 600; color: var(--color-good); margin-inline-start: 2px; }
+	.bar { height: 5px; border-radius: var(--radius-full); background: var(--color-bg); margin-top: 7px; display: flex; overflow: hidden; }
+	.bar i { background: var(--color-accent); width: 52%; } .bar u { background: var(--color-good); width: 8%; }
+	.hpfield { display: none; gap: 6px; align-items: center; flex: none; }
+	.half .hpfield { display: flex; }
+	.field { height: 28px; border: 1px solid var(--color-border-strong); border-radius: var(--radius); background: var(--color-bg); display: flex; align-items: center; padding: 0 8px; }
+	.field.focus { border-color: var(--color-good); }
+	.field .caret { width: 1px; height: 15px; background: var(--color-text); margin-inline-start: 1px; }
+	.sq { width: 28px; height: 28px; flex: none; border-radius: var(--radius); display: grid; place-items: center; font-size: 16px; border: 1px solid; }
+	.sq.dmg { color: var(--color-accent-bright); border-color: var(--color-accent); background: var(--color-accent-soft); }
+	.sq.heal { color: var(--color-good); border-color: var(--color-good); background: var(--color-good-soft); }
+	.stats { display: flex; flex: none; gap: 14px; }
+	.stat { text-align: center; }
+	.stat.open { border-radius: var(--radius-sm); background: var(--color-surface-2); box-shadow: 0 0 0 5px var(--color-surface-2), 0 0 0 6px var(--color-border-strong); }
+	.stat b { display: block; font: 700 18px/1 var(--font-display); white-space: nowrap; }
+	.stat span { display: block; margin-top: 5px; font-size: 10px; color: var(--color-text-muted); }
+	.chips { display: flex; gap: 5px; margin-top: 12px; }
+	.chip { font-size: 11px; padding: 2px 9px; border-radius: var(--radius-full); border: 1px solid var(--color-border-strong); color: var(--color-text-muted); white-space: nowrap; }
+	.chip.conc { color: var(--color-accent-bright); border-color: var(--color-accent); background: var(--color-accent-soft); }
+	.chip.bad { color: var(--color-accent-bright); border-color: var(--color-accent); }
+	.chip.good { color: var(--color-good); border-color: var(--color-good-line); }
+	.chip.add { border-style: dashed; padding-inline: 7px; }
+
+	.strip { flex: none; height: 46px; display: flex; align-items: center; gap: 5px; padding: 0 10px; }
+	.btn { padding: 5px 10px; border-radius: var(--radius-full); border: 1px solid var(--color-border-strong); font-size: 12px; color: var(--color-text); white-space: nowrap; }
+	.btn.quiet { border-color: transparent; background: var(--color-surface); color: var(--color-text-muted); padding-inline: 7px; }
+	.btn.primary { background: var(--color-accent-deep); border-color: var(--color-accent-deep); color: var(--color-accent-text); font-weight: 600; }
+	.clock { color: var(--color-text-muted); }
+	.round { font: 700 15px var(--font-display); margin-inline: 4px 2px; }
+	.econ { padding: 4px 10px; border-radius: var(--radius-full); border: 1px solid var(--color-good-line); color: var(--color-good); font-size: 12px; white-space: nowrap; }
+	.econ.used { border-color: var(--color-border); color: var(--color-text-muted); text-decoration: line-through; }
+
+	.last { flex: none; height: 42px; display: flex; align-items: center; gap: 9px; padding: 0 12px; border-top: 1px solid var(--color-border); background: var(--color-surface); font-size: 12px; }
+	.last .total { font: 700 19px var(--font-display); }
+	.last .meta { color: var(--color-text-muted); }
+
+	/* ---------- the body: columns as wide as their content, each a card whose title is its tabs ---------- */
+	.panes { flex: 1; min-height: 0; display: flex; gap: 6px; padding: 0 8px 8px; }
+	.pane { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; position: relative;
+		background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
+	.pane.cut::after { content: ''; position: absolute; inset: auto 0 0 0; height: 44px; background: linear-gradient(transparent, var(--color-surface)); pointer-events: none; }
+	.tabs { flex: none; display: flex; gap: 14px; padding: 0 12px; border-bottom: 1px solid var(--color-border); }
+	.tab { padding: 10px 0 8px; color: var(--color-text-muted); white-space: nowrap; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+	.tab.on { color: var(--color-text); font-weight: 600; border-color: var(--color-accent); }
+	.scroll { flex: 1; min-height: 0; overflow: hidden; padding: 0 12px 10px; }
+
+	.sec { display: flex; align-items: center; gap: 8px; padding: 12px 0 4px; color: var(--color-text-muted); white-space: nowrap;
+		font-size: 10px; letter-spacing: var(--tracking-label); text-transform: uppercase; }
+	.sec:first-child { padding-top: 8px; }
+	.sec .sum { margin-inline-start: auto; font-size: 12px; letter-spacing: 0; text-transform: none; }
+	.row { display: flex; align-items: center; gap: 6px; height: 28px; }
+	.row.two { height: auto; min-height: 44px; padding: 3px 0; }
+	.row.hover { background: var(--color-surface-2); border-radius: var(--radius); margin-inline: -6px; padding-inline: 6px; }
+	.row.dim { opacity: .4; }
+	.row b { font-weight: 600; white-space: nowrap; }
+	.stack { min-width: 0; } .stack > span { display: block; }
+	.meta { color: var(--color-text-muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+	.end { margin-inline-start: auto; display: flex; gap: 6px; align-items: center; white-space: nowrap; flex: none; }
+	.hit { font: 700 14px var(--font-display); color: var(--color-resource); text-align: end; }
+	.tag { font-size: 11px; padding: 1px 5px; border-radius: var(--radius-sm); border: 1px solid var(--color-resource-line); color: var(--color-resource); white-space: nowrap; }
+	.tag.plain { border-color: var(--color-border-strong); color: var(--color-text-muted); }
+	.tag.conc, .tag.bad { border-color: var(--color-accent); color: var(--color-accent-bright); }
+	.tag.good { border-color: var(--color-good-line); color: var(--color-good); }
+	.tags { display: flex !important; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+	.pip { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--color-good); }
+	.pip.on { background: var(--color-good); }
+	.pip.gold { border-color: var(--color-resource); } .pip.gold.on { background: var(--color-resource); }
+	.dot { width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--color-border-strong); flex: none; }
+	.dot.on { background: var(--color-resource); border-color: var(--color-resource); }
+	.dot.none { border-color: transparent; }
+	.facts { display: flex; align-items: center; gap: 10px; height: 24px; color: var(--color-text-muted); font-size: 12px; white-space: nowrap; }
+	.facts b { color: var(--color-text); font-weight: 600; }
+	.facts:first-child { margin-top: 8px; }
+	.pools { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 10px; }
+	.pool { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: var(--radius-full); border: 1px solid var(--color-resource-line); font-size: 12px; }
+	.pool .pip { margin-inline-start: 1px; }
+
+	/* slots: one cell a level on top, and the pips themselves on each level's line */
+	.slotbar { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 3px; margin: 6px 0 0; }
+	.slotbar div { text-align: center; padding: 3px 0 4px; border-radius: var(--radius-sm); background: var(--color-bg); border: 1px solid var(--color-border); }
+	.slotbar span { display: block; font-size: 9px; color: var(--color-text-muted); }
+	.slotbar b { display: block; font: 700 13px/1.1 var(--font-display); }
+	.slotbar .out b { color: var(--color-text-muted); }
+	.sec .pips { margin-inline-start: auto; display: flex; gap: 3px; }
+	.rit { width: 14px; height: 14px; flex: none; display: grid; place-items: center; border-radius: var(--radius-xs); border: 1px solid var(--color-border-strong); font-size: 9px; font-weight: 700; color: var(--color-text-muted); }
+	.up { width: 11px; height: 11px; flex: none; fill: none; stroke: var(--color-text-muted); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+	.note { margin: 2px 0 0; font-size: 12px; color: var(--color-text-muted); }
+	.blockline { display: flex; align-items: center; gap: 6px; margin-top: 10px; padding: 6px 9px; border-radius: var(--radius); border: 1px solid var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent-bright); font-size: 12px; }
+	.scroll.blocked .row, .scroll.blocked .sec, .scroll.blocked .facts { opacity: .4; }
+
+	/* what a spell asks of the turn: the app's own marks — a target for concentration, a bolt for a bonus action, a return for a reaction */
+	.mark { width: 12px; height: 12px; flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; color: var(--color-text-muted); }
+	.mark.conc { color: var(--color-accent-bright); }
+	.mark.cast { color: var(--color-text); }
+	.legend { display: inline-flex; gap: 12px; align-items: center; }
+	.legend span { display: inline-flex; gap: 4px; align-items: center; }
+
+	.abils { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; padding-top: 8px; }
+	.abil { text-align: center; padding: 4px 0 5px; border-radius: var(--radius); background: var(--color-bg); border: 1px solid var(--color-border); }
+	.abil span { display: block; font-size: 10px; color: var(--color-text-muted); }
+	.abil b { display: block; font: 700 17px/1.15 var(--font-display); }
+	.abil u { display: inline-block; margin-top: 2px; text-decoration: none; font-size: 10px; color: var(--color-text-muted); }
+	.abil u.prof { color: var(--color-resource); }
+	.passive { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 5px; padding: 8px 0 6px; text-align: center; color: var(--color-text-muted); font-size: 10px; white-space: nowrap; }
+	.passive b { color: var(--color-text); font: 700 13px var(--font-display); margin-inline-end: 4px; }
+	.row.sk { height: 20px; }
+	.sk .of { font-size: 10px; color: var(--color-text-muted); }
+	.sk .val { width: 22px; text-align: end; font: 700 13px var(--font-display); }
+	.sk.prof .val { color: var(--color-resource); }
+
+	.coins { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+	.coin { text-align: center; padding: 4px 0; border-radius: var(--radius); background: var(--color-bg); border: 1px solid var(--color-border); }
+	.coin b { display: block; font: 700 14px var(--font-display); }
+	.coin span { display: block; font-size: 10px; color: var(--color-text-muted); }
+	.qty { color: var(--color-text-muted); font-weight: 400; margin-inline-start: 4px; }
+	.row.ft { height: 23px; }
+	.ft > span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+	.ft.open > span:first-child { font-weight: 600; }
+	.ftext { margin: 2px 0 8px; padding: 8px 10px; border-radius: var(--radius); background: var(--color-bg); border: 1px solid var(--color-border); font-size: 12px; line-height: 1.45; color: var(--color-text-muted); }
+	.ftext p { margin: 0; color: var(--color-text); }
+	.ftext .links { display: flex; gap: 14px; margin-top: 8px; }
+
+	/* ---------- what a mouse opens: an explanation where the pointer is, a menu under its button ---------- */
+	.pop { position: absolute; z-index: 2; background: var(--color-surface-2); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); box-shadow: var(--shadow-2); padding: 10px 12px; font-size: 12px; }
+	.pop h4 { margin: 0 0 6px; font: 600 13px var(--font-display); }
+	.pop .line { display: flex; gap: 16px; padding: 2px 0; color: var(--color-text-muted); } .pop .line b { margin-inline-start: auto; color: var(--color-text); }
+	.pop .note { margin: 6px 0 0; padding-top: 6px; border-top: 1px solid var(--color-border); color: var(--color-accent-bright); }
+	.pop .controls { display: flex; gap: 6px; align-items: center; }
+	.pop .controls + .controls { margin-top: 6px; }
+	.pop .wide { flex: 1; height: 28px; display: grid; place-items: center; border-radius: var(--radius); border: 1px solid; white-space: nowrap; }
+	.pop .wide.dmg { color: var(--color-accent-bright); border-color: var(--color-accent); background: var(--color-accent-soft); }
+	.pop .wide.heal { color: var(--color-good); border-color: var(--color-good); background: var(--color-good-soft); }
+	.pop .rule { margin: 10px -12px; border: 0; border-top: 1px solid var(--color-border); }
+	.pop .exh { display: flex; align-items: center; gap: 5px; }
+	.pop .exh b { white-space: nowrap; margin-inline: auto 4px; font: 700 14px var(--font-display); color: var(--color-accent-bright); }
+	.pop .exh b small { font-weight: 400; color: var(--color-text-muted); }
+	.pip.exh { border-color: var(--color-accent); } .pip.exh.on { background: var(--color-accent-bright); }
+	.pop .line.tagged { align-items: center; } .pop .line.tagged .tag { margin-inline-start: auto; }
+	.pop .pick { display: grid; grid-template-columns: 4.5em 1fr auto; gap: 10px; padding: 3px 0; }
+	.pop .pick b { font-family: var(--font-display); } .pop .pick span:last-child { color: var(--color-text-muted); }
+	.pop .pick.out { opacity: .4; }
+	.cursor { position: absolute; z-index: 3; width: 16px; height: 16px; color: var(--color-text); }
+</style>
+
+<svg width="0" height="0" style="position: absolute">
+	<symbol id="i-conc" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+	<symbol id="i-bonus" viewBox="0 0 24 24"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></symbol>
+	<symbol id="i-react" viewBox="0 0 24 24"><path d="M20 4v7a4 4 0 0 1-4 4H4"/><path d="m9 10-5 5 5 5"/></symbol>
+	<symbol id="i-back" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/></symbol>
+	<symbol id="i-up" viewBox="0 0 24 24"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></symbol>
+	<symbol id="i-save" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></symbol>
+	<symbol id="i-fail" viewBox="0 0 24 24"><path d="M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="12" r="1"/></symbol>
+	<symbol id="i-dice" viewBox="0 0 24 24"><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"/><path d="M6 18h.01"/><path d="M10 14h.01"/></symbol>
+	<symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+</svg>
+
+<h1>Narrow desktop — the screens</h1>
+<p class="lede">A desktop window dragged small, driven by a mouse and a keyboard. A fixed top — the character in one block, one
+strip that becomes the turn — the last roll at the bottom, and between them columns as wide as their content, about 250px: the
+window decides how many stand side by side, and each is a card whose title is its tabs. The rows are the demo character’s own.</p>
+
+<template id="appbar">
+	<div class="appbar"><span class="logo">Char<i>nik</i></span><a>Roster</a><a class="on">Combat</a><a>Compendium</a><a>Settings</a>
+		<span class="iconbtn push"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>
+		<span class="iconbtn"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></span></div>
+</template>
+<template id="head">
+	<div class="head"><div class="headline">
+			<div class="who"><span>Warlock 5 / Barbarian 3</span><b>Karroth the Red<i>▾</i></b></div>
+			<div class="hp"><div class="num">38 <small>/ 73</small> <em>+6 temp</em></div><div class="bar"><i></i><u></u></div></div>
+			<div class="hpfield"><span class="field" style="width: 54px;">1</span><span class="sq dmg">−</span><span class="sq heal">+</span></div>
+			<div class="stats"><div class="stat"><b>15</b><span>AC</span></div><div class="stat"><b>+4</b><span>Init</span></div><div class="stat"><b>30 ft</b><span>Speed</span></div></div>
+		</div>
+		<div class="chips"><span class="chip conc">◎ Hex ✕</span><span class="chip good">Shield of Faith</span><span class="chip good">Bless</span><span class="chip bad">Bane</span><span class="chip bad">Poisoned</span><span class="chip add">+</span></div></div>
+</template>
+<template id="strip-rest">
+	<div class="strip"><span class="btn"><svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 19 6-6"/><path d="M14.5 17.5 3.586 6.586A2 2 0 013 5.172V3h2.172a2 2 0 011.414.586L17.5 14.5"/><path d="m14.828 6.172 2.586-2.586A2 2 0 0118.828 3H21v2.172a2 2 0 01-.586 1.414l-2.586 2.586"/><path d="m16 16 4 4"/><path d="m5 14 4 4"/><path d="M7.5 16.5 4 20"/></svg> Combat</span><span class="btn">Short rest</span><span class="btn">Long rest</span>
+		<span class="clock push" title="Pass time"><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span><span class="btn quiet">+1 rd</span><span class="btn quiet">+1 min</span><span class="btn quiet">+10 min</span><span class="btn quiet">+1 hr</span></div>
+</template>
+<template id="strip-turn">
+	<div class="strip"><span class="round">Round 2</span><span class="econ">Action</span><span class="econ used">Bonus</span><span class="econ">Reaction</span><span class="econ">30 ft</span>
+		<span class="btn primary push">Next turn</span><span class="btn quiet">✕</span></div>
+</template>
+<template id="last">
+	<div class="last"><span class="total">17</span><span>Greataxe, attack</span><span class="meta">1d20 (11) + 6</span><span class="meta push">log ›</span>
+		<span class="btn"><svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"/><path d="M6 18h.01"/><path d="M10 14h.01"/><path d="M15 6h.01"/><path d="M18 9h.01"/></svg> Dice tray</span></div>
+</template>
+
+<template id="body-actions">
+	<div class="pools"><span class="pool">Rage <i class="pip gold on"></i><i class="pip gold on"></i><i class="pip gold"></i></span></div>
+	<div class="sec">Attacks</div>
+	<div class="row two" data-mark="greataxe"><div class="stack"><b>Greataxe</b><span class="meta">1d12 +3 Slashing</span></div><div class="end"><span class="hit">+6</span></div></div>
+	<div class="row two"><div class="stack"><b>Unarmed Strike</b><span class="meta">+4 Bludgeoning</span></div><div class="end"><span class="hit">+6</span></div></div>
+	<div class="sec">Actions<span class="sum">Show / hide</span></div>
+	<div class="row two" data-mark="rage"><div class="stack"><b>Enter Rage</b><span class="meta">bonus action</span></div><div class="end"><span class="tag">1 Rage</span></div></div>
+	<div class="row"><b>Attack</b><span class="meta">weapon / spell / unarmed</span></div>
+	<div class="row"><b>Dash</b><span class="meta">+speed this turn</span></div>
+	<div class="row"><b>Disengage</b><span class="meta">no opportunity attacks</span></div>
+	<div class="row"><b>Dodge</b><span class="meta">attackers have disadv.</span></div>
+	<div class="row"><b>Hide</b><span class="meta">Stealth</span><div class="end"><span class="hit">+1</span></div></div>
+	<div class="row"><b>Search</b><span class="meta">Perception</span><div class="end"><span class="hit">0</span></div></div>
+	<div class="row"><b>Study</b><span class="meta">recall lore</span><div class="end"><span class="hit">+2</span></div></div>
+	<div class="row"><b>Grapple</b><span class="meta">Athletics vs target</span><div class="end"><span class="hit">+6</span></div></div>
+	<div class="row"><b>Shove</b><span class="meta">prone / push 5 ft</span><div class="end"><span class="hit">+6</span></div></div>
+	<div class="row"><b>Help</b><span class="meta">give an ally advantage</span></div>
+	<div class="row"><b>Ready</b><span class="meta">prepare a trigger</span></div>
+	<div class="row"><b>Utilize</b><span class="meta">use an object</span></div>
+</template>
+<template id="body-spells">
+	<div class="facts"><span>Prepared <b>4 / 6</b></span><span class="push">Spellbook</span></div>
+	<div class="facts"><span>Save DC <b>13</b></span><span>Attack <b>+5</b></span><span class="push">Pact 3rd</span><i class="pip on"></i><i class="pip"></i></div>
+	<div class="sec">Cantrips</div>
+	<div class="row"><i class="dot none"></i><b>Eldritch Blast</b><span class="meta">1d10 force</span><div class="end"><span class="tag">attack</span></div></div>
+	<div class="sec">1st level</div>
+	<div class="row"><i class="dot on"></i><b>Hex</b><svg class="mark conc"><title>Concentration</title><use href="#i-conc"/></svg><svg class="mark cast"><title>Bonus action</title><use href="#i-bonus"/></svg><span class="meta">1d6 necrotic</span><div class="end"><span class="tag conc">active</span></div></div>
+	<div class="row"><i class="dot on"></i><b>Burning Hands</b><span class="meta">3d6 fire</span><div class="end"><span class="tag">DEX save</span></div></div>
+	<div class="row"><i class="dot"></i><b>Command</b><div class="end"><span class="tag">WIS save</span></div></div>
+	<div class="sec">2nd level</div>
+	<div class="row"><i class="dot on"></i><b>Hold Person</b><svg class="mark conc"><title>Concentration</title><use href="#i-conc"/></svg><div class="end"><span class="tag">WIS save</span></div></div>
+	<div class="row"><i class="dot"></i><b>Invisibility</b><svg class="mark conc"><title>Concentration</title><use href="#i-conc"/></svg><span class="meta">Invisible</span></div>
+	<div class="row"><i class="dot"></i><b>Darkness</b><svg class="mark conc"><title>Concentration</title><use href="#i-conc"/></svg></div>
+	<div class="row"><i class="dot"></i><b>Scorching Ray</b><span class="meta">2d6 fire</span><div class="end"><span class="tag">attack</span></div></div>
+	<div class="row"><i class="dot"></i><b>Suggestion</b><svg class="mark conc"><title>Concentration</title><use href="#i-conc"/></svg><div class="end"><span class="tag">WIS save</span></div></div>
+	<div class="sec">3rd level</div>
+	<div class="row"><i class="dot on"></i><b>Fireball</b><span class="meta">8d6 fire</span><div class="end"><span class="tag">DEX save</span></div></div>
+	<div class="row"><i class="dot"></i><b>Stinking Cloud</b><svg class="mark conc"><title>Concentration</title><use href="#i-conc"/></svg><div class="end"><span class="tag">CON save</span></div></div>
+</template>
+<template id="body-skills">
+	<div class="abils">
+		<div class="abil"><span>STR</span><b>+3</b><u>save +4</u></div><div class="abil"><span>DEX</span><b>+1</b><u>save +2</u></div><div class="abil"><span>CON</span><b>+3</b><u>save +4</u></div>
+		<div class="abil"><span>INT</span><b>−1</b><u>save 0</u></div><div class="abil"><span>WIS</span><b>0</b><u class="prof">save +4</u></div><div class="abil"><span>CHA</span><b>+2</b><u class="prof">save +6</u></div>
+	</div>
+	<div class="passive" title="Passive senses"><span><b>5</b>Perception</span><span><b>4</b>Investigation</span><span><b>5</b>Insight</span></div>
+	<div class="row sk prof"><i class="dot on"></i><span>Athletics</span><div class="end"><span class="of">STR</span><span class="val">+6</span></div></div>
+	<div class="row sk"><i class="dot"></i><span>Acrobatics</span><div class="end"><span class="of">DEX</span><span class="val">+1</span></div></div>
+	<div class="row sk"><i class="dot"></i><span>Sleight of Hand</span><div class="end"><span class="of">DEX</span><span class="val">+1</span></div></div>
+	<div class="row sk"><i class="dot"></i><span>Stealth</span><div class="end"><span class="of">DEX</span><span class="val">+1</span></div></div>
+	<div class="row sk prof"><i class="dot on"></i><span>Arcana</span><div class="end"><span class="of">INT</span><span class="val">+2</span></div></div>
+	<div class="row sk"><i class="dot"></i><span>History</span><div class="end"><span class="of">INT</span><span class="val">−1</span></div></div>
+	<div class="row sk"><i class="dot"></i><span>Investigation</span><div class="end"><span class="of">INT</span><span class="val">−1</span></div></div>
+	<div class="row sk"><i class="dot"></i><span>Nature</span><div class="end"><span class="of">INT</span><span class="val">−1</span></div></div>
+	<div class="row sk"><i class="dot"></i><span>Religion</span><div class="end"><span class="of">INT</span><span class="val">−1</span></div></div>
+	<div class="row sk"><i class="dot"></i><span>Animal Handling</span><div class="end"><span class="of">WIS</span><span class="val">0</span></div></div>
+	<div class="row sk"><i class="dot"></i><span>Insight</span><div class="end"><span class="of">WIS</span><span class="val">0</span></div></div>
+	<div class="row sk"><i class="dot"></i><span>Medicine</span><div class="end"><span class="of">WIS</span><span class="val">0</span></div></div>
+	<div class="row sk"><i class="dot"></i><span>Perception</span><div class="end"><span class="of">WIS</span><span class="val">0</span></div></div>
+	<div class="row sk"><i class="dot"></i><span>Survival</span><div class="end"><span class="of">WIS</span><span class="val">0</span></div></div>
+	<div class="row sk prof"><i class="dot on"></i><span>Deception</span><div class="end"><span class="of">CHA</span><span class="val">+5</span></div></div>
+	<div class="row sk prof"><i class="dot on"></i><span>Intimidation</span><div class="end"><span class="of">CHA</span><span class="val">+5</span></div></div>
+	<div class="row sk"><i class="dot"></i><span>Performance</span><div class="end"><span class="of">CHA</span><span class="val">+2</span></div></div>
+	<div class="row sk"><i class="dot"></i><span>Persuasion</span><div class="end"><span class="of">CHA</span><span class="val">+2</span></div></div>
+	<div class="row sk prof"><i class="dot on"></i><span>Gaming Set</span><div class="end"><span class="of">tool</span><span class="val">+3</span></div></div>
+</template>
+<template id="body-effects">
+	<div class="sec">Buffs<span class="sum">+ Add</span></div>
+	<div class="row two"><div class="stack"><b>Shield of Faith</b><span class="tags"><span class="tag good">AC +2</span></span></div><div class="end"><span class="tag plain">10 min ▾</span><span class="meta">✕</span></div></div>
+	<div class="row two"><div class="stack"><b>Bless</b><span class="tags"><span class="tag good">all saves +1d4</span></span></div><div class="end"><span class="tag plain">10 rds ▾</span><span class="meta">✕</span></div></div>
+	<div class="sec">Debuffs</div>
+	<div class="row two"><div class="stack"><b>Bane</b><span class="tags"><span class="tag bad">all saves −1d4</span></span></div><div class="end"><span class="tag plain">10 rds ▾</span><span class="meta">✕</span></div></div>
+	<div class="row two"><div class="stack"><b>Poisoned</b><span class="tags"><span class="tag bad">disadv · Attack</span><span class="tag bad">disadv · all skills</span></span></div><div class="end"><span class="tag plain">∞ ▾</span><span class="meta">✕</span></div></div>
+	<div class="sec">From items and features</div>
+	<div class="row"><b>Tiefling</b><div class="end"><span class="tag plain">Darkvision ≥ 60</span></div></div>
+	<div class="row"><b>Alert</b><div class="end"><span class="tag plain">Initiative +3</span></div></div>
+	<div class="row two"><div class="stack"><b>Cloak of Protection</b><span class="tags"><span class="tag plain">AC +1</span><span class="tag plain">all saves +1</span></span></div></div>
+</template>
+<template id="body-items">
+	<div class="facts"><span>Load <b>21 / 240 lb</b> (9.5 / 108.9 kg)</span></div>
+	<div class="facts"><span>Attuned <b>1 / 3</b></span><span class="push">+ Add item</span></div>
+	<div class="sec">Coins</div>
+	<div class="coins"><div class="coin"><b>0</b><span>CP</span></div><div class="coin"><b>0</b><span>SP</span></div><div class="coin"><b>0</b><span>EP</span></div><div class="coin"><b>0</b><span>GP</span></div><div class="coin"><b>0</b><span>PP</span></div></div>
+	<div class="sec">Items</div>
+	<div class="row two"><div class="stack"><b>Leather Armor<span class="qty">×1</span></b><span class="meta">armor · AC 11 · 10 lb</span></div><div class="end"><span class="tag good">Equipped</span></div></div>
+	<div class="row two"><div class="stack"><b>Greataxe<span class="qty">×1</span></b><span class="meta">weapon · 1d12 slashing · 7 lb</span></div><div class="end"><span class="tag good">Equipped</span></div></div>
+	<div class="row two"><div class="stack"><b>Cloak of Protection<span class="qty">×1</span></b><span class="meta">wondrous</span></div><div class="end"><span class="tag">Attuned</span></div></div>
+	<div class="row two"><div class="stack"><b>Handaxe<span class="qty">×2</span></b><span class="meta">weapon · 1d6 slashing · 2 lb</span></div><div class="end"><span class="tag plain">Equip</span></div></div>
+</template>
+<template id="body-features">
+	<div class="sec">Class features<span class="sum">Show / hide</span></div>
+	<div class="row ft"><span>Eldritch Invocations</span><div class="end"><span class="meta">Warlock 1</span></div></div>
+	<div class="row ft"><span>Pact Magic</span><div class="end"><span class="meta">Warlock 1</span></div></div>
+	<div class="row ft"><span>Rage</span><div class="end"><span class="meta">Barbarian 1</span></div></div>
+	<div class="row ft"><span>Unarmored Defense</span><div class="end"><span class="meta">Barbarian 1</span></div></div>
+	<div class="row ft"><span>Weapon Mastery</span><div class="end"><span class="meta">Barbarian 1</span></div></div>
+	<div class="row ft"><span>Magical Cunning</span><div class="end"><span class="meta">Warlock 2</span></div></div>
+	<div class="row ft"><span>Danger Sense</span><div class="end"><span class="meta">Barbarian 2</span></div></div>
+	<div class="row ft" data-feature="reckless"><span>Reckless Attack</span><div class="end"><span class="meta">Barbarian 2</span></div></div>
+	<div class="ftext" data-text="reckless" hidden><p>You can throw aside all concern for defense to attack with increased ferocity. When you make your first attack roll on your turn, you can decide to attack recklessly. Doing so gives you Advantage on attack rolls using Strength until the start of your next turn, but attack rolls against you have Advantage during that time.</p>
+		<div class="links"><span>Pin</span><span>In your own words</span></div></div>
+	<div class="row ft"><span>Warlock Subclass</span><div class="end"><span class="meta">Warlock 3</span></div></div>
+	<div class="row ft"><span>Dark One’s Blessing</span><div class="end"><span class="meta">Warlock 3</span></div></div>
+	<div class="row ft"><span>Fiend Spells</span><div class="end"><span class="meta">Warlock 3</span></div></div>
+	<div class="row ft"><span>Barbarian Subclass</span><div class="end"><span class="meta">Barbarian 3</span></div></div>
+	<div class="row ft"><span>Primal Knowledge</span><div class="end"><span class="meta">Barbarian 3</span></div></div>
+	<div class="row ft"><span>Frenzy</span><div class="end"><span class="meta">Barbarian 3</span></div></div>
+	<div class="row ft"><span>Ability Score Improvement</span><div class="end"><span class="meta">Warlock 4</span></div></div>
+	<div class="sec">Species traits</div>
+	<div class="row ft"><span>Tiefling</span></div>
+	<div class="row ft"><span>Infernal</span></div>
+	<div class="sec">Background</div>
+	<div class="row ft"><span>Soldier</span></div>
+	<div class="sec">Feats</div>
+	<div class="row ft"><span>Alert</span></div>
+	<div class="row ft"><span>Savage Attacker</span></div>
+</template>
+<template id="hp-dying">
+	<div class="saves" title="Hit points 0 / 73"><svg class="mark save on"><use href="#i-save"/></svg><svg class="mark save"><use href="#i-save"/></svg><svg class="mark save"><use href="#i-save"/></svg>
+		<span class="mini roll" title="Roll a death save"><svg class="mark" style="color: inherit"><use href="#i-dice"/></svg></span><span class="mini heal" title="Heal · Temp HP">+</span>
+		<svg class="mark fail"><use href="#i-fail"/></svg><svg class="mark fail"><use href="#i-fail"/></svg><svg class="mark fail on"><use href="#i-fail"/></svg></div><div class="bar"><i></i><u></u></div>
+</template>
+<template id="hp-stable">
+	<div class="saves"><span class="word good">Stabilized</span><span class="mini back" title="Take back the save that ended it"><svg class="mark" style="color: inherit"><use href="#i-back"/></svg></span><span class="mini heal" style="margin-inline: 0" title="Heal · Temp HP">+</span></div><div class="bar"><i></i><u></u></div>
+</template>
+<template id="hp-dead">
+	<div class="saves" title="Massive damage — the leftover met your hit-point maximum"><span class="word">Dead</span><span class="btn">I was revived</span></div><div class="bar"><i></i><u></u></div>
+</template>
+<template id="chips-exhausted">
+	<span class="chip conc">◎ Hex ✕</span><span class="chip bad">Exhaustion 2</span><span class="chip bad">Poisoned</span><span class="chip bad">Bane</span><span class="chip">+2 ›</span><span class="chip add">+</span>
+</template>
+<template id="body-spells-wizard">
+	<div class="facts"><span>Save DC <b>19</b></span><span>Attack <b>+11</b></span><span class="push">Spellbook</span></div>
+	<div class="slotbar"><div><span>1st</span><b>4</b></div><div><span>2nd</span><b>3</b></div><div><span>3rd</span><b>2</b></div><div><span>4th</span><b>3</b></div><div><span>5th</span><b>2</b></div><div><span>6th</span><b>1</b></div><div class="out"><span>7th</span><b>0</b></div><div><span>8th</span><b>1</b></div><div class="out"><span>9th</span><b>0</b></div></div>
+	<div class="sec">Cantrips</div>
+	<div class="row"><i class="dot none"></i><b>Fire Bolt</b><span class="meta">1d10 fire</span><div class="end"><span class="tag">attack</span></div></div>
+	<div class="row"><i class="dot none"></i><b>Mage Hand</b></div>
+	<div class="row"><i class="dot none"></i><b>Light</b></div>
+	<div class="sec">1st level<span class="pips"><i class="pip on"></i><i class="pip on"></i><i class="pip on"></i><i class="pip on"></i></span></div>
+	<div class="row"><i class="dot on"></i><b>Shield</b><svg class="mark cast"><title>Reaction</title><use href="#i-react"/></svg><div class="end"><svg class="up"><use href="#i-up"/></svg></div></div>
+	<div class="row"><i class="dot on"></i><b>Magic Missile</b><div class="end"><svg class="up"><use href="#i-up"/></svg></div></div>
+	<div class="row"><i class="dot on"></i><b>Detect Magic</b><svg class="mark conc"><title>Concentration</title><use href="#i-conc"/></svg><div class="end"><span class="rit" title="Cast as ritual (no slot, +10 min)">R</span><svg class="up"><use href="#i-up"/></svg></div></div>
+	<div class="row"><i class="dot on"></i><b>Mage Armor</b><div class="end"><svg class="up"><use href="#i-up"/></svg></div></div>
+	<div class="sec">2nd level<span class="pips"><i class="pip on"></i><i class="pip on"></i><i class="pip on"></i></span></div>
+	<div class="row"><i class="dot on"></i><b>Misty Step</b><svg class="mark cast"><title>Bonus action</title><use href="#i-bonus"/></svg><div class="end"><svg class="up"><use href="#i-up"/></svg></div></div>
+	<div class="row"><i class="dot on"></i><b>Hold Person</b><svg class="mark conc"><title>Concentration</title><use href="#i-conc"/></svg><div class="end"><span class="tag">WIS save</span><svg class="up"><use href="#i-up"/></svg></div></div>
+	<div class="row"><i class="dot on"></i><b>Invisibility</b><svg class="mark conc"><title>Concentration</title><use href="#i-conc"/></svg><div class="end"><svg class="up"><use href="#i-up"/></svg></div></div>
+	<div class="sec">3rd level<span class="pips"><i class="pip on"></i><i class="pip on"></i><i class="pip"></i></span></div>
+	<div class="row" data-mark="fireball"><i class="dot on"></i><b>Fireball</b><span class="meta">8d6 fire</span><div class="end"><span class="tag">DEX save</span><svg class="up"><use href="#i-up"/></svg></div></div>
+	<div class="row"><i class="dot on"></i><b>Counterspell</b><svg class="mark cast"><title>Reaction</title><use href="#i-react"/></svg><div class="end"><span class="tag">CON save</span><svg class="up"><use href="#i-up"/></svg></div></div>
+	<div class="row"><i class="dot on"></i><b>Fly</b><svg class="mark conc"><title>Concentration</title><use href="#i-conc"/></svg><div class="end"><svg class="up"><use href="#i-up"/></svg></div></div>
+	<div class="sec">4th level<span class="pips"><i class="pip on"></i><i class="pip on"></i><i class="pip on"></i></span></div>
+	<div class="row"><i class="dot on"></i><b>Dimension Door</b><div class="end"><svg class="up"><use href="#i-up"/></svg></div></div>
+	<div class="row"><i class="dot on"></i><b>Polymorph</b><svg class="mark conc"><title>Concentration</title><use href="#i-conc"/></svg><div class="end"><span class="tag">WIS save</span><svg class="up"><use href="#i-up"/></svg></div></div>
+	<div class="sec">5th level<span class="pips"><i class="pip on"></i><i class="pip on"></i><i class="pip"></i></span></div>
+	<div class="row"><i class="dot on"></i><b>Cone of Cold</b><span class="meta">8d8 cold</span><div class="end"><span class="tag">CON save</span><svg class="up"><use href="#i-up"/></svg></div></div>
+	<div class="row"><i class="dot on"></i><b>Wall of Force</b><svg class="mark conc"><title>Concentration</title><use href="#i-conc"/></svg><div class="end"><svg class="up"><use href="#i-up"/></svg></div></div>
+</template>
+<template id="body-spells-multi">
+	<div class="facts"><span><b>Wizard</b></span><span>Save DC <b>15</b></span><span>Attack <b>+7</b></span></div>
+	<div class="facts" style="margin-top: 0"><span><b>Cleric</b></span><span>Save DC <b>13</b></span><span>Attack <b>+5</b></span></div>
+	<div class="slotbar"><div><span>1st</span><b>3</b></div><div><span>2nd</span><b>3</b></div><div><span>3rd</span><b>2</b></div><div><span>4th</span><b>2</b></div></div>
+	<div class="sec">Cantrips</div>
+	<div class="row"><i class="dot none"></i><b>Fire Bolt</b><span class="meta">1d10 fire</span><div class="end"><span class="tag">attack +7</span></div></div>
+	<div class="row"><i class="dot none"></i><b>Sacred Flame</b><span class="meta">1d8 radiant</span><div class="end"><span class="tag">DEX 13</span></div></div>
+	<div class="sec">1st level<span class="pips"><i class="pip on"></i><i class="pip on"></i><i class="pip on"></i><i class="pip"></i></span></div>
+	<div class="row"><i class="dot on"></i><b>Shield</b><svg class="mark cast"><title>Reaction</title><use href="#i-react"/></svg></div>
+	<div class="row"><i class="dot on"></i><b>Bless</b><svg class="mark conc"><title>Concentration</title><use href="#i-conc"/></svg></div>
+	<div class="row"><i class="dot on"></i><b>Guiding Bolt</b><span class="meta">4d6 radiant</span><div class="end"><span class="tag">attack +5</span></div></div>
+	<div class="sec">2nd level<span class="pips"><i class="pip on"></i><i class="pip on"></i><i class="pip on"></i></span></div>
+	<div class="row"><i class="dot on"></i><b>Misty Step</b><svg class="mark cast"><title>Bonus action</title><use href="#i-bonus"/></svg></div>
+	<div class="row"><i class="dot on"></i><b>Hold Person</b><svg class="mark conc"><title>Concentration</title><use href="#i-conc"/></svg><div class="end"><span class="tag">WIS 15</span></div></div>
+	<div class="row"><i class="dot on"></i><b>Spiritual Weapon</b><svg class="mark conc"><title>Concentration</title><use href="#i-conc"/></svg><svg class="mark cast"><title>Bonus action</title><use href="#i-bonus"/></svg><div class="end"><span class="tag">attack +5</span></div></div>
+	<div class="sec">3rd level<span class="pips"><i class="pip on"></i><i class="pip on"></i><i class="pip"></i></span></div>
+	<div class="row"><i class="dot on"></i><b>Fireball</b><span class="meta">8d6 fire</span><div class="end"><span class="tag">DEX 15</span></div></div>
+	<div class="row"><i class="dot on"></i><b>Counterspell</b><svg class="mark cast"><title>Reaction</title><use href="#i-react"/></svg><div class="end"><span class="tag">CON 15</span></div></div>
+	<div class="sec">4th level<span class="pips"><i class="pip on"></i><i class="pip on"></i></span></div>
+	<p class="note">No spells of this level — these slots cast lower ones higher.</p>
+</template>
+<template id="cursor">
+	<svg class="cursor" viewBox="0 0 16 16"><path d="M2 1l10 9H7.5l-2.6 5z" fill="currentColor" stroke="var(--color-bg)" stroke-width="1"/></svg>
+</template>
+
+<h2>A third of the screen, 512 wide — the six panels</h2>
+<div class="board">
+	<figure><figcaption><b>1 · Actions and Skills</b><span>what the character does on the left, what is looked up on the right; neither scrolls</span></figcaption>
+		<div class="win" data-groups="actions*,spells,items|skills*,effects,features"></div></figure>
+	<figure><figcaption><b>2 · Spells and Effects</b><span class="legend"><span><svg class="mark conc"><use href="#i-conc"/></svg>concentration</span><span><svg class="mark cast"><use href="#i-bonus"/></svg>bonus action</span><span><svg class="mark cast"><use href="#i-react"/></svg>reaction</span></span><span> — an action carries no mark</span></figcaption>
+		<div class="win" data-groups="actions,spells*,items|skills,effects*,features"></div></figure>
+	<figure><figcaption><b>3 · Items and Features</b><span>a count opens under its ×N; twenty features fit while they are closed</span></figcaption>
+		<div class="win" data-groups="actions,spells,items*|skills,effects,features*"></div></figure>
+</div>
+
+<h2>The mouse</h2>
+<div class="board">
+	<figure><figcaption><b>4 · In combat — hover a number, open a feature</b><span>the strip is the turn; a number explains itself at the pointer; a feature opens in place</span></figcaption>
+		<div class="win" data-groups="actions*,spells,items|skills,effects,features*" data-strip="strip-turn" data-hover="greataxe" data-dim="rage" data-feature="reckless">
+			<div class="pop" data-below="greataxe" style="left: 22px; width: 196px;"><h4>Greataxe, attack +6</h4>
+				<div class="line">Strength<b>+3</b></div><div class="line">Proficiency<b>+3</b></div>
+				<p class="note">Poisoned — disadvantage on attack rolls</p></div>
+			<svg class="cursor" data-on="greataxe" viewBox="0 0 16 16"><path d="M2 1l10 9H7.5l-2.6 5z" fill="currentColor" stroke="var(--color-bg)" stroke-width="1"/></svg>
+		</div></figure>
+	<figure><figcaption><b>5 · Click the hit points</b><span>damage, healing and temporary hit points; exhaustion too — a chip once it is above 0</span></figcaption>
+		<div class="win" data-groups="actions,spells*,items|skills*,effects,features" data-hp="open" data-chips="chips-exhausted">
+			<div class="pop" style="top: 102px; left: 205px; width: 266px;"><h4>Hit points</h4>
+				<div class="controls"><span class="field focus" style="flex: 1;">12<i class="caret"></i></span><span class="field">type ▾</span></div>
+				<div class="controls"><span class="wide dmg">− Damage</span><span class="wide heal">+ Heal · Temp HP</span></div>
+				<hr class="rule" />
+				<div class="exh"><span>Exhaustion</span><i class="pip exh on"></i><i class="pip exh on"></i><i class="pip exh"></i><i class="pip exh"></i><i class="pip exh"></i><i class="pip exh"></i><b>2 <small>/ 6</small></b><span class="mini">−</span><span class="mini">+</span></div></div>
+			<svg class="cursor" style="left: 276px; top: 80px;" viewBox="0 0 16 16"><path d="M2 1l10 9H7.5l-2.6 5z" fill="currentColor" stroke="var(--color-bg)" stroke-width="1"/></svg>
+		</div></figure>
+</div>
+
+<h2>Half of the screen, 768 wide — three columns</h2>
+<div class="board">
+	<figure><figcaption class="wide"><b>6 · The same columns, one more of them</b><span>the six tabs dealt into three groups; the hit-point field has room to stand open in the top block</span></figcaption>
+		<div class="win half" data-groups="actions*,items|spells*,effects|skills*,features"></div></figure>
+</div>
+
+<h2>The top block — at 0 hit points <em class="redo">to be redone</em></h2>
+<div class="board">
+	<figure><figcaption><b>7 · Dying <em class="redo">to be redone</em></b><span>the number’s line becomes the saves, the roll and healing; the block keeps its height</span></figcaption>
+		<div class="win short" data-groups="actions*,spells,items|skills*,effects,features" data-hpstate="dying"></div></figure>
+	<figure><figcaption><b>8 · Stabilized <em class="redo">to be redone</em></b><span>the verdict in a word, and the way back from it</span></figcaption>
+		<div class="win short" data-groups="actions*,spells,items|skills*,effects,features" data-hpstate="stable"></div></figure>
+	<figure><figcaption><b>9 · Dead <em class="redo">to be redone</em></b><span>the reason is on hover; the one button is the way back</span></figcaption>
+		<div class="win short" data-groups="actions*,spells,items|skills*,effects,features" data-hpstate="dead"></div></figure>
+</div>
+
+<h2>The top block — what its numbers and its name open</h2>
+<div class="board">
+	<figure><figcaption><b>10 · Click the armor class</b><span>what it is made of, then the defenses and the senses</span></figcaption>
+		<div class="win short" data-groups="actions*,spells,items|skills*,effects,features" data-stat="0">
+			<div class="pop" style="top: 104px; right: 14px; width: 214px;"><h4>Armor class 15</h4>
+				<div class="line">Leather Armor<b>11</b></div><div class="line">Dexterity<b>+1</b></div><div class="line">Cloak of Protection<b>+1</b></div><div class="line">Shield of Faith<b>+2</b></div>
+				<hr class="rule" />
+				<div class="line tagged">Resist<span class="tag good">Fire ½</span></div><div class="line tagged">Senses<span class="tag plain">Darkvision 60 ft</span></div></div>
+			<svg class="cursor" style="left: 372px; top: 72px;" viewBox="0 0 16 16"><path d="M2 1l10 9H7.5l-2.6 5z" fill="currentColor" stroke="var(--color-bg)" stroke-width="1"/></svg>
+		</div></figure>
+	<figure><figcaption><b>11 · Click the name</b><span>level, proficiency bonus, species, background, rules — what the title line carries today</span></figcaption>
+		<div class="win short" data-groups="actions*,spells,items|skills*,effects,features" data-who="open">
+			<div class="pop" style="top: 104px; left: 22px; width: 214px;"><h4>Karroth the Red</h4>
+				<div class="line">Level<b>8</b></div><div class="line">Proficiency bonus<b>+3</b></div><div class="line">Species<b>Tiefling</b></div><div class="line">Background<b>Soldier</b></div><div class="line">Rules<b>D&amp;D 5.5e</b></div><div class="line">Advancement<b>Milestone</b></div></div>
+			<svg class="cursor" style="left: 150px; top: 80px;" viewBox="0 0 16 16"><path d="M2 1l10 9H7.5l-2.6 5z" fill="currentColor" stroke="var(--color-bg)" stroke-width="1"/></svg>
+		</div></figure>
+</div>
+
+<h2>Spells with slots — one column</h2>
+<div class="board">
+	<figure><figcaption><b>12 · A level-20 wizard</b><span>one cell a level on top says what is left; the pips on a level’s line spend and restore</span></figcaption>
+		<div class="solo" data-groups="actions,spells-wizard*,items"></div></figure>
+	<figure><figcaption><b>13 · Which slot pays</b><span>the arrow at a row’s end; R casts as a ritual</span></figcaption>
+		<div class="solo" data-groups="actions,spells-wizard*,items" data-hover="fireball">
+			<div class="pop" data-above="fireball" style="left: 14px; width: 200px;"><h4>Fireball — cast with</h4>
+				<div class="pick"><span>3rd level</span><b>8d6</b><span>2 left</span></div><div class="pick"><span>4th level</span><b>9d6</b><span>3 left</span></div><div class="pick"><span>5th level</span><b>10d6</b><span>2 left</span></div><div class="pick"><span>6th level</span><b>11d6</b><span>1 left</span></div><div class="pick out"><span>7th level</span><b>12d6</b><span>none</span></div><div class="pick"><span>8th level</span><b>13d6</b><span>1 left</span></div><div class="pick out"><span>9th level</span><b>14d6</b><span>none</span></div></div>
+			<svg class="cursor" data-on="fireball" viewBox="0 0 16 16"><path d="M2 1l10 9H7.5l-2.6 5z" fill="currentColor" stroke="var(--color-bg)" stroke-width="1"/></svg>
+		</div></figure>
+	<figure><figcaption><b>14 · Two casting classes</b><span>each tag carries its own number, so nobody asks which DC a spell uses</span></figcaption>
+		<div class="solo" data-groups="actions,spells-multi*,items"></div></figure>
+	<figure><figcaption><b>15 · When it cannot be cast</b><span>the reason stands on top; everything under it greys out</span></figcaption>
+		<div class="solo" data-groups="actions,spells*,items" data-block="Rage"></div></figure>
+</div>
+
+<script>
+	// Build each frame from the shared pieces: the fixed top, one card per tab group, the last roll.
+	const TAB_NAMES = { actions: 'Actions', spells: 'Spells', items: 'Items', skills: 'Skills', effects: 'Effects', features: 'Features' };
+	const tabName = (id) => TAB_NAMES[id.split('-')[0]];
+	const stamp = (id) => document.getElementById(id).content.cloneNode(true);
+	const make = (className) => Object.assign(document.createElement('div'), { className });
+	for (const win of document.querySelectorAll('[data-groups]')) {
+		const { groups, strip = 'strip-rest', hover, dim, hp, feature, hpstate, chips, stat, who, block } = win.dataset;
+		const solo = win.classList.contains('solo');
+		const panes = make('panes');
+		for (const group of groups.split('|')) {
+			const pane = make('pane');
+			const tabs = make('tabs');
+			const scroll = make('scroll');
+			for (const entry of group.split(',')) {
+				const id = entry.replace('*', '');
+				const tab = Object.assign(document.createElement('span'), { className: 'tab', textContent: tabName(id) });
+				if (entry.endsWith('*')) {
+					tab.classList.add('on');
+					scroll.append(stamp(`body-${id}`));
+				}
+				tabs.append(tab);
+			}
+			pane.append(tabs, scroll);
+			panes.append(pane);
+		}
+		if (solo) win.append(...panes.children);
+		else win.append(stamp('appbar'), stamp('head'), stamp(strip), panes, stamp('last'));
+		if (hpstate) {
+			const box = win.querySelector('.hp');
+			box.replaceChildren(stamp(`hp-${hpstate}`));
+			box.classList.add(hpstate === 'dying' ? 'down' : hpstate);
+		}
+		if (chips) win.querySelector('.chips').replaceChildren(stamp(chips));
+		if (stat) win.querySelectorAll('.stat')[Number(stat)].classList.add('open');
+		if (who) win.querySelector('.who').classList.add(who);
+		if (block) {
+			const scroll = win.querySelector('.scroll');
+			scroll.classList.add('blocked');
+			const line = make('blockline');
+			line.innerHTML = `<svg class="mark" style="color: inherit"><use href="#i-warn"/></svg>Spellcasting blocked — ${block}`;
+			scroll.prepend(line);
+		}
+		if (hover) win.querySelector(`[data-mark="${hover}"]`).classList.add('hover');
+		if (dim) win.querySelector(`[data-mark="${dim}"]`).classList.add('dim');
+		if (hp) win.querySelector('.hp').classList.add(hp);
+		if (feature) {
+			win.querySelector(`[data-feature="${feature}"]`).classList.add('open');
+			win.querySelector(`[data-text="${feature}"]`).hidden = false;
+		}
+		for (const scroll of win.querySelectorAll('.scroll')) {
+			if (scroll.scrollHeight > scroll.clientHeight) scroll.parentElement.classList.add('cut');
+		}
+		// a menu opens under its row, or over it when there is no room below; the pointer rests on the row's end
+		const frame = win.getBoundingClientRect();
+		const markBox = (name) => win.querySelector(`[data-mark="${name}"]`).getBoundingClientRect();
+		for (const pop of win.querySelectorAll('[data-below]')) pop.style.top = `${markBox(pop.dataset.below).bottom - frame.top + 5}px`;
+		for (const pop of win.querySelectorAll('[data-above]')) pop.style.top = `${markBox(pop.dataset.above).top - frame.top - pop.offsetHeight - 7}px`;
+		for (const pointer of win.querySelectorAll('[data-on]')) {
+			const box = markBox(pointer.dataset.on);
+			Object.assign(pointer.style, { left: `${box.right - frame.left - 16}px`, top: `${box.top - frame.top + box.height / 2 - 3}px` });
+		}
+	}
+</script>

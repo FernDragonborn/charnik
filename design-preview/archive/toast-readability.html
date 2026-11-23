@@ -1,0 +1,223 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Roll toast — readability variants</title>
+<style>
+:root{
+ --space-1:.25rem;--space-1-5:.375rem;--space-2:.5rem;--space-2-5:.625rem;--space-3:.75rem;--space-4:1rem;--space-5:1.5rem;
+ --radius-xs:4px;--radius-sm:6px;--radius:8px;--radius-md:11px;--radius-lg:14px;--radius-full:999px;
+ --font-display:'Space Grotesk',system-ui,sans-serif;--font-body:'Inter',system-ui,sans-serif;
+ --font-size-micro:.625rem;--font-size-xs:.6875rem;--font-size-sm:.8125rem;--font-size-body:.875rem;--font-size-md:1rem;--font-size-lg:1.25rem;--font-size-xl:1.75rem;--font-size-2xl:2.75rem;
+ --tracking-label:.12em;--shadow-2:0 8px 30px rgb(0 0 0/.55);
+ --color-bg:#0f1116;--color-surface:#171a21;--color-surface-2:#1f232c;--color-border:#272c37;--color-border-strong:#333a47;
+ --color-text:#e6e8ec;--color-text-muted:#878f9d;--color-accent-bright:#ef6b78;--color-resource:#caa24a;--color-resource-line:#5a4d28;--color-resource-soft:#2a2415;
+ --color-good:#3bb8a6;--color-warning:#e0a44b;--color-danger:#e0635a;--color-danger-soft:#2a1512;
+}
+body{background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);margin:0;padding:var(--space-5)}
+h1{font-family:var(--font-display);font-size:var(--font-size-lg);margin:0 0 var(--space-4)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-5);align-items:start}
+.col>h2{font-family:var(--font-display);font-size:var(--font-size-md);margin:0 0 var(--space-1)}
+.col>p{font-size:var(--font-size-xs);color:var(--color-text-muted);margin:0 0 var(--space-4);min-height:3.4em;line-height:1.5}
+.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);box-shadow:var(--shadow-2);padding:var(--space-3);margin-bottom:var(--space-3)}
+.card.crit{border-color:var(--color-resource-line)}
+.card.miss{border-color:#3a2220}
+.eyebrow{font-size:var(--font-size-micro);letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--color-text-muted)}
+.name{font-family:var(--font-display);font-weight:600;font-size:var(--font-size-body)}
+.mathline{font-size:var(--font-size-xs);color:var(--color-text-muted);white-space:nowrap}
+.mathline b{color:var(--color-text);font-weight:600}
+.gold{color:var(--color-resource)}
+.red{color:var(--color-danger)}
+
+/* ---------- A · verdict lane ---------- */
+.a-head{display:flex;justify-content:space-between;align-items:baseline;gap:var(--space-2);margin-bottom:var(--space-2)}
+.a-lane{display:flex;gap:var(--space-2)}
+.a-box{flex:1;background:var(--color-surface-2);border-radius:var(--radius);padding:var(--space-2) var(--space-2-5);display:flex;flex-direction:column;gap:2px}
+.a-num{font-family:var(--font-display);font-size:var(--font-size-xl);font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums}
+.a-box.dmg{background:#221a1c}
+.a-box.critbox .a-num{color:var(--color-resource)}
+.a-box.missbox .a-num{color:var(--color-danger);font-size:var(--font-size-lg)}
+.a-sub{font-size:var(--font-size-micro);color:var(--color-text-muted)}
+/* the arithmetic, dimmed, on the number's baseline to its right — the sum keeps the left edge, so
+   the boxes read as one column of answers and the formulas trail off behind them */
+.a-numrow{display:flex;align-items:baseline;gap:var(--space-2);min-width:0}
+.a-formula{font-size:var(--font-size-xs);color:var(--color-text-muted);opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.a-formula b{color:#b9c0cb;font-weight:600}
+/* the die the rule threw away: still readable, struck, and never the one the eye lands on */
+.a-formula s{text-decoration:line-through;opacity:.6}
+/* at 11px a strike turns a digit into a blob, so the alternatives drop the line and say it another way */
+.a-drop{color:var(--color-text-muted);opacity:.85}
+.a-formula .kept{color:#e6e8ec;font-weight:700}
+.a-adv{color:var(--color-good)}
+.a-dis{color:var(--color-warning)}
+/* the bracket itself says which rule read the pair — the same cue the live tray uses */
+.a-formula .br-adv{color:var(--color-good)}
+.a-formula .br-dis{color:var(--color-warning)}
+
+/* ---------- B · one hero number ---------- */
+.b-top{display:flex;align-items:center;gap:var(--space-2-5)}
+.b-hero{font-family:var(--font-display);font-size:var(--font-size-2xl);font-weight:700;line-height:.95;font-variant-numeric:tabular-nums}
+.b-hero.crit{color:var(--color-resource)}
+.b-hero.bad{color:var(--color-danger)}
+.b-meta{display:flex;flex-direction:column;gap:3px;min-width:0}
+.b-chip{display:inline-flex;align-items:center;gap:var(--space-1);background:var(--color-surface-2);border-radius:var(--radius-full);padding:2px var(--space-2);font-size:var(--font-size-sm);font-weight:600;white-space:nowrap;width:fit-content}
+.b-chip .lab{font-size:var(--font-size-micro);letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--color-text-muted);font-weight:400}
+.b-chip.critchip{background:var(--color-resource-soft);color:var(--color-resource)}
+.b-chip.badchip{background:var(--color-danger-soft);color:var(--color-danger)}
+.b-foot{margin-top:var(--space-2);padding-top:var(--space-2);border-top:1px solid var(--color-border)}
+
+/* ---------- C · table talk ---------- */
+.c-line{font-size:var(--font-size-body);line-height:1.8}
+.c-num{font-family:var(--font-display);font-size:var(--font-size-xl);font-weight:700;vertical-align:-2px;font-variant-numeric:tabular-nums}
+.c-num.crit{color:var(--color-resource)}
+.c-num.bad{color:var(--color-danger)}
+.c-lab{color:var(--color-text-muted)}
+.c-math{margin-top:var(--space-1-5);font-size:var(--font-size-xs);color:var(--color-text-muted)}
+.c-rule{height:1px;background:var(--color-border);margin:var(--space-2) 0}
+</style>
+<h1>Roll toast — three ways to make the final number the loudest thing</h1>
+<div class="grid">
+
+<!-- ============ A ============ -->
+<div class="col">
+ <h2>A · Verdict lane</h2>
+ <p>Two labelled boxes carry the two answers, and each box holds its own arithmetic — dimmed, on the sum's baseline to its right.</p>
+
+ <div class="card">
+  <div class="a-head"><span class="name">Perception</span></div>
+  <div class="a-lane"><div class="a-box"><span class="eyebrow">Check</span><span class="a-numrow"><span class="a-num">18</span><span class="a-formula">[<b>14</b>] +4</span></span></div></div>
+ </div>
+
+ <div class="card">
+  <div class="a-head"><span class="name">Longsword</span></div>
+  <div class="a-lane">
+   <div class="a-box"><span class="eyebrow">To hit</span><span class="a-numrow"><span class="a-num">21</span><span class="a-formula">[<b>14</b>] +7</span></span></div>
+   <div class="a-box dmg"><span class="eyebrow">Damage</span><span class="a-numrow"><span class="a-num">12</span><span class="a-formula">⚔ [<b>8</b>] +4</span></span><span class="a-sub">slashing</span></div>
+  </div>
+ </div>
+
+ <div class="card crit">
+  <div class="a-head"><span class="name">Rapier <span class="eyebrow gold">crit</span></span></div>
+  <div class="a-lane">
+   <div class="a-box critbox"><span class="eyebrow">To hit</span><span class="a-numrow"><span class="a-num">29</span><span class="a-formula">[<b class="gold">20</b>] +9</span></span></div>
+   <div class="a-box dmg critbox"><span class="eyebrow">Damage</span><span class="a-numrow"><span class="a-num">17</span><span class="a-formula">⚔ [<b>7</b>|<b>5</b>] +5</span></span><span class="a-sub">piercing · doubled</span></div>
+  </div>
+ </div>
+
+ <div class="card">
+  <div class="a-head"><span class="name">Flame Tongue</span></div>
+  <div class="a-lane">
+   <div class="a-box"><span class="eyebrow">To hit</span><span class="a-numrow"><span class="a-num">19</span><span class="a-formula">[<b>11</b>] +8</span></span></div>
+   <div class="a-box dmg"><span class="eyebrow">Damage</span><span class="a-numrow"><span class="a-num">19</span><span class="a-formula">⚔ [<b>6</b>] +4 · 🔥 [<b>4</b>|<b>5</b>]</span></span><span class="a-sub">10 slashing · 9 fire</span></div>
+  </div>
+ </div>
+
+ <div class="card miss">
+  <div class="a-head"><span class="name">Shortbow</span></div>
+  <div class="a-lane">
+   <div class="a-box"><span class="eyebrow">To hit</span><span class="a-numrow"><span class="a-num">7</span><span class="a-formula">[<b class="red">1</b>] +6</span></span></div>
+   <div class="a-box dmg missbox"><span class="eyebrow">Damage</span><span class="a-numrow"><span class="a-num">miss</span><span class="a-formula">natural 1</span></span></div>
+  </div>
+ </div>
+
+ <div class="card">
+  <div class="a-head"><span class="name">Longsword</span> <span class="eyebrow a-adv">advantage</span></div>
+  <div class="a-lane">
+   <div class="a-box"><span class="eyebrow">To hit</span><span class="a-numrow"><span class="a-num">19</span><span class="a-formula"><span class="br-adv">[</span><b>14</b> <s>7</s><span class="br-adv">]</span> +5</span></span></div>
+   <div class="a-box dmg"><span class="eyebrow">Damage</span><span class="a-numrow"><span class="a-num">9</span><span class="a-formula">&#9876; [<b>6</b>] +3</span></span><span class="a-sub">slashing</span></div>
+  </div>
+ </div>
+
+ <div class="card">
+  <div class="a-head"><span class="name">Greataxe</span> <span class="eyebrow a-dis">disadvantage</span></div>
+  <div class="a-lane">
+   <div class="a-box"><span class="eyebrow">To hit</span><span class="a-numrow"><span class="a-num">15</span><span class="a-formula"><span class="br-dis">[</span><b>9</b> <s>14</s><span class="br-dis">]</span> +6</span></span></div>
+   <div class="a-box dmg"><span class="eyebrow">Damage</span><span class="a-numrow"><span class="a-num">5</span><span class="a-formula">&#9876; [<b>2</b>] +3</span></span><span class="a-sub">slashing</span></div>
+  </div>
+ </div>
+
+ <div class="card">
+  <div class="a-head"><span class="name">Stealth</span> <span class="eyebrow a-adv">advantage</span></div>
+  <div class="a-lane">
+   <div class="a-box"><span class="eyebrow">Check</span><span class="a-numrow"><span class="a-num">23</span><span class="a-formula"><span class="br-adv">[</span><b>18</b> <s>3</s><span class="br-adv">]</span> +5</span></span></div>
+  </div>
+ </div>
+
+ <p style="margin:var(--space-5) 0 var(--space-2);font-size:var(--font-size-xs);color:var(--color-text-muted);min-height:0">
+  The same advantage roll, three ways to say which die was thrown away — the strike above is the first of them.</p>
+
+ <div class="card">
+  <div class="a-head"><span class="name">Longsword</span> <span class="eyebrow a-adv">advantage</span></div>
+  <div class="a-lane">
+   <div class="a-box"><span class="eyebrow">To hit</span><span class="a-numrow"><span class="a-num">19</span><span class="a-formula"><span class="br-adv">[</span><b>14</b> <s>7</s><span class="br-adv">]</span> +5</span></span><span class="a-sub">1 &middot; struck</span></div>
+   <div class="a-box"><span class="eyebrow">To hit</span><span class="a-numrow"><span class="a-num">19</span><span class="a-formula"><span class="br-adv">[</span><b class="kept">14</b><span class="a-drop"> &#8595;7</span><span class="br-adv">]</span> +5</span></span><span class="a-sub">2 &middot; arrow</span></div>
+   <div class="a-box"><span class="eyebrow">To hit</span><span class="a-numrow"><span class="a-num">19</span><span class="a-formula">[<b class="kept">14</b>] +5 <span class="a-drop">&middot; dropped 7</span></span></span><span class="a-sub">3 &middot; in words</span></div>
+  </div>
+ </div>
+</div>
+
+<!-- ============ B ============ -->
+<div class="col">
+ <h2>B · One hero number</h2>
+ <p>One number is the size of the card — the one you say out loud first. The other answer is a labelled chip beside it, and every die goes to a footer you are free to ignore.</p>
+
+ <div class="card">
+  <div class="b-top"><span class="b-hero">18</span>
+   <div class="b-meta"><span class="name">Perception</span><span class="b-chip"><span class="lab">check</span></span></div></div>
+  <div class="b-foot mathline">[<b>14</b>] +4</div>
+ </div>
+
+ <div class="card">
+  <div class="b-top"><span class="b-hero">21</span>
+   <div class="b-meta"><span class="name">Longsword</span><span class="b-chip"><span class="lab">to hit · dmg</span> 12 ⚔</span></div></div>
+  <div class="b-foot mathline">[<b>14</b>] +7 &nbsp;·&nbsp; ⚔ [<b>8</b>] +4</div>
+ </div>
+
+ <div class="card crit">
+  <div class="b-top"><span class="b-hero crit">29</span>
+   <div class="b-meta"><span class="name">Rapier</span><span class="b-chip critchip"><span class="lab gold">crit · dmg</span> 17 ⚔</span></div></div>
+  <div class="b-foot mathline">[<b class="gold">20</b>] +9 &nbsp;·&nbsp; ⚔ [<b>7</b>|<b>5</b>] +5</div>
+ </div>
+
+ <div class="card">
+  <div class="b-top"><span class="b-hero">19</span>
+   <div class="b-meta"><span class="name">Flame Tongue</span><span class="b-chip"><span class="lab">to hit · dmg</span> 19 &nbsp;⚔10 🔥9</span></div></div>
+  <div class="b-foot mathline">[<b>11</b>] +8 &nbsp;·&nbsp; ⚔ [<b>6</b>] +4 &nbsp;·&nbsp; 🔥 [<b>4</b>|<b>5</b>]</div>
+ </div>
+
+ <div class="card miss">
+  <div class="b-top"><span class="b-hero bad">7</span>
+   <div class="b-meta"><span class="name">Shortbow</span><span class="b-chip badchip"><span class="lab red">natural 1 · miss</span></span></div></div>
+  <div class="b-foot mathline">[<b class="red">1</b>] +6</div>
+ </div>
+</div>
+
+<!-- ============ C ============ -->
+<div class="col">
+ <h2>C · Table talk</h2>
+ <p>Reads as the sentence a player says to the DM. The numbers are oversized inside the words that name them, so there is no caption row at all.</p>
+
+ <div class="card">
+  <div class="c-line"><span class="name">Perception</span> <span class="c-lab">→</span> <span class="c-num">18</span></div>
+  <div class="c-rule"></div><div class="c-math">[<b>14</b>] +4</div>
+ </div>
+
+ <div class="card">
+  <div class="c-line"><span class="name">Longsword</span> <span class="c-lab">hits</span> <span class="c-num">21</span><span class="c-lab">, deals</span> <span class="c-num">12</span> <span class="c-lab">slashing</span></div>
+  <div class="c-rule"></div><div class="c-math">[<b>14</b>] +7 &nbsp;·&nbsp; ⚔ [<b>8</b>] +4</div>
+ </div>
+
+ <div class="card crit">
+  <div class="c-line"><span class="name">Rapier</span> <span class="c-lab">crits</span> <span class="c-num crit">29</span><span class="c-lab">, deals</span> <span class="c-num crit">17</span> <span class="c-lab">piercing</span></div>
+  <div class="c-rule"></div><div class="c-math">[<b class="gold">20</b>] +9 &nbsp;·&nbsp; ⚔ [<b>7</b>|<b>5</b>] +5 <span class="gold">· doubled</span></div>
+ </div>
+
+ <div class="card">
+  <div class="c-line"><span class="name">Flame Tongue</span> <span class="c-lab">hits</span> <span class="c-num">19</span><span class="c-lab">, deals</span> <span class="c-num">19</span> <span class="c-lab">— 10 slashing, 9 fire</span></div>
+  <div class="c-rule"></div><div class="c-math">[<b>11</b>] +8 &nbsp;·&nbsp; ⚔ [<b>6</b>] +4 &nbsp;·&nbsp; 🔥 [<b>4</b>|<b>5</b>]</div>
+ </div>
+
+ <div class="card miss">
+  <div class="c-line"><span class="name">Shortbow</span> <span class="c-lab">rolls</span> <span class="c-num bad">7</span> <span class="c-lab">—</span> <span class="c-num bad" style="font-size:var(--font-size-lg)">miss</span></div>
+  <div class="c-rule"></div><div class="c-math">[<b class="red">1</b>] +6 · natural 1</div>
+ </div>
+</div>
+</div>

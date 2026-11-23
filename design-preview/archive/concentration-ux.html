@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="uk" data-theme="charnik">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Charnik — concentration-save UX (2 variants)</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			:root {
+				--bg: #0f1116;
+				--surface: #171a21;
+				--surface-2: #1f232c;
+				--line: #272c37;
+				--line-2: #333a47;
+				--text: #e6e8ec;
+				--muted: #878f9d;
+				--accent: #cf2b40;
+				--accent-bright: #ef6b78;
+				--accent-deep: #b3243a;
+				--accent-soft: #241317;
+				--gold: #caa24a;
+				--good: #3bb8a6;
+				--good-soft: #11302c;
+				--danger: #e0635a;
+				--danger-soft: #2a1512;
+				--disp: 'Space Grotesk', system-ui, sans-serif;
+				--body: 'Inter', system-ui, sans-serif;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--body);
+				padding: 28px;
+			}
+			h1 {
+				font-family: var(--disp);
+				font-size: 22px;
+				margin: 0 0 4px;
+			}
+			.sub {
+				color: var(--muted);
+				font-size: 13px;
+				margin: 0 0 24px;
+				max-width: 900px;
+				line-height: 1.5;
+			}
+			.grid {
+				display: grid;
+				grid-template-columns: repeat(2, minmax(340px, 1fr));
+				gap: 24px;
+				max-width: 900px;
+			}
+			.variant > h2 {
+				font-family: var(--disp);
+				font-size: 15px;
+				margin: 0 0 3px;
+			}
+			.variant > .tag {
+				font-size: 12px;
+				color: var(--muted);
+				margin: 0 0 12px;
+				line-height: 1.45;
+			}
+			/* --- HP card (mirrors HpPanel) --------------------------------------------------------- */
+			.hitpoints {
+				background: var(--surface);
+				border: 1px solid var(--line);
+				border-radius: 14px;
+				padding: 12px 16px;
+			}
+			.hp-main {
+				display: flex;
+				gap: 15px;
+			}
+			.hp-readout {
+				flex: 1;
+				min-width: 0;
+			}
+			.eyebrow {
+				font-family: var(--body);
+				font-size: 10px;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--muted);
+			}
+			.hp-value {
+				font-family: var(--disp);
+				font-weight: 700;
+				font-size: 30px;
+				margin-top: 2px;
+			}
+			.hp-value small {
+				color: var(--muted);
+				font-size: 17px;
+				font-weight: 500;
+			}
+			.hp-bar {
+				height: 9px;
+				border-radius: 999px;
+				background: var(--surface-2);
+				overflow: hidden;
+				border: 1px solid var(--line);
+				margin-top: 8px;
+				display: flex;
+			}
+			.hp-bar > i {
+				display: block;
+				height: 100%;
+				background: var(--accent);
+			}
+			.hp-controls {
+				flex: none;
+				width: 120px;
+				display: flex;
+				flex-direction: column;
+				gap: 5px;
+				border-left: 1px solid var(--line);
+				padding-left: 15px;
+			}
+			.hp-btn {
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 12px;
+				padding: 5px 11px;
+				border-radius: 7px;
+				cursor: pointer;
+				border: 1px solid;
+			}
+			.hp-btn.heal {
+				background: var(--good-soft);
+				border-color: var(--good);
+				color: var(--good);
+			}
+			.hp-btn.damage {
+				background: var(--danger-soft);
+				border-color: var(--danger);
+				color: var(--danger);
+			}
+			.hp-num {
+				width: 100%;
+				text-align: center;
+				font-family: var(--body);
+				font-size: 15px;
+				background: var(--surface-2);
+				border: 1px solid var(--line);
+				border-radius: 7px;
+				color: var(--text);
+				padding: 4px;
+			}
+			/* --- concentration indicator ---------------------------------------------------------- */
+			.conc {
+				display: inline-flex;
+				align-items: center;
+				gap: 8px;
+				margin-top: 12px;
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 12px;
+				padding: 5px 11px;
+				border-radius: 999px;
+				background: var(--accent-soft);
+				border: 1px solid var(--accent);
+				color: var(--accent-bright);
+			}
+			.conc .lbl {
+				font-family: var(--body);
+				font-size: 11px;
+				border: 1px solid var(--accent);
+				border-radius: 5px;
+				padding: 1px 6px;
+			}
+			/* --- VARIANT A: smart, highlighted, suggested DC -------------------------------------- */
+			.conc-callout {
+				margin-top: 12px;
+				padding: 11px 13px;
+				border-radius: 11px;
+				border: 1px solid var(--accent);
+				background: var(--accent-soft);
+				box-shadow: 0 0 0 3px rgba(207, 43, 64, 0.16);
+				animation: glow 1.6s ease-in-out infinite alternate;
+			}
+			@keyframes glow {
+				to {
+					box-shadow: 0 0 0 5px rgba(207, 43, 64, 0.26);
+				}
+			}
+			.conc-callout .co-top {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 8px;
+			}
+			.co-title {
+				font-family: var(--disp);
+				font-weight: 700;
+				font-size: 13px;
+				color: var(--accent-bright);
+			}
+			.co-why {
+				font-size: 11px;
+				color: var(--muted);
+			}
+			.co-row {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				margin-top: 10px;
+			}
+			.co-dc {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				font-size: 12px;
+				color: var(--muted);
+			}
+			.co-dc input {
+				width: 46px;
+				text-align: center;
+				font-family: var(--body);
+				font-weight: 600;
+				font-size: 14px;
+				background: var(--surface-2);
+				border: 1px solid var(--line-2);
+				border-radius: 6px;
+				color: var(--text);
+				padding: 3px;
+			}
+			.roll-btn {
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 12px;
+				padding: 6px 13px;
+				border-radius: 7px;
+				cursor: pointer;
+				background: var(--accent-deep);
+				border: 1px solid var(--accent-deep);
+				color: #fff;
+				margin-left: auto;
+			}
+			.co-foot {
+				font-size: 11px;
+				color: var(--muted);
+				margin-top: 9px;
+			}
+			/* --- VARIANT B: minimal, always-present plain button ---------------------------------- */
+			.conc-row-b {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				margin-top: 12px;
+			}
+			.save-btn {
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 12px;
+				padding: 6px 13px;
+				border-radius: 7px;
+				cursor: pointer;
+				background: var(--surface-2);
+				border: 1px solid var(--line-2);
+				color: var(--text);
+			}
+			.hint {
+				font-size: 11px;
+				color: var(--muted);
+			}
+			.note {
+				font-size: 11px;
+				color: var(--muted);
+				margin-top: 10px;
+				line-height: 1.5;
+				border-top: 1px dashed var(--line);
+				padding-top: 9px;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Concentration save — 2 UX variants</h1>
+		<p class="sub">
+			Both share the principle: the app never rolls the save for you and never pops a modal on every
+			Damage press (you might be correcting an entry). It only <b>surfaces</b> the option. Scenario:
+			concentrating on <b>Bless</b>, just pressed <b>Damage 22</b>. Fail → the app <i>offers</i> to
+			drop concentration.
+		</p>
+
+		<div class="grid">
+			<!-- ============ VARIANT A ============ -->
+			<section class="variant">
+				<h2>A · Smart — highlight + suggested DC</h2>
+				<p class="tag">
+					After a Damage press while concentrating, a glowing call-out appears with a pre-filled but
+					<b>editable</b> DC (max 10 / half the damage). One click to roll. Corrections just update
+					the suggestion — no modal.
+				</p>
+				<div class="hitpoints">
+					<div class="hp-main">
+						<div class="hp-readout">
+							<div class="eyebrow">Hit points</div>
+							<div class="hp-value">26<small> / 40</small></div>
+							<div class="hp-bar"><i style="width: 65%"></i></div>
+						</div>
+						<div class="hp-controls">
+							<button class="hp-btn heal">＋ Heal</button>
+							<input class="hp-num" value="22" />
+							<button class="hp-btn damage">− Damage</button>
+						</div>
+					</div>
+					<div class="conc">◈ Concentration <span class="lbl">Bless</span></div>
+
+					<div class="conc-callout">
+						<div class="co-top">
+							<span class="co-title">Concentration check</span>
+							<span class="co-why">you took 22 damage</span>
+						</div>
+						<div class="co-row">
+							<span class="co-dc">DC <input value="11" /></span>
+							<span class="co-why">d20 + CON save (+3)</span>
+							<button class="roll-btn">🎲 Roll save</button>
+						</div>
+						<div class="co-foot">Fail → you'll be asked to drop Bless.</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- ============ VARIANT B ============ -->
+			<section class="variant">
+				<h2>B · Minimal — plain always-present button</h2>
+				<p class="tag">
+					While concentrating, a plain “Concentration save” button just sits by the indicator. No
+					auto-DC, no highlight — you decide when to roll and know your own DC. Least clever, least
+					in-the-way.
+				</p>
+				<div class="hitpoints">
+					<div class="hp-main">
+						<div class="hp-readout">
+							<div class="eyebrow">Hit points</div>
+							<div class="hp-value">26<small> / 40</small></div>
+							<div class="hp-bar"><i style="width: 65%"></i></div>
+						</div>
+						<div class="hp-controls">
+							<button class="hp-btn heal">＋ Heal</button>
+							<input class="hp-num" value="22" />
+							<button class="hp-btn damage">− Damage</button>
+						</div>
+					</div>
+					<div class="conc-row-b">
+						<div class="conc">◈ Concentration <span class="lbl">Bless</span></div>
+						<button class="save-btn">🎲 Concentration save</button>
+					</div>
+					<div class="hint" style="margin-top: 8px">DC 10 or half the damage taken, whichever is higher.</div>
+					<div class="note">
+						Trade-off: never nags, but doesn’t remind you a save is due, and you compute the DC
+						yourself.
+					</div>
+				</div>
+			</section>
+		</div>
+	</body>
+</html>

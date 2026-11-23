@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<title>GM request · H2 motion</title>
+<style>
+	:root {
+		--bg: #0f1116; --surface: #171a21; --surface-2: #1d212a; --border: #272c37; --border-strong: #333a47;
+		--text: #e6e8ec; --muted: #878f9d; --accent: #cf2b40; --accent-deep: #b3243a; --accent-soft: #241317;
+		--accent-line: #3a1c22; --gold: #e0a339;
+		--display: 'Space Grotesk', system-ui, 'Segoe UI', sans-serif;
+		--body: 'Inter', system-ui, 'Segoe UI', sans-serif;
+		/* one curve and three lengths for the whole move */
+		--ease: cubic-bezier(.2, .8, .2, 1);
+		--t-fade: 140ms; --t-grow: 320ms; --t-settle: 220ms;
+	}
+	* { box-sizing: border-box; }
+	body { margin: 0; padding: 32px; background: #0a0c10; color: var(--text); font: 14px/1.5 var(--body); }
+	.ctl { display: flex; gap: 10px; margin-bottom: 18px; }
+	.ctl button { padding: 6px 14px; border-radius: 4px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); font: 600 12px var(--body); }
+	.note { color: var(--muted); max-width: 980px; margin: 0 0 18px; }
+
+	.play { width: 1040px; }
+	.play-row {
+		display: grid; grid-template-columns: 1fr 310px; gap: 12px;
+		/* coming back: the content leaves first, then the row narrows */
+		transition: grid-template-columns var(--t-grow) var(--ease) var(--t-fade);
+	}
+	.asking .play-row { grid-template-columns: 1fr 500px; transition-delay: 0ms; }
+
+	.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+	.pass { display: flex; align-items: center; gap: 10px; padding: 0 16px; height: 56px; overflow: hidden; }
+	.pass .eb { font: 600 10px var(--body); letter-spacing: .1em; color: var(--muted); white-space: nowrap; }
+	.pill { font: 600 11px var(--body); padding: 4px 10px; border-radius: 999px; background: var(--surface-2); color: #c7cbd2; white-space: nowrap; }
+	/* the two that give way fold their width as well as their ink, so nothing after them jumps */
+	.pill.fold {
+		max-width: 80px; overflow: hidden;
+		transition: opacity var(--t-fade) linear calc(var(--t-fade) + var(--t-grow) - 120ms),
+			max-width var(--t-grow) var(--ease) var(--t-fade),
+			padding var(--t-grow) var(--ease) var(--t-fade),
+			margin var(--t-grow) var(--ease) var(--t-fade);
+	}
+	.asking .pill.fold {
+		opacity: 0; max-width: 0; padding-inline: 0; margin-left: -10px;
+		transition: opacity var(--t-fade) linear, max-width var(--t-grow) var(--ease),
+			padding var(--t-grow) var(--ease), margin var(--t-grow) var(--ease);
+	}
+
+	.bar {
+		display: flex; align-items: stretch; height: 56px; overflow: hidden; position: relative;
+		transition: border-color var(--t-grow) var(--ease), background-color var(--t-grow) var(--ease);
+	}
+	.asking .bar { border-color: var(--accent-deep); background: var(--accent-soft); }
+	/* the two faces share one box; one leaves before the other arrives */
+	.face { position: absolute; inset: 0 auto 0 0; right: 0; display: flex; align-items: stretch; }
+	.idle { opacity: 1; transition: opacity var(--t-settle) linear calc(var(--t-fade) + var(--t-grow) - 140ms); }
+	.asking .idle { opacity: 0; transition-delay: 0ms; pointer-events: none; }
+	.req { opacity: 0; transform: translateY(4px); pointer-events: none;
+		transition: opacity var(--t-fade) linear, transform var(--t-fade) var(--ease); }
+	.asking .req { opacity: 1; transform: none; pointer-events: auto;
+		transition: opacity var(--t-settle) linear calc(var(--t-grow) - 140ms), transform var(--t-settle) var(--ease) calc(var(--t-grow) - 140ms); }
+
+	.last { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 0 14px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+	.last .roll { color: var(--text); font: 600 13px var(--body); }
+	.cue { display: flex; align-items: center; padding: 0 14px; border-left: 1px solid var(--border); color: var(--muted); font-size: 12px; white-space: nowrap; transition: border-color var(--t-grow) var(--ease), color var(--t-grow); }
+	.asking .cue { border-left-color: var(--accent-line); color: var(--text); }
+	.act { display: flex; align-items: center; gap: 6px; padding: 0 10px; border-left: 1px solid var(--accent-line); }
+	.who { color: var(--muted); font-size: 12px; }
+	.what { font: 600 16px/1.2 var(--display); color: var(--text); overflow: hidden; text-overflow: ellipsis; }
+	.dc { font: 600 12px var(--body); color: var(--gold); margin-left: 6px; }
+	.act button { padding: 5px 12px; border-radius: 4px; border: 1px solid var(--border-strong); background: transparent; color: var(--text); font: 600 12px var(--body); }
+	.act button.yes { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+	/* attention once settled: three slow breaths of the border, then still */
+	/* one wave: a faint glow as it arrives, fading to nothing, then still */
+	@keyframes one-wave { 0% { box-shadow: 0 0 0 0 #cf2b4026; } 100% { box-shadow: 0 0 0 5px #cf2b4000; } }
+	.wave.asking .bar { animation: one-wave 1.4s ease-out calc(var(--t-grow) - 60ms) 1; }
+
+	.below { margin-top: 18px; color: var(--muted); font: 600 10px var(--body); letter-spacing: .1em; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+
+	@media (prefers-reduced-motion: reduce) {
+		.play-row, .pill.fold, .bar, .face, .cue { transition: none !important; }
+		.asking .bar { animation: none; }
+	}
+</style>
+</head>
+<body>
+<p class="note">Натисніть «Ведучий просить», потім «Кинути» чи «Ні». Вхід: дві кнопки часу згортаються, рядок ширшає, тоді з'являється запит; рамка раз м'яко світиться і далі стоїть кольорова до відповіді. Вихід — у зворотному порядку: запит зникає, рядок вужчає, кнопки часу повертаються, а в рядку стоїть щойно зроблений кидок. Із «зменшеним рухом» у системі — без анімації.</p>
+<div class="ctl"><button id="ask">Ведучий просить</button><span id="mode" style="color:var(--muted);font-size:12px;align-self:center"></span></div>
+<div class="play wave" id="play">
+	<div class="play-row">
+		<div class="card pass"><span class="eb">ПЛИН ЧАСУ</span><span class="pill">+1 раунд</span><span class="pill">+1 хв</span><span class="pill fold">+10 хв</span><span class="pill fold">+1 год</span></div>
+		<div class="card bar">
+			<div class="face idle"><div class="last"><span>Останній кидок</span><span class="roll" id="last">Атлетика 14</span></div><div class="cue">журнал ›</div></div>
+			<div class="face req"><div class="last"><span class="who">Ведучий просить</span><span class="what">Рятівний кидок Спритності<span class="dc">СК 15</span></span></div>
+				<div class="act"><button id="no">Ні</button><button class="yes" id="yes">Кинути</button></div><div class="cue">журнал ›</div></div>
+		</div>
+	</div>
+	<div class="below">БІЙ</div>
+</div>
+<script>
+	const play = document.getElementById('play');
+	const last = document.getElementById('last');
+	document.getElementById('m-wave').onclick = () => set('wave', 'зараз: одна хвиля');
+	document.getElementById('ask').onclick = () => play.classList.add('asking');
+	document.getElementById('yes').onclick = () => { last.textContent = 'Рятівний СПР 17 · пройдено'; play.classList.remove('asking'); };
+	document.getElementById('no').onclick = () => { last.textContent = 'Запит відхилено'; play.classList.remove('asking'); };
+</script>
+</body>
+</html>

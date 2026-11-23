@@ -1,0 +1,480 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Defence chips on the play sheet — variants</title>
+		<link
+			rel="stylesheet"
+			href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap"
+		/>
+		<style>
+			/* Real token values, copied from src/lib/styles/tokens.css (dark block) so a judgement made
+			   here is a judgement about the app. The chip rules below are the app's own, not lookalikes:
+			   .senses-strip / .def-group / .def-label / .def-chip come from CombatStrip.svelte, and .tag
+			   from SheetDefenses.svelte. */
+			:root {
+				--space-1-5: 0.375rem;
+				--space-2: 0.5rem;
+				--space-2-5: 0.625rem;
+				--space-4: 1rem;
+				--radius-sm: 6px;
+				--radius-md: 11px;
+				--font-display: 'Space Grotesk', system-ui, sans-serif;
+				--font-body: 'Inter', system-ui, sans-serif;
+				--font-size-micro: 0.625rem;
+				--font-size-xs: 0.6875rem;
+				--color-surface: #171a21;
+				--color-surface-2: #1f232c;
+				--color-border: #272c37;
+				--color-border-strong: #333a47;
+				--color-text: #e6e8ec;
+				--color-text-muted: #878f9d;
+				--color-accent-bright: #ef6b78;
+				--color-good: #3bb8a6;
+				--color-good-soft: #11302c;
+				--color-good-line: #2c4a45;
+				--color-danger: #e0635a;
+				--color-gold: #caa24a;
+				--color-gold-soft: #2a2415;
+				--color-gold-line: #4a3e1f;
+			}
+			body {
+				margin: 0;
+				padding: 2rem 1.5rem 4rem;
+				background: #0f1116;
+				color: var(--color-text);
+				font-family: var(--font-body);
+				font-size: 14px;
+			}
+			.wrap {
+				max-width: 62rem;
+				margin: 0 auto;
+			}
+			h1 {
+				font-family: var(--font-display);
+				font-size: 1.5rem;
+				margin: 0 0 0.4rem;
+			}
+			.lede {
+				color: var(--color-text-muted);
+				max-width: 62ch;
+				margin: 0 0 2.5rem;
+				line-height: 1.6;
+			}
+			h2 {
+				font-family: var(--font-display);
+				font-size: 1rem;
+				margin: 2.5rem 0 0.3rem;
+			}
+			h2 .badge {
+				font-family: var(--font-body);
+				font-size: 0.625rem;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: var(--color-text-muted);
+				border: 1px solid var(--color-border-strong);
+				border-radius: 4px;
+				padding: 1px 6px;
+				margin-left: 0.5rem;
+				vertical-align: 2px;
+			}
+			.note {
+				color: var(--color-text-muted);
+				margin: 0 0 0.9rem;
+				max-width: 68ch;
+				line-height: 1.55;
+				font-size: 0.82rem;
+			}
+			.note b {
+				color: var(--color-text);
+				font-weight: 600;
+			}
+
+			/* ── the app's own strip ────────────────────────────────────────────────── */
+			.senses-strip {
+				display: flex;
+				flex-wrap: wrap;
+				align-items: baseline;
+				gap: 14px;
+				background: var(--color-surface);
+				border: 1px solid var(--color-border);
+				border-radius: var(--radius-md);
+				padding: var(--space-2-5) var(--space-4);
+			}
+			.bar-label {
+				font-family: var(--font-body);
+				font-size: var(--font-size-micro);
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--color-text-muted);
+			}
+			.def-group {
+				display: inline-flex;
+				align-items: center;
+				gap: var(--space-1-5);
+			}
+			.def-label {
+				font-family: var(--font-body);
+				font-size: var(--font-size-xs);
+				color: var(--color-text-muted);
+			}
+			.def-chip {
+				font-family: var(--font-body);
+				font-weight: 400;
+				font-size: var(--font-size-xs);
+				line-height: 1.6;
+				padding: 1px var(--space-2);
+				border-radius: var(--radius-sm);
+				border: 1px solid var(--color-border-strong);
+				color: var(--color-text);
+				/* NOT `capitalize`: the shipped rule uppercases the f in "60 Ft", and once a chip can be a
+				   whole sentence it would uppercase every word of it. A damage type is already lowercase
+				   in the data and reads fine. */
+			}
+			.def-chip--resist {
+				border-color: var(--color-good-line);
+				color: var(--color-good);
+			}
+			.def-chip--immune {
+				border-color: var(--color-good-line);
+				background: var(--color-good-soft);
+				color: var(--color-good);
+			}
+			.def-chip--vulnerable {
+				border-color: color-mix(in srgb, var(--color-danger) 45%, var(--color-surface));
+				color: var(--color-danger);
+			}
+			.def-chip--senses {
+				color: var(--color-text-muted);
+			}
+			/* the two kinds the play sheet does not have today */
+			.def-chip--qualified {
+				border-color: var(--color-gold-line);
+				color: var(--color-gold);
+			}
+			.def-chip--incoming {
+				border-color: var(--color-gold-line);
+				background: var(--color-gold-soft);
+				color: var(--color-gold);
+			}
+			/* a sentence-chip is not a word-chip: it must not be capitalised per chip, and it wraps */
+			.def-chip--sentence {
+				text-transform: none;
+			}
+
+			/* ── the builder's flat tag, for variant A ──────────────────────────────── */
+			.tags {
+				display: flex;
+				flex-wrap: wrap;
+				gap: var(--space-1-5);
+				background: var(--color-surface);
+				border: 1px solid var(--color-border);
+				border-radius: var(--radius-md);
+				padding: var(--space-2-5) var(--space-4);
+				align-items: center;
+			}
+			.tag {
+				font-size: var(--font-size-xs);
+				line-height: 1.6;
+				padding: 1px var(--space-2);
+				border-radius: var(--radius-sm);
+				border: 1px solid var(--color-border-strong);
+				color: var(--color-text);
+			}
+			.tag.gold {
+				border-color: var(--color-gold-line);
+				color: var(--color-gold);
+			}
+			.tag.accent {
+				border-color: color-mix(in srgb, var(--color-danger) 45%, var(--color-surface));
+				color: var(--color-danger);
+			}
+
+			.open-flag {
+				color: var(--color-accent-bright);
+			}
+
+			/* variant C: the incoming group is about someone ELSE's die, so it sits behind a rule */
+			.def-group--aside {
+				padding-left: var(--space-2-5);
+				border-left: 1px solid var(--color-border-strong);
+			}
+			.def-label--aside {
+				color: var(--color-gold);
+			}
+
+			.narrow {
+				max-width: 393px;
+				margin-top: 0.75rem;
+			}
+			/* THE NARROW RULE B NEEDS. A group is a label plus its chips; at 393 two groups on one line
+			   leave neither enough room, so the label wraps to two words and the chip wraps mid-sentence.
+			   One group per line fixes both at once and costs one declaration. */
+			.narrow.fixed .def-group {
+				width: 100%;
+				align-items: baseline;
+			}
+			.narrow.fixed .def-label {
+				flex: 0 0 5.25rem;
+			}
+			.narrow.fixed .senses-strip {
+				gap: var(--space-2);
+			}
+			.w-label {
+				font-size: 0.625rem;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: var(--color-text-muted);
+				margin: 1.1rem 0 0.35rem;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="wrap">
+			<h1>Defence chips on the play sheet</h1>
+			<p class="lede">
+				Eleven shipped magic items grant a qualified defence ("+2 AC vs ranged attacks") or an
+				incoming-attack statement ("attacks against you have disadvantage"). Both render in the
+				builder and <b>neither reaches the Combat screen</b>, which has its own independent strip
+				knowing four buckets. Each block below is the Combat strip — real tokens, the app's own chip
+				CSS — at 1280 and again at 393. The labels are the ones agreed in review.
+			</p>
+
+			<h2>Now <span class="badge">shipped</span></h2>
+			<p class="note">
+				Four groups, each with a label. The two new kinds are simply absent: a player wearing a
+				Cloak of Displacement sees nothing about it here.
+			</p>
+			<div class="senses-strip">
+				<span class="bar-label">Defences</span>
+				<span class="def-group"
+					><span class="def-label">Resist</span
+					><span class="def-chip def-chip--resist">fire</span></span
+				>
+				<span class="def-group"
+					><span class="def-label">Immune</span
+					><span class="def-chip def-chip--immune">poison</span
+					><span class="def-chip def-chip--immune">charmed</span></span
+				>
+				<span class="def-group"
+					><span class="def-label">Senses</span
+					><span class="def-chip def-chip--senses">darkvision 60 ft</span></span
+				>
+			</div>
+
+			<h2>A — port the builder's row as it stands <span class="badge">smallest diff</span></h2>
+			<p class="note">
+				What "reuse <b>SheetDefenses</b>" literally gives: one flat list of sentence-chips. It is
+				complete, and it is the problem I flagged — a sense, a conditional AC bonus and a fact about
+				what an <em>attacker</em> rolls all wear the same pill, and the Combat strip loses the group
+				labels it already had. <b>This is the variant I would not ship.</b>
+			</p>
+			<div class="tags">
+				<span class="tag gold">Darkvision 60 ft</span>
+				<span class="tag gold">+2 AC vs ranged attacks</span>
+				<span class="tag gold">advantage on saves vs spells</span>
+				<span class="tag gold">attacks against you have disadvantage</span>
+				<span class="tag gold">spell attacks against you have disadvantage</span>
+				<span class="tag gold">resists fire</span>
+				<span class="tag gold">immune to poison</span>
+			</div>
+
+			<h2>B — every group names what MOVES <span class="badge">agreed</span></h2>
+			<p class="note">
+				The Combat strip already answers the kinds question with a labelled group. What the labels
+				sort on is <b>whose die it is</b>: <b>AC</b> and <b>Saves</b> move your own number or your own
+				roll (a <code>QualifiedDefense</code> carries exactly that <code>target</code>), and
+				<b>Against you</b> is the one group whose subject is somebody else — an
+				<code>IncomingAttack</code> has no target at all, because the die is the attacker's.
+			</p>
+			<p class="note">
+				<b>The case goes in the CHIP, never in the label.</b> An earlier pass called the first group
+				"Only vs", which reads well until you notice that an incoming statement can be qualified too
+				— Spellguard Shield is <code>disadvantage:attacked.spell</code>, equally "only vs spells". A
+				scope is a qualifier, not a subject.
+			</p>
+			<p class="note">
+				<b class="open-flag">Saves is the open one.</b> Two rows under one label, each a swing plus a
+				case, is the part that has not found its form — everything else here is settled. Next
+				variants start from this group.
+			</p>
+			<div class="senses-strip">
+				<span class="bar-label">Defences</span>
+				<span class="def-group"
+					><span class="def-label">Resist</span
+					><span class="def-chip def-chip--resist">fire</span></span
+				>
+				<span class="def-group"
+					><span class="def-label">Immune</span
+					><span class="def-chip def-chip--immune">poison</span
+					><span class="def-chip def-chip--immune">charmed</span></span
+				>
+				<span class="def-group"
+					><span class="def-label">AC</span
+					><span class="def-chip def-chip--qualified def-chip--sentence"
+						>+2 · against ranged attacks</span
+					></span
+				>
+				<span class="def-group"
+					><span class="def-label">Saves</span
+					><span class="def-chip def-chip--qualified def-chip--sentence"
+						>advantage · against spells</span
+					><span class="def-chip def-chip--qualified def-chip--sentence"
+						>advantage · against magical effects</span
+					></span
+				>
+				<span class="def-group"
+					><span class="def-label">Against you</span
+					><span class="def-chip def-chip--incoming def-chip--sentence">attacks: disadvantage</span
+					><span class="def-chip def-chip--incoming def-chip--sentence"
+						>spell attacks: disadvantage</span
+					></span
+				>
+				<span class="def-group"
+					><span class="def-label">Senses</span
+					><span class="def-chip def-chip--senses">darkvision 60 ft</span></span
+				>
+			</div>
+
+			<h2>C — B, with the foreign die set apart <span class="badge">if B reads flat</span></h2>
+			<p class="note">
+				Same as B, except <b>Against you</b> sits last behind a hairline rule and its label takes the
+				chip colour. The argument for it: it is the only group on the strip whose subject is not you,
+				which is exactly why it needed a channel of its own in the engine. The argument against: one
+				more rule on a strip that already carries six groups.
+			</p>
+			<div class="senses-strip">
+				<span class="bar-label">Defences</span>
+				<span class="def-group"
+					><span class="def-label">Resist</span
+					><span class="def-chip def-chip--resist">fire</span></span
+				>
+				<span class="def-group"
+					><span class="def-label">Immune</span
+					><span class="def-chip def-chip--immune">poison</span
+					><span class="def-chip def-chip--immune">charmed</span></span
+				>
+				<span class="def-group"
+					><span class="def-label">AC</span
+					><span class="def-chip def-chip--qualified def-chip--sentence"
+						>+2 · against ranged attacks</span
+					></span
+				>
+				<span class="def-group"
+					><span class="def-label">Saves</span
+					><span class="def-chip def-chip--qualified def-chip--sentence"
+						>advantage · against spells</span
+					><span class="def-chip def-chip--qualified def-chip--sentence"
+						>advantage · against magical effects</span
+					></span
+				>
+				<span class="def-group"
+					><span class="def-label">Senses</span
+					><span class="def-chip def-chip--senses">darkvision 60 ft</span></span
+				>
+				<span class="def-group def-group--aside"
+					><span class="def-label def-label--aside">Against you</span
+					><span class="def-chip def-chip--incoming def-chip--sentence">attacks: disadvantage</span
+					><span class="def-chip def-chip--incoming def-chip--sentence"
+						>spell attacks: disadvantage</span
+					></span
+				>
+			</div>
+
+			<p class="w-label">
+				The same three at 393px — B and C carrying the one narrow rule they need
+			</p>
+
+			<div class="narrow fixed">
+				<p class="note"><b>A</b></p>
+				<div class="tags">
+					<span class="tag gold">Darkvision 60 ft</span>
+					<span class="tag gold">+2 AC vs ranged attacks</span>
+					<span class="tag gold">advantage on saves vs spells</span>
+					<span class="tag gold">attacks against you have disadvantage</span>
+					<span class="tag gold">spell attacks against you have disadvantage</span>
+					<span class="tag gold">resists fire</span>
+					<span class="tag gold">immune to poison</span>
+				</div>
+
+				<p class="note" style="margin-top: 1rem"><b>B</b></p>
+				<div class="senses-strip">
+					<span class="bar-label">Defences</span>
+					<span class="def-group"
+						><span class="def-label">Resist</span
+						><span class="def-chip def-chip--resist">fire</span></span
+					>
+					<span class="def-group"
+						><span class="def-label">Immune</span
+						><span class="def-chip def-chip--immune">poison</span
+						><span class="def-chip def-chip--immune">charmed</span></span
+					>
+					<span class="def-group"
+						><span class="def-label">AC</span
+						><span class="def-chip def-chip--qualified def-chip--sentence"
+							>+2 · against ranged attacks</span
+						></span
+					>
+					<span class="def-group"
+						><span class="def-label">Saves</span
+						><span class="def-chip def-chip--qualified def-chip--sentence"
+							>advantage · against spells</span
+						><span class="def-chip def-chip--qualified def-chip--sentence"
+							>advantage · against magical effects</span
+						></span
+					>
+					<span class="def-group"
+						><span class="def-label">Against you</span
+						><span class="def-chip def-chip--incoming def-chip--sentence">attacks: disadvantage</span
+						><span class="def-chip def-chip--incoming def-chip--sentence"
+							>spell attacks: disadvantage</span
+						></span
+					>
+					<span class="def-group"
+						><span class="def-label">Senses</span
+						><span class="def-chip def-chip--senses">darkvision 60 ft</span></span
+					>
+				</div>
+
+				<p class="note" style="margin-top: 1rem"><b>C</b></p>
+				<div class="senses-strip">
+					<span class="bar-label">Defences</span>
+					<span class="def-group"
+						><span class="def-label">Resist</span
+						><span class="def-chip def-chip--resist">fire</span></span
+					>
+					<span class="def-group"
+						><span class="def-label">Immune</span
+						><span class="def-chip def-chip--immune">poison</span
+						><span class="def-chip def-chip--immune">charmed</span></span
+					>
+					<span class="def-group"
+						><span class="def-label">AC</span
+						><span class="def-chip def-chip--qualified def-chip--sentence"
+							>+2 · against ranged attacks</span
+						></span
+					>
+					<span class="def-group"
+						><span class="def-label">Saves</span
+						><span class="def-chip def-chip--qualified def-chip--sentence"
+							>advantage · against spells</span
+						><span class="def-chip def-chip--qualified def-chip--sentence"
+							>advantage · against magical effects</span
+						></span
+					>
+					<span class="def-group"
+						><span class="def-label">Senses</span
+						><span class="def-chip def-chip--senses">darkvision 60 ft</span></span
+					>
+					<span class="def-group def-group--aside"
+						><span class="def-label def-label--aside">Against you</span
+						><span class="def-chip def-chip--incoming def-chip--sentence">attacks: disadvantage</span
+						><span class="def-chip def-chip--incoming def-chip--sentence"
+							>spell attacks: disadvantage</span
+						></span
+					>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,391 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Effects block — final v1 + icon pickers</title>
+		<style>
+			@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap');
+			:root {
+				--bg: #0f1116;
+				--surface: #171a21;
+				--surface-2: #1f232c;
+				--border: #272c37;
+				--border-strong: #333a47;
+				--text: #e6e8ec;
+				--muted: #878f9d;
+				--accent: #cf2b40;
+				--accent-bright: #ef6b78;
+				--resource: #caa24a;
+				--good: #3bb8a6;
+				--font-d: 'Space Grotesk', sans-serif;
+				--font-m: 'JetBrains Mono', monospace;
+			}
+			body {
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--font-d);
+				margin: 0;
+				padding: 32px;
+			}
+			h1 {
+				font-size: 18px;
+				font-weight: 700;
+				margin: 0 0 4px;
+			}
+			.lead {
+				color: var(--muted);
+				font-size: 13px;
+				margin: 0 0 24px;
+			}
+			.layout {
+				display: flex;
+				gap: 46px;
+				align-items: flex-start;
+			}
+			.cap {
+				font-family: var(--font-m);
+				font-size: 11px;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: var(--accent-bright);
+				margin: 0 0 10px 2px;
+			}
+			.card {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 14px;
+				padding: 16px;
+				width: 430px;
+			}
+			.phead {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				margin: 0 0 6px;
+			}
+			.ptitle {
+				font-weight: 600;
+				font-size: 12px;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: var(--muted);
+				margin-right: auto;
+			}
+			.pill-btn {
+				font-weight: 600;
+				font-size: 12px;
+				color: var(--muted);
+				background: transparent;
+				border: 1px solid var(--border);
+				border-radius: 7px;
+				padding: 5px 11px;
+			}
+			.grip {
+				color: var(--border-strong);
+				font-size: 14px;
+			}
+			.x {
+				background: transparent;
+				border: 0;
+				color: var(--border-strong);
+				cursor: pointer;
+				font-size: 12px;
+				flex: none;
+			}
+			.nm {
+				font-weight: 600;
+				font-size: 13px;
+				color: var(--text); /* ALL names white */
+			}
+			/* one tag family; inline-flex + fixed line-height so red & teal pills are the SAME height */
+			.tag {
+				display: inline-flex;
+				align-items: center;
+				line-height: 1.35;
+				font-family: var(--font-m);
+				font-size: 10px;
+				border: 1px solid var(--border);
+				background: var(--surface-2);
+				border-radius: 5px;
+				padding: 1px 6px;
+				color: var(--muted);
+				white-space: nowrap;
+				flex: none;
+			}
+			.tag.pos {
+				color: var(--good);
+				border-color: rgba(59, 184, 166, 0.4);
+				background: rgba(59, 184, 166, 0.08);
+			}
+			.tag.neg {
+				color: var(--accent-bright);
+				border-color: rgba(207, 43, 64, 0.45);
+				background: rgba(207, 43, 64, 0.08);
+			}
+			.dsel {
+				display: inline-flex;
+				align-items: center;
+				gap: 5px;
+				font-family: var(--font-m);
+				font-size: 10px;
+				color: var(--resource);
+				border: 1px solid var(--border-strong);
+				border-radius: 7px;
+				padding: 3px 7px;
+				white-space: nowrap;
+				flex: none;
+			}
+			.ghdr {
+				display: flex;
+				align-items: center;
+				gap: 7px;
+				font-family: var(--font-m);
+				font-size: 9px;
+				letter-spacing: 0.13em;
+				text-transform: uppercase;
+				padding: 12px 0 5px;
+			}
+			.ghdr.buff {
+				color: var(--good);
+			}
+			.ghdr.debuff {
+				color: var(--accent-bright);
+			}
+			.ghdr.rsrc {
+				color: var(--resource);
+			}
+			.ghdr .ct {
+				color: var(--muted);
+			}
+			.ghdr svg {
+				flex: none;
+			}
+			/* effect row — wrap overflow (variant 1): name + tags wrap in .main, control stays top-right */
+			.r {
+				display: flex;
+				gap: 9px;
+				padding: 7px 0;
+				border-top: 1px solid var(--border);
+				align-items: flex-start;
+			}
+			.sec:first-of-type .r:first-of-type {
+				border-top: 0;
+			}
+			.main {
+				flex: 1;
+				min-width: 0;
+				display: flex;
+				flex-wrap: wrap;
+				align-items: center;
+				gap: 6px 8px;
+			}
+			.ctrl {
+				display: flex;
+				gap: 8px;
+				flex: none;
+			}
+			/* resource row */
+			.rr {
+				display: flex;
+				align-items: center;
+				gap: 9px;
+				padding: 7px 0;
+				border-top: 1px solid var(--border);
+			}
+			.rr .rname {
+				font-weight: 600;
+				font-size: 13px;
+				color: var(--text);
+				flex: 1;
+			}
+			.pips {
+				display: inline-flex;
+				gap: 4px;
+			}
+			.pip {
+				width: 11px;
+				height: 11px;
+				border-radius: 50%;
+				border: 1px solid var(--resource);
+				background: var(--resource);
+			}
+			.pip.off {
+				background: transparent;
+				border-color: var(--border-strong);
+			}
+			.rcount {
+				font-family: var(--font-m);
+				font-size: 10px;
+				color: var(--muted);
+				min-width: 26px;
+			}
+			.recharge {
+				font-family: var(--font-m);
+				font-size: 10px;
+				color: var(--resource);
+				border: 1px solid #5a4d28;
+				background: rgba(202, 162, 74, 0.08);
+				border-radius: 5px;
+				padding: 1px 6px;
+				white-space: nowrap;
+			}
+
+			/* ===== icon picker panel ===== */
+			.picker {
+				width: 300px;
+			}
+			.picker h3 {
+				font-family: var(--font-m);
+				font-size: 10px;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--muted);
+				margin: 0 0 8px;
+			}
+			.opts {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+				margin-bottom: 22px;
+			}
+			.opt {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 5px;
+				width: 62px;
+			}
+			.chip {
+				width: 100%;
+				height: 34px;
+				display: grid;
+				place-items: center;
+				border: 1px solid var(--border-strong);
+				border-radius: 8px;
+				background: var(--surface);
+			}
+			.chip.deb {
+				color: var(--accent-bright);
+			}
+			.chip.res {
+				color: var(--resource);
+			}
+			.opt .lbl {
+				font-family: var(--font-m);
+				font-size: 9px;
+				color: var(--muted);
+			}
+			.chip svg {
+				display: block;
+			}
+			.big {
+				font-size: 17px;
+				line-height: 1;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Effects block — final (variant 1) · white names · fixed pills · wrap overflow</h1>
+		<p class="lead">Left: the block. Right: pick the Debuffs + Resources header icons.</p>
+		<div class="layout">
+			<!-- ===== THE BLOCK ===== -->
+			<div>
+				<p class="cap">3-section block · variant 1</p>
+				<div class="card">
+					<div class="phead">
+						<span class="ptitle">Effects &amp; conditions</span>
+						<button class="pill-btn">＋ Add effect</button><span class="grip">⠿</span>
+					</div>
+
+					<div class="sec">
+						<!-- buff icon = shield + plus (pairs with the cracked-shield debuff) -->
+						<div class="ghdr buff">
+							<svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M10 2.5 L16 5 V10 C16 14 13 16.6 10 18 C7 16.6 4 14 4 10 V5 Z" /><path d="M10 7 V12 M7.5 9.5 H12.5" stroke-linecap="round" /></svg>
+							Buffs <span class="ct">· 4</span>
+						</div>
+						<div class="r">
+							<div class="main"><span class="nm">Shield of Faith</span><span class="tag pos">AC +2</span></div>
+							<span class="ctrl"><span class="dsel">100 rds ▾</span><button class="x">✕</button></span>
+						</div>
+						<div class="r">
+							<div class="main"><span class="nm">Bless</span><span class="tag pos">saves +1d4</span></div>
+							<span class="ctrl"><span class="dsel">9 rds ▾</span><button class="x">✕</button></span>
+						</div>
+						<div class="r">
+							<div class="main">
+								<span class="nm">War Anthem</span>
+								<span class="tag pos">AC +2</span><span class="tag pos">saves +1d4</span><span class="tag pos">attacks +1d4</span><span class="tag pos">speed ×2</span><span class="tag pos">+1 action</span><span class="tag pos">resist fire</span><span class="tag pos">resist cold</span><span class="tag pos">immune charmed</span>
+							</div>
+							<span class="ctrl"><span class="dsel">6 rds ▾</span><button class="x">✕</button></span>
+						</div>
+						<div class="r">
+							<div class="main"><span class="nm">Mage Armor</span><span class="tag pos">AC = 13</span></div>
+							<span class="ctrl"><span class="dsel">∞ ▾</span><button class="x">✕</button></span>
+						</div>
+					</div>
+
+					<div class="sec">
+						<!-- debuff icon = cracked shield (thematic, non-directional) -->
+						<div class="ghdr debuff">
+							<svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M10 2.5 L16 5 V10 C16 14 13 16.6 10 18 C7 16.6 4 14 4 10 V5 Z" /><path d="M10.5 4.5 L8.5 9 L11 10.5 L9.2 15.5" stroke-linecap="round" /></svg>
+							Debuffs <span class="ct">· 3</span>
+						</div>
+						<div class="r">
+							<div class="main"><span class="nm">Bane</span><span class="tag neg">saves −1d4</span></div>
+							<span class="ctrl"><span class="dsel">9 rds ▾</span><button class="x">✕</button></span>
+						</div>
+						<div class="r">
+							<div class="main"><span class="nm">Poisoned</span><span class="tag neg">disadvantage</span></div>
+							<span class="ctrl"><span class="dsel">∞ ▾</span><button class="x">✕</button></span>
+						</div>
+						<div class="r">
+							<div class="main"><span class="nm">Slowed</span><span class="tag neg">speed ÷2</span><span class="tag neg">−2 AC</span></div>
+							<span class="ctrl"><span class="dsel">10 rds ▾</span><button class="x">✕</button></span>
+						</div>
+					</div>
+
+					<div class="sec">
+						<!-- resource icon = battery (chosen) -->
+						<div class="ghdr rsrc">
+							<svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="6" width="12" height="8" rx="2" /><path d="M17 9 V11" stroke-linecap="round" /><path d="M6 10 H9" stroke-linecap="round" /></svg>
+							Resources <span class="ct">· 3</span>
+						</div>
+						<div class="rr">
+							<span class="rname">Arcane Recovery</span>
+							<span class="pips"><span class="pip"></span></span><span class="rcount">1/1</span>
+							<span class="recharge">long rest</span><button class="x">✕</button>
+						</div>
+						<div class="rr">
+							<span class="rname">Second Wind</span>
+							<span class="pips"><span class="pip"></span></span><span class="rcount">1/1</span>
+							<span class="recharge">short rest</span><button class="x">✕</button>
+						</div>
+						<div class="rr">
+							<span class="rname">Channel Divinity</span>
+							<span class="pips"><span class="pip"></span><span class="pip off"></span></span><span class="rcount">1/2</span>
+							<span class="recharge">short rest</span><button class="x">✕</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- ===== ICON PICKERS ===== -->
+			<div class="picker">
+				<h3>Debuffs icon — non-directional (▾ = collapse, so no down glyphs)</h3>
+				<div class="opts">
+					<div class="opt"><span class="chip deb"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="10" r="7" /><path d="M6.5 10 H13.5" stroke-linecap="round" /></svg></span><span class="lbl">a · circle−</span></div>
+					<div class="opt"><span class="chip deb"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"><path d="M10 3 L17.5 16.5 H2.5 Z" /><path d="M10 8 V11.6" /><circle cx="10" cy="13.8" r="0.4" fill="currentColor" /></svg></span><span class="lbl">b · warning</span></div>
+					<div class="opt"><span class="chip deb"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M10 2.5 L16 5 V10 C16 14 13 16.6 10 18 C7 16.6 4 14 4 10 V5 Z" /><path d="M10.5 4.5 L8.5 9 L11 10.5 L9.2 15.5" stroke-linecap="round" /></svg></span><span class="lbl">c · cracked shield</span></div>
+					<div class="opt"><span class="chip deb"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4.5 9.5 A5.5 5.5 0 0 1 15.5 9.5 V12.5 H13.5 V14.5 H11.5 V12.8 H8.5 V14.5 H6.5 V12.5 H4.5 Z" /><circle cx="8" cy="9.5" r="1.2" fill="currentColor" stroke="none" /><circle cx="12" cy="9.5" r="1.2" fill="currentColor" stroke="none" /></svg></span><span class="lbl">d · skull-lite</span></div>
+					<div class="opt"><span class="chip deb"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M10 2.5 C10 2.5 15.5 9 15.5 13 A5.5 5.5 0 0 1 4.5 13 C4.5 9 10 2.5 10 2.5 Z" /></svg></span><span class="lbl">e · droplet</span></div>
+					<div class="opt"><span class="chip deb"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4 L16 16 M16 4 L4 16" /></svg></span><span class="lbl">f · crossed</span></div>
+				</div>
+
+				<h3>Resources icon — ✓ battery (chosen)</h3>
+				<div class="opts">
+					<div class="opt"><span class="chip res" style="border-color: var(--resource)"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="6" width="12" height="8" rx="2" /><path d="M17 9 V11" stroke-linecap="round" /><path d="M6 10 H9" stroke-linecap="round" /></svg></span><span class="lbl">battery ✓</span></div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

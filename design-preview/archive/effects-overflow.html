@@ -1,0 +1,341 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Effect with many pills — overflow treatments</title>
+		<style>
+			@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap');
+			:root {
+				--bg: #0f1116;
+				--surface: #171a21;
+				--surface-2: #1f232c;
+				--border: #272c37;
+				--border-strong: #333a47;
+				--text: #e6e8ec;
+				--muted: #878f9d;
+				--accent: #cf2b40;
+				--accent-bright: #ef6b78;
+				--resource: #caa24a;
+				--good: #3bb8a6;
+				--font-d: 'Space Grotesk', sans-serif;
+				--font-m: 'JetBrains Mono', monospace;
+			}
+			body {
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--font-d);
+				margin: 0;
+				padding: 32px;
+			}
+			h1 {
+				font-size: 18px;
+				font-weight: 700;
+				margin: 0 0 4px;
+			}
+			.lead {
+				color: var(--muted);
+				font-size: 13px;
+				margin: 0 0 24px;
+				max-width: 760px;
+			}
+			.col {
+				display: flex;
+				flex-direction: column;
+				gap: 26px;
+				width: 430px;
+			}
+			.cap {
+				font-family: var(--font-m);
+				font-size: 11px;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: var(--accent-bright);
+				margin: 0 0 9px 2px;
+			}
+			.card {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 14px;
+				padding: 16px;
+			}
+			.phead {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				margin: 0 0 8px;
+			}
+			.ptitle {
+				font-weight: 600;
+				font-size: 12px;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: var(--muted);
+				margin-right: auto;
+			}
+			.pill-btn {
+				font-weight: 600;
+				font-size: 12px;
+				color: var(--muted);
+				background: transparent;
+				border: 1px solid var(--border);
+				border-radius: 7px;
+				padding: 5px 11px;
+			}
+			.grip {
+				color: var(--border-strong);
+				font-size: 14px;
+			}
+			.x {
+				background: transparent;
+				border: 0;
+				color: var(--border-strong);
+				cursor: pointer;
+				font-size: 12px;
+				flex: none;
+			}
+			.nm {
+				font-weight: 600;
+				font-size: 13px;
+				color: var(--good);
+			}
+			.tag {
+				font-family: var(--font-m);
+				font-size: 10px;
+				border: 1px solid rgba(59, 184, 166, 0.4);
+				background: rgba(59, 184, 166, 0.08);
+				border-radius: 5px;
+				padding: 1px 6px;
+				color: var(--good);
+				white-space: nowrap;
+				flex: none;
+			}
+			.more {
+				color: var(--muted);
+				border-color: var(--border-strong);
+				background: var(--surface-2);
+				cursor: pointer;
+			}
+			.dsel {
+				display: inline-flex;
+				align-items: center;
+				gap: 5px;
+				font-family: var(--font-m);
+				font-size: 10px;
+				color: var(--resource);
+				border: 1px solid var(--border-strong);
+				border-radius: 7px;
+				padding: 3px 7px;
+				white-space: nowrap;
+				flex: none;
+			}
+			.ghdr {
+				font-family: var(--font-m);
+				font-size: 9px;
+				letter-spacing: 0.13em;
+				text-transform: uppercase;
+				color: var(--good);
+				padding: 6px 0 5px;
+			}
+			/* a normal (short) neighbour row for context */
+			.row {
+				display: flex;
+				gap: 9px;
+				padding: 8px 0;
+				border-top: 1px solid var(--border);
+			}
+			.row .nm-only {
+				font-weight: 600;
+				font-size: 13px;
+				color: var(--good);
+			}
+			.row .simple {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				flex: 1;
+				min-width: 0;
+			}
+			.row .rr {
+				margin-left: auto;
+				display: flex;
+				gap: 8px;
+			}
+
+			/* ===== T1: WRAP (tags flow to next lines) ===== */
+			.T1 .heavy {
+				display: flex;
+				gap: 9px;
+				padding: 8px 0;
+				border-top: 1px solid var(--border);
+				align-items: flex-start;
+			}
+			.T1 .main {
+				flex: 1;
+				min-width: 0;
+				display: flex;
+				flex-wrap: wrap;
+				align-items: center;
+				gap: 6px 7px;
+			}
+			.T1 .ctrl {
+				display: flex;
+				gap: 8px;
+				flex: none;
+			}
+
+			/* ===== T2: COLLAPSE (+N more) ===== */
+			.T2 .heavy {
+				display: flex;
+				align-items: center;
+				gap: 9px;
+				padding: 8px 0;
+				border-top: 1px solid var(--border);
+			}
+			.T2 .main {
+				flex: 1;
+				min-width: 0;
+				display: flex;
+				align-items: center;
+				gap: 7px;
+				overflow: hidden;
+			}
+			.T2 .ctrl {
+				display: flex;
+				gap: 8px;
+				flex: none;
+			}
+
+			/* ===== T3: FADE STRIP (single line, fades at edge) ===== */
+			.T3 .heavy {
+				display: flex;
+				align-items: center;
+				gap: 9px;
+				padding: 8px 0;
+				border-top: 1px solid var(--border);
+			}
+			.T3 .main {
+				flex: 1;
+				min-width: 0;
+				display: flex;
+				align-items: center;
+				gap: 7px;
+			}
+			.T3 .strip {
+				display: flex;
+				gap: 7px;
+				overflow: hidden;
+				min-width: 0;
+				-webkit-mask-image: linear-gradient(90deg, #000 82%, transparent);
+				mask-image: linear-gradient(90deg, #000 82%, transparent);
+			}
+			.T3 .ctrl {
+				display: flex;
+				gap: 8px;
+				flex: none;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>One effect, 8 modifiers — how it renders when the pills overflow the row</h1>
+		<p class="lead">
+			Heavy homebrew buff <b>“War Anthem”</b>: AC +2 · saves +1d4 · attacks +1d4 · speed ×2 · +1
+			action · resist fire · resist cold · immune charmed. Three ways to handle the overflow (a short
+			neighbour row is shown for context).
+		</p>
+		<div style="display: flex; gap: 40px; align-items: flex-start">
+			<div class="col">
+				<!-- T1 -->
+				<div class="variant T1">
+					<p class="cap">1 · wrap — nothing hidden, row grows</p>
+					<div class="card">
+						<div class="phead">
+							<span class="ptitle">Effects &amp; conditions</span>
+							<button class="pill-btn">＋ Add effect</button><span class="grip">⠿</span>
+						</div>
+						<div class="ghdr">✦ Buffs · 2</div>
+						<div class="row">
+							<div class="simple"><span class="nm-only">Shield of Faith</span><span class="tag">AC +2</span></div>
+							<span class="rr"><span class="dsel">100 rds ▾</span><button class="x">✕</button></span>
+						</div>
+						<div class="heavy">
+							<div class="main">
+								<span class="nm">War Anthem</span>
+								<span class="tag">AC +2</span><span class="tag">saves +1d4</span><span class="tag">attacks +1d4</span><span class="tag">speed ×2</span><span class="tag">+1 action</span><span class="tag">resist fire</span><span class="tag">resist cold</span><span class="tag">immune charmed</span>
+							</div>
+							<span class="ctrl"><span class="dsel">6 rds ▾</span><button class="x">✕</button></span>
+						</div>
+					</div>
+				</div>
+
+				<!-- T3 -->
+				<div class="variant T3">
+					<p class="cap">3 · fade strip — one line, fades off the edge (hover to scroll)</p>
+					<div class="card">
+						<div class="phead">
+							<span class="ptitle">Effects &amp; conditions</span>
+							<button class="pill-btn">＋ Add effect</button><span class="grip">⠿</span>
+						</div>
+						<div class="ghdr">✦ Buffs · 2</div>
+						<div class="row">
+							<div class="simple"><span class="nm-only">Shield of Faith</span><span class="tag">AC +2</span></div>
+							<span class="rr"><span class="dsel">100 rds ▾</span><button class="x">✕</button></span>
+						</div>
+						<div class="heavy">
+							<div class="main">
+								<span class="nm">War Anthem</span>
+								<span class="strip">
+									<span class="tag">AC +2</span><span class="tag">saves +1d4</span><span class="tag">attacks +1d4</span><span class="tag">speed ×2</span><span class="tag">+1 action</span><span class="tag">resist fire</span><span class="tag">resist cold</span><span class="tag">immune charmed</span>
+								</span>
+							</div>
+							<span class="ctrl"><span class="dsel">6 rds ▾</span><button class="x">✕</button></span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="col">
+				<!-- T2 -->
+				<div class="variant T2">
+					<p class="cap">2 · collapse — first few + “+N” (click to expand)</p>
+					<div class="card">
+						<div class="phead">
+							<span class="ptitle">Effects &amp; conditions</span>
+							<button class="pill-btn">＋ Add effect</button><span class="grip">⠿</span>
+						</div>
+						<div class="ghdr">✦ Buffs · 2</div>
+						<div class="row">
+							<div class="simple"><span class="nm-only">Shield of Faith</span><span class="tag">AC +2</span></div>
+							<span class="rr"><span class="dsel">100 rds ▾</span><button class="x">✕</button></span>
+						</div>
+						<div class="heavy">
+							<div class="main">
+								<span class="nm">War Anthem</span>
+								<span class="tag">AC +2</span><span class="tag">saves +1d4</span><span class="tag">attacks +1d4</span><span class="tag more">+5 ▾</span>
+							</div>
+							<span class="ctrl"><span class="dsel">6 rds ▾</span><button class="x">✕</button></span>
+						</div>
+					</div>
+				</div>
+
+				<!-- T2 expanded state -->
+				<div class="variant T1">
+					<p class="cap">2b · …expanded (same as wrap once opened)</p>
+					<div class="card">
+						<div class="phead">
+							<span class="ptitle">Effects &amp; conditions</span>
+							<button class="pill-btn">＋ Add effect</button><span class="grip">⠿</span>
+						</div>
+						<div class="ghdr">✦ Buffs · 2</div>
+						<div class="heavy">
+							<div class="main">
+								<span class="nm">War Anthem</span>
+								<span class="tag">AC +2</span><span class="tag">saves +1d4</span><span class="tag">attacks +1d4</span><span class="tag">speed ×2</span><span class="tag">+1 action</span><span class="tag">resist fire</span><span class="tag">resist cold</span><span class="tag">immune charmed</span><span class="tag more">▴ less</span>
+							</div>
+							<span class="ctrl"><span class="dsel">6 rds ▾</span><button class="x">✕</button></span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

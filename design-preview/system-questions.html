@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<title>System questions — C</title>
+<style>
+	:root {
+		--bg: #0f1116; --surface: #171a21; --surface-2: #1d212a; --border: #272c37; --border-strong: #333a47;
+		--text: #e6e8ec; --muted: #878f9d; --body-text: #c7cbd2; --accent-deep: #b3243a; --danger-text: #ff6b7d;
+		--display: 'Space Grotesk', system-ui, 'Segoe UI', sans-serif;
+		--body: 'Inter', system-ui, 'Segoe UI', sans-serif;
+		--mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+	}
+	* { box-sizing: border-box; }
+	body { margin: 0; padding: 32px; background: #0a0c10; color: var(--text); font: 14px/1.5 var(--body); }
+	h2.variant { font: 600 22px var(--display); margin: 0 0 4px; }
+	p.why { color: var(--muted); margin: 0 0 20px; max-width: 900px; }
+	section.v { margin-bottom: 48px; }
+	.row { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; }
+	.cap { color: var(--muted); font-size: 12px; margin: 0 0 6px; }
+
+	.win { width: 480px; background: var(--bg); border: 1px solid #3a3f4a; box-shadow: 0 8px 24px #0008; }
+	.win > .bar { height: 30px; display: flex; align-items: center; justify-content: space-between; padding: 0 0 0 12px; font: 12px 'Segoe UI', sans-serif; color: #c9ccd3; background: #1f2229; }
+	.win > .bar span.x { width: 46px; text-align: center; color: #9aa0aa; }
+
+	/* C, shared: the question small, the fact to judge large, buttons at the edges */
+	.c { padding: 22px 24px 20px; }
+	.dlg { width: 500px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 8px; position: relative; padding: 22px 24px 20px; }
+	.dlg .lang { position: absolute; top: 14px; right: 14px; font: 600 11px var(--body); color: #4fb7a5; border: 1px solid #2f6b61; border-radius: 4px; padding: 2px 6px; }
+	.ask { margin: 0; color: var(--muted); font-size: 13px; }
+	.fact { margin: 2px 0 12px; font: 600 24px/1.2 var(--display); overflow-wrap: anywhere; }
+	.c p, .dlg p { margin: 0 0 8px; color: var(--body-text); }
+	footer { display: flex; justify-content: space-between; gap: 8px; margin-top: 16px; }
+	footer .right { display: flex; gap: 8px; }
+	button { padding: 8px 18px; border-radius: 4px; border: 1px solid var(--border-strong); background: transparent; color: var(--text); font: 600 13px var(--body); }
+	button.yes { background: var(--text); color: var(--bg); border-color: var(--text); }
+	button.danger { border-color: var(--accent-deep); color: var(--danger-text); }
+	.mono { font-family: var(--mono); }
+
+	/* 1 · name, then code — both large, code larger */
+	.h1 .who { margin: 2px 0 0; font: 600 26px/1.15 var(--display); }
+	.h1 .where { margin: 0 0 14px; color: var(--muted); font-size: 13px; }
+	.h1 .code { display: block; margin: 0 0 12px; font: 600 34px/1 var(--mono); letter-spacing: .16em; }
+
+	/* 2 · name and code side by side, one line to read across */
+	.h2 .pair { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 16px; margin: 6px 0 14px; padding: 12px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+	.h2 .who { font: 600 24px/1.15 var(--display); overflow-wrap: anywhere; }
+	.h2 .code { font: 600 30px/1 var(--mono); letter-spacing: .14em; }
+	.h2 small { display: block; color: var(--muted); font: 12px var(--body); letter-spacing: 0; margin-bottom: 4px; }
+
+	/* 3 · the name is the headline, the code its proof underneath */
+	.h3 .who { margin: 2px 0 10px; font: 600 30px/1.1 var(--display); overflow-wrap: anywhere; }
+	.h3 .proof { display: flex; align-items: baseline; gap: 12px; margin: 0 0 12px; }
+	.h3 .proof span { color: var(--muted); font-size: 13px; }
+	.h3 .code { font: 600 26px/1 var(--mono); letter-spacing: .14em; }
+
+	.die { font: 600 13px var(--body); color: var(--muted); }
+</style>
+</head>
+<body>
+
+<section class="v">
+	<h2 class="variant">C · Впустити гравця: три способи поєднати ім'я й код</h2>
+	<p class="why">Ім'я — хто це, код — доказ, що це справді він. Людина спершу дивиться на ім'я, а код звіряє зі сказаним уголос.</p>
+	<div class="row">
+		<div>
+			<p class="cap">C1 · ім'я, під ним код — код найбільший</p>
+			<div class="win"><div class="bar">Charnik — гравець хоче приєднатися<span class="x">✕</span></div>
+				<div class="c h1">
+					<p class="ask">Хоче приєднатися</p>
+					<p class="who">Ліра Швидконога</p>
+					<p class="where">до столу «Thursday game» · код</p>
+					<span class="code">K7-M2-QX</span>
+					<p>Впускайте лише тоді, коли це той код, який гравець вам зачитав.</p>
+					<footer><button>Відмовити</button><button class="yes">Впустити</button></footer>
+				</div></div>
+		</div>
+		<div>
+			<p class="cap">C2 · ім'я й код в одному рядку, однієї ваги</p>
+			<div class="win"><div class="bar">Charnik — гравець хоче приєднатися<span class="x">✕</span></div>
+				<div class="c h2">
+					<p class="ask">Хоче приєднатися до столу «Thursday game»</p>
+					<div class="pair">
+						<div><small>Гравець</small><span class="who">Ліра Швидконога</span></div>
+						<div><small>Код</small><span class="code">K7-M2-QX</span></div>
+					</div>
+					<p>Впускайте лише тоді, коли це той код, який гравець вам зачитав.</p>
+					<footer><button>Відмовити</button><button class="yes">Впустити</button></footer>
+				</div></div>
+		</div>
+		<div>
+			<p class="cap">C3 · ім'я — заголовок, код — підпис-доказ</p>
+			<div class="win"><div class="bar">Charnik — гравець хоче приєднатися<span class="x">✕</span></div>
+				<div class="c h3">
+					<p class="ask">До столу «Thursday game» хоче сісти</p>
+					<p class="who">Ліра Швидконога</p>
+					<div class="proof"><span>Код</span><b class="code">K7-M2-QX</b></div>
+					<p>Впускайте лише тоді, коли це той код, який гравець вам зачитав.</p>
+					<footer><button>Відмовити</button><button class="yes">Впустити</button></footer>
+				</div></div>
+		</div>
+	</div>
+</section>
+
+<section class="v">
+	<h2 class="variant">C · Інші службові діалоги тією ж мовою</h2>
+	<p class="why">Одне правило на всі: дрібно — що відбувається, великим — про що саме (персонаж, стіл, кидок), абзацом — наслідок, кнопки по краях. Колір бренду — лише на незворотній дії.</p>
+	<div class="row">
+		<div>
+			<p class="cap">Ростер · видалити персонажа</p>
+			<div class="dlg"><span class="lang">UK</span>
+				<p class="ask">Видалити персонажа</p>
+				<p class="fact">Каррот Червоний</p>
+				<p>Це видалить аркуш персонажа, портрет, журнал кидків і всі резервні копії. Скасувати неможливо.</p>
+				<footer><button>Скасувати</button><button class="danger">Видалити персонажа</button></footer>
+			</div>
+		</div>
+		<div>
+			<p class="cap">Стіл · ведучий просить (у гравця)</p>
+			<div class="dlg"><span class="lang">UK</span>
+				<p class="ask">Ведучий просить кидок</p>
+				<p class="fact">Рятівний кидок Спритності <span class="die">СК 15</span></p>
+				<p>Нічого не станеться, доки ви не відповісте.</p>
+				<footer><button>Відхилити</button><span class="right"><button>Зібрати в лотку кісток</button><button class="yes">Кинути</button></span></footer>
+			</div>
+		</div>
+		<div>
+			<p class="cap">Стіл · забути стіл</p>
+			<div class="dlg"><span class="lang">UK</span>
+				<p class="ask">Забути стіл</p>
+				<p class="fact">Thursday game</p>
+				<p>Цей комп'ютер забуде ключ столу та його журнал. Гравці приєднаються до нового столу за новим запрошенням.</p>
+				<footer><button>Скасувати</button><button class="danger">Забути</button></footer>
+			</div>
+		</div>
+	</div>
+</section>
+
+</body>
+</html>

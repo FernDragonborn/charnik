@@ -261,8 +261,11 @@ reach: a drag, hover timing, IME and input-method behaviour, and the final look 
 
 **Screenshots go in `design-preview/`.** Never the repo root, never a temp folder. That folder also
 holds the iterated `*.html` design mocks: when a view has one, **bake it faithfully** and wire live
-data onto it, rather than building a simplified version from scratch. When a design choice is open,
-offer two or three **rendered** variants — they are picked from seeing them, not from names.
+data onto it, rather than building a simplified version from scratch. The mocks are tracked and
+public, so a path or a name in one is a placeholder (`C:\Users\player`), never a real one; renders
+and scratch scripts beside them stay untracked. **A mock is never deleted**: once it is built or
+rejected it moves to `design-preview/archive/`. When a design choice is open, offer two or three
+**rendered** variants — they are picked from seeing them, not from names.
 
 ## Taste
 

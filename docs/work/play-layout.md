@@ -14,8 +14,7 @@ The play screen has THREE layouts, each drawn as a mock in `design-preview/`:
 
 A frame is cited by its mock and its number: **D4** is frame 4 of the narrow desktop mock, **P11**
 frame 11 of the phone mock. A frame the phone mock labels *new idea* is behaviour the app does not
-have; *layout*, *flow* and *hard case* place behaviour the app has. `design-preview/` is gitignored,
-so the mocks live on the maintainer's disk and this file is what the repository holds of them.
+have; *layout*, *flow* and *hard case* place behaviour the app has.
 
 **This splits what `internals/ui.md` ▸ A narrow window treats as one.** That section says a phone and
 a small desktop window are the same thing under one 800px threshold; these mocks give them different

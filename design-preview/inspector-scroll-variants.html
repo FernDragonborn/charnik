@@ -1,0 +1,1117 @@
+<!doctype html>
+<html lang="uk" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<title>Charnik — інспектор: варіанти скролу</title>
+<style>
+:root {
+	--radius-sm: 6px; --radius: 8px; --radius-md: 11px; --radius-lg: 14px; --radius-full: 999px;
+	--font-display: 'Space Grotesk', system-ui, 'Segoe UI', sans-serif;
+	--font-body: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+	--fs-micro: 10px; --fs-xs: 11px; --fs-sm: 13px; --fs-body: 14px; --fs-md: 16px; --fs-lg: 20px;
+	--bg: #0f1116; --surface: #171a21; --surface2: #1f232c;
+	--border: #272c37; --border-strong: #333a47;
+	--text: #e6e8ec; --muted: #878f9d;
+	--accent: #cf2b40; --accent-bright: #ef6b78; --accent-deep: #b3243a; --accent-soft: #241317;
+	--gold: #caa24a; --gold-soft: #2a2415; --gold-line: #5a4d28;
+	--good: #3bb8a6;
+}
+* { box-sizing: border-box; }
+body {
+	margin: 0; background: var(--bg); color: var(--text);
+	font-family: var(--font-body); font-size: var(--fs-body);
+}
+.wrap { max-width: 1280px; margin: 0 auto; padding: 20px 16px 60px; }
+h1 { font-family: var(--font-display); font-size: 26px; margin: 0 0 4px; }
+.lede { color: var(--muted); font-size: var(--fs-sm); line-height: 1.6; margin: 0 0 18px; max-width: 78ch; }
+.lede b { color: var(--text); font-weight: 600; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.tab {
+	font: inherit; font-size: var(--fs-sm); cursor: pointer; padding: 7px 13px;
+	border: 1px solid var(--border-strong); background: var(--surface2);
+	color: var(--muted); border-radius: var(--radius-full);
+}
+.tab[aria-selected="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-bright); }
+.note {
+	border: 1px solid var(--border); border-left: 3px solid var(--accent);
+	background: var(--surface); border-radius: var(--radius);
+	padding: 11px 14px; font-size: var(--fs-sm); line-height: 1.6; margin-bottom: 14px;
+}
+.note b { color: var(--accent-bright); }
+.note .verdict { color: var(--good); }
+
+/* ---- the build page frame, at the real proportions ------------------------------------------ */
+.frame {
+	display: grid; grid-template-columns: minmax(0, 1fr) 520px; gap: 16px;
+	height: 620px; border: 1px solid var(--border); border-radius: var(--radius-lg);
+	background: var(--bg); padding: 14px; overflow: hidden; position: relative;
+}
+.sheet { overflow: auto; display: flex; flex-direction: column; gap: 12px; min-height: 0; position: relative; }
+.card { border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius-md); padding: 12px 14px; }
+.eyebrow { font-size: var(--fs-micro); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.tile { border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius-md); padding: 10px 6px; text-align: center; }
+.tile b { display: block; font-family: var(--font-display); font-size: 22px; }
+.tile small { font-size: var(--fs-micro); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.filler { color: var(--muted); font-size: var(--fs-xs); line-height: 1.8; }
+
+/* ---- the inspector ---------------------------------------------------------------------------- */
+.insp { border-left: 1px solid var(--border); padding-left: 16px; min-height: 0; position: relative; }
+.ihead { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.ihead .sp { flex: 1; }
+.ititle { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-lg); margin: 0 0 4px; }
+.iblurb { color: var(--muted); font-size: var(--fs-xs); line-height: 1.55; margin: 0 0 10px; }
+.search {
+	display: flex; align-items: center; gap: 8px; background: var(--surface2);
+	border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 0 11px; flex: none;
+}
+.search input { flex: 1; min-width: 0; background: none; border: 0; color: var(--text); font: inherit; font-size: var(--fs-sm); padding: 8px 0; outline: none; }
+.search .n { font-size: var(--fs-micro); color: var(--muted); }
+.rows { display: flex; flex-direction: column; gap: 3px; padding: 8px 2px; border: 1px solid var(--border); border-radius: var(--radius-md); margin-top: 9px; }
+.orow {
+	cursor: pointer; display: flex; align-items: baseline; gap: 8px; padding: 5px 10px; margin: 0 6px;
+	border: 1px solid var(--border); border-radius: 9px; background: var(--surface); font: inherit; text-align: left; color: var(--text);
+}
+.orow b { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-sm); }
+.orow .m { flex: 1; text-align: right; font-size: var(--fs-micro); color: var(--muted); }
+.orow.on { border-color: var(--accent); background: var(--accent-soft); }
+.orow.on b { color: var(--accent-bright); }
+.glabel { font-size: var(--fs-micro); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 8px 8px 2px; position: sticky; top: -8px; background: var(--bg); }
+.changes { border: 1px solid var(--gold-line); background: var(--gold-soft); border-radius: var(--radius-md); padding: 8px 12px; font-size: var(--fs-xs); color: var(--gold); margin-top: 9px; flex: none; }
+.article { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); padding: 10px 14px 14px; margin-top: 9px; }
+.article h3 { font-family: var(--font-display); font-size: var(--fs-md); margin: 6px 0; }
+.article p { font-size: var(--fs-sm); line-height: 1.65; color: var(--muted); margin: 0 0 10px; }
+.scrolly { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+.hint { position: absolute; right: 6px; font-size: var(--fs-micro); color: var(--accent-bright);
+	background: var(--accent-soft); border: 1px solid var(--accent-deep); border-radius: var(--radius-full); padding: 2px 8px; pointer-events: none; z-index: 5; }
+
+/* facets */
+.facets { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; flex: none; }
+.chip { font: inherit; font-size: var(--fs-micro); cursor: pointer; padding: 3px 9px; border-radius: var(--radius-full);
+	border: 1px solid var(--border-strong); background: var(--surface2); color: var(--muted); }
+.chip[aria-pressed="true"] { border-color: var(--gold-line); background: var(--gold-soft); color: var(--gold); }
+
+/* variant-specific frames */
+.v-pane { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.grow { flex: 1; min-height: 0; overflow: auto; }
+.splitter { height: 9px; flex: none; cursor: row-resize; display: grid; place-items: center; }
+.splitter i { display: block; width: 46px; height: 3px; border-radius: 3px; background: var(--border-strong); }
+.splitter:hover i { background: var(--accent); }
+.backbar { display: flex; align-items: center; gap: 8px; font-size: var(--fs-sm); color: var(--accent-bright);
+	background: none; border: 0; cursor: pointer; padding: 6px 0; font-family: inherit; }
+.pop { position: absolute; left: 16px; right: 0; top: 148px; z-index: 20; box-shadow: 0 18px 50px rgb(0 0 0 / .6);
+	background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius-md); max-height: 340px; overflow: auto; }
+.overlay-article {
+	position: absolute; inset: 14px 14px 14px 90px; z-index: 15; background: var(--surface);
+	border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 12px 18px 18px;
+	overflow: auto; box-shadow: 0 20px 60px rgb(0 0 0 / .7);
+}
+.scrim { position: absolute; inset: 0; z-index: 14; background: rgb(0 0 0 / .45); }
+
+/* V6 — BG3: сітка замість списку + картка-виноска збоку */
+.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 9px; flex: none; }
+.cell {
+	font: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;
+	padding: 9px 4px; border: 1px solid var(--border); border-radius: var(--radius-md);
+	background: var(--surface); color: var(--text);
+}
+.cell span { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-sm); text-align: center; line-height: 1.2; }
+/* the meta the peek would have carried, in the cell itself — which is why V6 needs no hover card */
+.cell .cm { font-family: var(--font-body); font-weight: 400; font-size: var(--fs-micro); color: var(--muted); }
+.cell:hover { border-color: var(--border-strong); background: var(--surface2); }
+.cell.on { border-color: var(--accent); background: var(--accent-soft); }
+.cell.on span { color: var(--accent-bright); }
+.cell.taken { border-color: var(--gold-line); background: var(--gold-soft); }
+.cell.taken > span:first-child { color: var(--gold); }
+.flyout {
+	position: absolute; z-index: 30; width: 330px; padding: 0 0 10px;
+	background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-md);
+	box-shadow: 0 16px 44px rgb(0 0 0 / .65); overflow: hidden;
+}
+/* довгі статті: обрізаємо ПО ФАКТУ переповнення, з градієнтом і виходом на повний перегляд */
+.flyout .body { position: relative; }
+.flyout.clamped .body { max-height: 300px; overflow: hidden; }
+.flyout.clamped .body::after {
+	content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 64px;
+	background: linear-gradient(to bottom, transparent, var(--surface));
+}
+.flyout .expand {
+	display: none; width: calc(100% - 28px); margin: 6px 14px 0; padding: 7px;
+	font: inherit; font-size: var(--fs-xs); cursor: pointer;
+	border: 1px solid var(--accent-deep); border-radius: var(--radius);
+	background: var(--accent-soft); color: var(--accent-bright);
+}
+.flyout.clamped .expand { display: block; }
+.flyout .fh { padding: 11px 14px 9px; border-bottom: 1px solid var(--border); }
+.flyout b { display: block; font-family: var(--font-display); font-size: var(--fs-md); }
+.flyout .meta { font-size: var(--fs-xs); color: var(--gold); }
+.flyout p { margin: 9px 14px; font-size: var(--fs-sm); line-height: 1.55; }
+.flyout .cost { display: flex; gap: 14px; padding: 8px 14px 0; margin-top: 6px; border-top: 1px solid var(--border);
+	font-size: var(--fs-xs); color: var(--muted); }
+.flyout .inspect { position: absolute; top: -22px; left: 4px; font-size: var(--fs-micro);
+	letter-spacing: .12em; text-transform: uppercase; color: var(--accent-bright); }
+/* V7 — рівень як основна навігація */
+.lvltabs { display: flex; gap: 4px; margin-top: 9px; flex: none; overflow-x: auto; padding-bottom: 2px; }
+.lvltab {
+	font: inherit; font-size: var(--fs-xs); cursor: pointer; white-space: nowrap;
+	padding: 5px 10px; border-radius: var(--radius); border: 1px solid var(--border);
+	background: var(--surface); color: var(--muted); display: flex; align-items: baseline; gap: 6px;
+}
+.lvltab .c { font-size: var(--fs-micro); color: var(--muted); }
+.lvltab.full { border-color: var(--gold-line); }
+.lvltab.full .c { color: var(--gold); }
+.lvltab.open { border-color: var(--accent); }
+.lvltab.open .c { color: var(--accent-bright); }
+.lvltab[aria-selected="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--text); }
+/* рядок = ДВА елементи: тіло (читати) і кнопка (взяти). Клік по назві нічого не бере. */
+.srowwrap { display: flex; align-items: stretch; gap: 4px; margin: 0 6px;
+	border: 1px solid transparent; border-radius: 9px; }
+.srowwrap:hover, .srowwrap.on { border-color: var(--accent); background: var(--accent-soft); }
+.srowwrap.taken { border-color: var(--gold-line); background: var(--gold-soft); }
+.srow {
+	cursor: pointer; flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 9px;
+	padding: 6px 10px 6px 2px; border: 0; border-radius: 9px; background: none;
+	font: inherit; color: var(--text); text-align: left;
+}
+.srow b { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-sm); flex: none;
+	overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.srow .sm { flex: 1; text-align: right; font-size: var(--fs-micro); color: var(--muted); white-space: nowrap; }
+/* the row's OWN state sits on the left — same slot as the spellbook's leading eye/pin and SkillRows'
+   proficiency dot. A gold fill means taken, exactly as gold means proficient there. */
+.addbtn {
+	flex: none; width: 26px; align-self: center; aspect-ratio: 1; cursor: pointer; font: inherit; font-size: var(--fs-xs);
+	border: 1.5px solid var(--border-strong); border-radius: 50%; margin-left: 7px;
+	background: transparent; color: transparent; display: grid; place-items: center; line-height: 1;
+}
+.addbtn:hover { border-color: var(--accent); color: var(--accent-bright); }
+.addbtn.taken { border-color: var(--gold); background: var(--gold); color: #221b06; }
+.addbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* V9/V10 — рівень як СТРУКТУРА списку, а не як фільтр */
+.sect {
+	position: sticky; top: -8px; z-index: 3; display: flex; align-items: center; gap: 8px; width: 100%;
+	padding: 7px 10px; margin: 6px 0 2px; border: 0; border-radius: var(--radius); cursor: pointer;
+	background: var(--bg); font: inherit; font-size: var(--fs-xs); color: var(--muted); text-align: left;
+}
+.sect:hover { background: var(--surface2); }
+.sect .caret { width: 10px; flex: none; transition: none; }
+.sect .nm { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-sm); color: var(--text); }
+.sect .of { margin-left: auto; font-size: var(--fs-micro); }
+.sect .got { color: var(--gold); }
+.sect.shut .nm { color: var(--muted); }
+.jump { display: flex; gap: 4px; margin-top: 9px; flex: none; overflow-x: auto; padding-bottom: 2px; }
+.jumpbtn {
+	font: inherit; font-size: var(--fs-micro); cursor: pointer; white-space: nowrap;
+	padding: 4px 9px; border-radius: var(--radius-full); border: 1px solid var(--border);
+	background: var(--surface); color: var(--muted);
+}
+.jumpbtn.here { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-bright); }
+.jumpbtn .g { color: var(--gold); }
+.caps { display: flex; gap: 8px; margin-top: 8px; flex: none; }
+.cap {
+	flex: 1; display: flex; align-items: baseline; gap: 7px; padding: 6px 11px;
+	border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface);
+	font-size: var(--fs-xs); color: var(--muted);
+}
+.cap b { font-family: var(--font-display); font-size: var(--fs-sm); color: var(--text); margin-left: auto; }
+.cap.open { border-color: var(--accent-deep); }
+.cap.open b { color: var(--accent-bright); }
+.cap.done { border-color: var(--gold-line); }
+.cap.done b { color: var(--gold); }
+
+/* V8 — попοвер по кліку, живе над аркушем */
+.popover {
+	position: absolute; z-index: 30; width: 470px; display: flex; flex-direction: column;
+	background: var(--surface); border: 1px solid var(--accent-deep); border-radius: var(--radius-lg);
+	box-shadow: 0 24px 64px rgb(0 0 0 / .72); overflow: hidden;
+}
+/* an author `display` beats the UA's `[hidden] { display: none }`, so say it here or it never hides */
+.popover[hidden] { display: none; }
+
+/* the PEEK — a deliberate teaser on hover, so scanning a list doesn't cost a click per row.
+   `pointer-events: none` on purpose: there is nothing to click in it, so it needs no hover-bridge
+   and can never be the thing you try to read. Reading in full is the click. */
+.peek {
+	position: absolute; z-index: 28; width: 320px; padding: 0 0 9px; pointer-events: none;
+	background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-md);
+	box-shadow: 0 14px 38px rgb(0 0 0 / .6); overflow: hidden;
+}
+.peek[hidden] { display: none; }
+.peek .kh { padding: 9px 12px 7px; border-bottom: 1px solid var(--border); }
+.peek .kh b { display: block; font-family: var(--font-display); font-size: var(--fs-sm); }
+.peek .kh .meta { font-size: var(--fs-micro); color: var(--gold); }
+.peek .kt {
+	margin: 8px 12px 0; font-size: var(--fs-xs); line-height: 1.5; color: var(--muted);
+	display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden;
+}
+.peek .kmore { display: block; margin: 8px 12px 0; font-size: var(--fs-micro); color: var(--accent-bright); }
+.popover .ph { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px 10px; border-bottom: 1px solid var(--border); }
+.popover .ph b { display: block; font-family: var(--font-display); font-size: var(--fs-lg); }
+.popover .ph .meta { font-size: var(--fs-xs); color: var(--gold); }
+.popover .ph .x { margin-left: auto; cursor: pointer; background: none; border: 0; color: var(--muted); font: inherit; font-size: var(--fs-md); }
+.popover .pbody { overflow: auto; padding: 2px 14px 4px; }
+.popover .pbody p { margin: 10px 0; font-size: var(--fs-sm); line-height: 1.6; }
+.popover .pfoot { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-top: 1px solid var(--border); font-size: var(--fs-xs); color: var(--muted); }
+.popover .pfoot .take {
+	margin-left: auto; cursor: pointer; font: inherit; font-size: var(--fs-xs);
+	padding: 6px 14px; border-radius: var(--radius); border: 1px solid var(--accent-deep);
+	background: var(--accent-deep); color: #fff;
+}
+.popover .pfoot .take.taken { background: var(--gold-soft); border-color: var(--gold-line); color: var(--gold); }
+.steprail { position: absolute; left: 14px; top: 14px; width: 150px; z-index: 2;
+	display: flex; flex-direction: column; gap: 6px; }
+.step { display: flex; align-items: center; gap: 7px; font-size: var(--fs-xs); color: var(--muted); }
+.step .box { width: 13px; height: 13px; flex: none; border-radius: 4px; border: 1px solid var(--border-strong); }
+.step.done .box { background: var(--good); border-color: var(--good); }
+.step.open .box { border-color: var(--accent); border-style: dashed; }
+.step.open { color: var(--accent-bright); }
+</style>
+</head>
+<body>
+<div class="wrap">
+	<h1>Інспектор білдера — варіанти скролу</h1>
+	<p class="lede">
+		Реальні пропорції: сторінка 1280&nbsp;CSS-px, панель інспектора 520&nbsp;px, висота обмежена вікном.
+		Крути колесом <b>над списком</b> і <b>поруч зі списком</b> у кожному варіанті — різниця саме в цьому.
+		Дані — заглушки, поведінка скролу справжня.
+	</p>
+
+	<div class="tabs" id="tabs"></div>
+	<div class="note" id="note"></div>
+	<div class="frame">
+		<div class="sheet scrolly" id="sheet"></div>
+		<aside class="insp" id="insp"></aside>
+	</div>
+</div>
+
+<script>
+const CLASSES = ['Barbarian','Bard','Cleric','Druid','Fighter','Monk','Paladin','Ranger','Rogue','Sorcerer','Warlock','Wizard'];
+const SCHOOLS = ['Abjuration','Conjuration','Divination','Enchantment','Evocation','Illusion','Necromancy','Transmutation'];
+const NOUNS = ['Bolt','Ward','Shroud','Grasp','Flame','Step','Sight','Bind','Gale','Chain','Veil','Blade','Rune','Song','Thorn','Ember','Frost','Echo','Sigil','Mote'];
+const ADJS = ['Arcane','Burning','Silent','Elder','Hollow','Radiant','Wretched','Glimmering','Iron','Whispering','Gilded','Sundered','Verdant','Hexed'];
+const SPELLS = [];
+for (let lvl = 0; lvl <= 9; lvl++) {
+	for (let i = 0; i < 44; i++) {
+		SPELLS.push({
+			name: `${ADJS[(lvl * 7 + i) % ADJS.length]} ${NOUNS[(lvl * 3 + i) % NOUNS.length]} ${i > 13 ? 'II' : ''}`.trim(),
+			lvl, school: SCHOOLS[(lvl + i) % SCHOOLS.length],
+		});
+	}
+}
+// Wish, скорочено з SRD 5.1 — найдовша стаття в наборі, межовий випадок для виноски
+const WISH = [
+	'<i>Бажання</i> — найпотужніше закляття, яке смертна істота здатна накласти. Самим лише промовлянням ви можете змінити саму тканину реальності відповідно до своїх забаганок.',
+	'Базове використання цього закляття — продублювати будь-яке інше закляття 8-го рівня або нижче. Вам не потрібно виконувати жодних вимог того закляття, включно з дорогими компонентами. Закляття просто спрацьовує.',
+	'Крім того, ви можете створити один із наведених нижче ефектів на власний вибір: ви створюєте один предмет вартістю до 25 000 зл, який не є магічним; до двадцяти п’яти істот, яких ви бачите, повністю відновлюють хіти; до десяти істот отримують опір до типу шкоди на ваш вибір; до десяти істот отримують імунітет до одного закляття або магічного ефекту на 8 годин.',
+	'Ви також можете дозволити до восьми істотам перекинути будь-який кидок, зроблений протягом останнього раунду, з перевагою або перешкодою на ваш вибір.',
+	'Ви можете спробувати досягти чогось поза межами наведених прикладів. Опишіть майстру, чого саме ви бажаєте. Майстер вирішує, що станеться. Що більше бажання, то більша ймовірність, що щось піде не так. Закляття може спрацювати буквально й водночас завдати вам жахливої шкоди, або просто спрацювати частково.',
+	'Стрес від накладання цього закляття для будь-чого, крім дублювання іншого закляття, послаблює вас. Доки ви не завершите тривалий відпочинок, кожного разу, коли ви накладаєте закляття, ви отримуєте 1d10 некротичної шкоди за кожен рівень цього закляття. Ця шкода не може бути зменшена або запобігнута жодним чином.',
+	'Крім того, ваша Сила падає до 3 на 2d4 дні, якщо вона вже не нижча. За кожен із цих днів, проведений у відпочинку й нічому, крім легкої діяльності, залишок часу відновлення зменшується на 2 дні.',
+	'Нарешті, є 33-відсоткова ймовірність, що ви станете нездатні накладати <i>бажання</i> знову назавжди, якщо ви зазнали цього стресу.',
+];
+const PROSE = [
+	'Ви скеровуєте потік сирої магії у точку, яку бачите в межах дистанції. Ціль має здійснити рятівний кидок Спритності, інакше отримує 8d6 шкоди вогнем, або половину за успішного кидка.',
+	'Вогонь поширюється навколо кутів. Він запалює горючі предмети в зоні, які ніхто не несе і не носить.',
+	'На вищих рівнях: коли ви накладаєте це закляття комірком 4-го рівня або вище, шкода зростає на 1d6 за кожен рівень вище третього.',
+	'Джерело: SRD 5.1. Школа: перетворення. Час накладання: 1 дія. Дистанція: 150 футів (45 м). Компоненти: В, С, М (крихітна кулька з гуано кажана та сірки).',
+];
+
+/**
+ * ONE popover, shared by V6 and V8 — the grid and the list differ, what you read does not.
+ * Lives on the frame (so it spills over the sheet), anchored to the LEFT edge of whatever opened it
+ * so the take toggle is never covered. Any click outside closes it, in the capture phase, so a click
+ * on the next entry reads as a swap without needing a special case.
+ */
+function makePopover(frame, { onTake } = {}) {
+	const pop = document.createElement('div');
+	pop.className = 'popover';
+	pop.hidden = true;
+	frame.append(pop);
+	let anchor = null;
+	const close = () => {
+		pop.hidden = true;
+		if (anchor) anchor.dataset.wasOpen = '1';
+		frame.querySelectorAll('.on').forEach((n) => n.classList.remove('on'));
+		const a = anchor;
+		anchor = null;
+		setTimeout(() => a && delete a.dataset.wasOpen, 0);
+	};
+	document.addEventListener('keydown', (e) => e.key === 'Escape' && close());
+	document.addEventListener('click', (e) => { if (!pop.hidden && !pop.contains(e.target)) close(); }, true);
+	const open = (el, { title, meta, paras, cost, taken, anchorTo }) => {
+		if (el.dataset.wasOpen === '1') return; // second click on the same entry = close, not reopen
+		anchor = el;
+		el.classList.add('on');
+		pop.innerHTML = `
+			<div class="ph"><div><b>${title}</b><span class="meta">${meta}</span></div>
+				<button class="x" title="Закрити (Esc)">✕</button></div>
+			<div class="pbody scrolly">${paras.map((p) => `<p>${p}</p>`).join('')}</div>
+			<div class="pfoot">${cost.map((c) => `<span>◆ ${c}</span>`).join('')}
+				${onTake ? `<button class="take${taken ? ' taken' : ''}">${taken ? '✓ Взято' : '+ Взяти'}</button>` : ''}</div>`;
+		pop.hidden = false;
+		const f = frame.getBoundingClientRect(), r = el.getBoundingClientRect();
+		pop.style.maxHeight = `${f.height - 28}px`;
+		pop.querySelector('.pbody').style.maxHeight = `${f.height - 150}px`;
+		const h = pop.getBoundingClientRect().height;
+		pop.style.top = `${Math.min(Math.max(14, r.top - f.top - 12), f.height - h - 14)}px`;
+		// vertical follows the entry; HORIZONTAL follows the whole picker, so the card can never land on
+		// a sibling entry or on the take toggle — in a grid the clicked cell's own left edge is not the
+		// picker's, and anchoring to it covers the cells to its left.
+		const a = (anchorTo ?? el).getBoundingClientRect();
+		pop.style.left = `${a.left - f.left - pop.offsetWidth - GAP}px`;
+		pop.querySelector('.x').onclick = close;
+		const take = pop.querySelector('.take');
+		if (take) take.onclick = () => {
+			const on = onTake(el);
+			take.classList.toggle('taken', on);
+			take.textContent = on ? '✓ Взято' : '+ Взяти';
+		};
+	};
+	return { open, close, el: pop };
+}
+
+/** Breathing room between a row and any card it opens — big enough that the take toggle stays
+ *  visible and clickable, so the hand never loses the control it just used. */
+const GAP = 14;
+
+const sheetEl = document.getElementById('sheet');
+sheetEl.innerHTML = `
+	<div class="card"><div class="eyebrow">Вид · Походження</div>
+		<p class="filler">Ельф · Мудрець — місце, де живуть картки вибору. Тут довгий аркуш, він скролиться сам по собі і це нормально.</p></div>
+	<div class="tiles">
+		${['9 AC','7 MAX HP','−1 ІНІЦІАТИВА','30 ШВИДКІСТЬ','9 ПАС. УВАГА'].map(t => {
+			const [a, ...b] = t.split(' ');
+			return `<div class="tile"><b>${a}</b><small>${b.join(' ')}</small></div>`;
+		}).join('')}
+	</div>
+	${Array.from({ length: 6 }, (_, i) => `<div class="card"><div class="eyebrow">Блок аркуша ${i + 1}</div>
+		<p class="filler">Заповнювач, щоб ліва колонка мала власну довжину і власний скрол — як у справжньому білдері.</p></div>`).join('')}
+`;
+
+/* ---------------------------------------------------------------------------------------------- */
+const rowsHtml = (items, sel, group) => {
+	let out = '', last = null;
+	items.forEach((it, i) => {
+		const g = group ? group(it) : null;
+		if (g && g !== last) { out += `<div class="glabel">${g}</div>`; last = g; }
+		out += `<button class="orow${i === sel ? ' on' : ''}" data-i="${i}"><b>${it.name}</b><span class="m">${it.meta ?? ''}</span></button>`;
+	});
+	return out;
+};
+const articleHtml = (title) => `
+	<div class="article">
+		<div class="eyebrow">Стаття компендіуму</div>
+		<h3>${title}</h3>
+		${PROSE.map(p => `<p>${p}</p>`).join('')}
+		${PROSE.map(p => `<p>${p}</p>`).join('')}
+	</div>`;
+const changesHtml = `<div class="changes">Якщо взяти: <b>Макс. HP 7 → 13</b> · <b>Кістка 1d6</b> · рятівні INT, WIS · +2 навички</div>`;
+const head = (title, blurb) => `
+	<div class="ihead"><span class="eyebrow">Інспектор</span><span class="sp"></span><span class="eyebrow">✕</span></div>
+	<h2 class="ititle">${title}</h2><p class="iblurb">${blurb}</p>`;
+
+const asOptions = (list, kind) =>
+	kind === 'spell'
+		? list.map(s => ({ name: s.name, meta: s.school, lvl: s.lvl }))
+		: list.map(c => ({ name: c, meta: 'd8 · SRD' }));
+
+/* ---------------------------------------------------------------------------------------------- */
+const VARIANTS = [
+	{
+		id: 'v0', label: 'V0 · Як зараз',
+		note: `<b>Проблема.</b> Панель інспектора — скрол-контейнер, і всередині неї список зі своїм <code>max-height: 340px</code>.
+			Дві вкладені скрол-поверхні в одній колонці. Колесо завжди йде до найближчого скрольного предка під курсором,
+			тому «хочу гортати інспектор» = «гортається список». Baymard: 26% сайтів роблять так, і це один із їхніх п'яти режимів відмови (scroll hijacking).`,
+		render(el) {
+			el.className = 'insp scrolly';
+			el.style.overflow = 'auto';
+			el.innerHTML = head('Клас', 'Що вміє персонаж: кістка життя, рятівні, список навичок і кожна здібність за рівнем.') +
+				`<div class="search"><input placeholder="Пошук 12…"><span class="n">12</span></div>
+				 <div class="rows scrolly" id="L" style="max-height:340px;overflow:auto"></div>` +
+				changesHtml + articleHtml('Wizard');
+			el.querySelector('#L').innerHTML = rowsHtml(asOptions(CLASSES), 11);
+			el.insertAdjacentHTML('afterbegin', `<span class="hint" style="top:112px">↓ два скроли один в одному</span>`);
+		},
+	},
+	{
+		id: 'v1', label: 'V1 · Дві панелі + роздільник',
+		note: `<b>Патерн компендіуму Charnik, повернутий вертикально.</b> Інспектор більше не скролиться сам:
+			шапка auto → список 1fr зі своїм скролом → зміни auto → стаття 1fr зі своїм скролом. Третього скролу,
+			який ти намагався крутити, просто не існує, тому нічого не перехоплюється. Стаття завжди на екрані.
+			Роздільник тягнеться мишею. <span class="verdict">Найменший діф, вже доведений патерн у цьому ж застосунку.</span>`,
+		render(el) {
+			el.className = 'insp';
+			el.style.overflow = 'hidden';
+			el.innerHTML = `<div class="v-pane">
+				${head('Клас', 'Що вміє персонаж: кістка життя, рятівні, список навичок і кожна здібність за рівнем.')}
+				<div class="search"><input placeholder="Пошук 12…"><span class="n">12</span></div>
+				<div class="rows scrolly grow" id="L" style="flex:0 0 200px"></div>
+				<div class="splitter" id="S"><i></i></div>
+				${changesHtml}
+				<div class="grow scrolly" id="A"></div>
+			</div>`;
+			el.querySelector('#L').innerHTML = rowsHtml(asOptions(CLASSES), 11);
+			el.querySelector('#A').innerHTML = articleHtml('Wizard');
+			const L = el.querySelector('#L'), S = el.querySelector('#S');
+			S.onpointerdown = (e) => {
+				S.setPointerCapture(e.pointerId);
+				const y0 = e.clientY, h0 = L.getBoundingClientRect().height;
+				const move = (ev) => { L.style.flex = `0 0 ${Math.max(90, Math.min(420, h0 + ev.clientY - y0))}px`; };
+				const up = () => { S.removeEventListener('pointermove', move); S.removeEventListener('pointerup', up); };
+				S.addEventListener('pointermove', move); S.addEventListener('pointerup', up);
+			};
+		},
+	},
+	{
+		id: 'v2', label: 'V2 · Combobox поверх',
+		note: `<b>Спосіб «великий список у малому просторі» за замовчуванням поза іграми</b> — ARIA combobox:
+			нативний &lt;select&gt;, VS Code quick-open, GitHub «Go to file», Headless UI Combobox.
+			У панелі постійно живе тільки рядок пошуку і стаття на всю висоту; список відкривається плаваючою
+			панеллю ПОВЕРХ і не коштує нічого за висотою. Скрол списку існує рівно тоді, коли ти в ньому. Esc закриває.
+			Ціна: стан відкриття, керування фокусом, клік-поза.`,
+		render(el) {
+			el.className = 'insp scrolly';
+			el.style.overflow = 'auto';
+			el.innerHTML = head('Заклинання', 'Обери, що персонаж знає і що підготував. 440 у списку — фільтруй, не гортай.') +
+				`<div class="search" id="SB"><input placeholder="Клікни, щоб розкрити 440…"><span class="n">440</span></div>` +
+				changesHtml + articleHtml('Гримучий Болт');
+			const pop = document.createElement('div');
+			pop.className = 'pop scrolly';
+			pop.hidden = true;
+			pop.innerHTML = rowsHtml(asOptions(SPELLS, 'spell').slice(0, 120), 3, (s) => s.lvl === 0 ? 'Замовляння' : `Рівень ${s.lvl}`);
+			el.append(pop);
+			const sb = el.querySelector('#SB');
+			const toggle = (on) => { pop.hidden = !on; sb.style.borderColor = on ? 'var(--accent)' : ''; };
+			sb.onclick = () => toggle(pop.hidden);
+			document.addEventListener('keydown', (e) => e.key === 'Escape' && toggle(false), { once: false });
+			el.insertAdjacentHTML('afterbegin', `<span class="hint" style="top:96px">клікни в пошук →</span>`);
+		},
+	},
+	{
+		id: 'v3', label: 'V3 · Список ↔ стаття',
+		note: `<b>Drill-down (Material «list-detail», Windows «list/details»).</b> Клік по опції — стаття ЗАМІЩАЄ список
+			у панелі, зверху смуга «← до списку». На екрані завжди рівно одна скрол-поверхня, тому колесо ніколи не двозначне.
+			Запит і позиція в списку зберігаються. Мінус: щоб порівняти дві опції, треба ходити туди-сюди —
+			а це рівно те, заради чого існує діф.`,
+		render(el) {
+			el.className = 'insp';
+			el.style.overflow = 'hidden';
+			const paint = (mode) => {
+				if (mode === 'list') {
+					el.innerHTML = `<div class="v-pane">
+						${head('Заклинання', 'Обери, що персонаж знає і що підготував.')}
+						<div class="search"><input placeholder="Пошук 440…"><span class="n">440</span></div>
+						<div class="rows scrolly grow" id="L"></div></div>`;
+					el.querySelector('#L').innerHTML = rowsHtml(asOptions(SPELLS, 'spell').slice(0, 160), 3, (s) => s.lvl === 0 ? 'Замовляння' : `Рівень ${s.lvl}`);
+					el.querySelectorAll('.orow').forEach(b => b.onclick = () => paint('article'));
+				} else {
+					el.innerHTML = `<div class="v-pane">
+						<button class="backbar" id="B">← до списку (440)</button>
+						${changesHtml}
+						<div class="grow scrolly" id="A"></div></div>`;
+					el.querySelector('#A').innerHTML = articleHtml('Гримучий Болт');
+					el.querySelector('#B').onclick = () => paint('list');
+				}
+			};
+			paint('list');
+			el.insertAdjacentHTML('afterbegin', `<span class="hint" style="top:96px">клікни рядок →</span>`);
+		},
+	},
+	{
+		id: 'v4', label: 'V4 · Фасети + V1',
+		note: `<b>Відповідь усього НРІ-світу, і в Charnik її нема.</b> D&amp;D Beyond, AideDD, Archives of Nethys,
+			Demiplane, Foundry Compendium Browser — усі ведуть <em>фасетами</em> (рівень / школа / клас / концентрація / ритуал),
+			а не пошуком по назві. 440 заклять ніхто не гортає: їх звужують до 12, і після цього питання висоти списку
+			перестає існувати. Тут це фасети + V1. <span class="verdict">Лікує і п.10, і «немає фільтрів» із п.2.</span>`,
+		render(el) {
+			el.className = 'insp';
+			el.style.overflow = 'hidden';
+			el.innerHTML = `<div class="v-pane">
+				${head('Заклинання', 'Обери, що персонаж знає і що підготував.')}
+				<div class="search"><input placeholder="Пошук…"><span class="n" id="N">12</span></div>
+				<div class="facets">
+					${['Замовляння','1','2','3','4+'].map((l, i) => `<button class="chip" aria-pressed="${i === 2}">Рів. ${l}</button>`).join('')}
+					${['Evocation','Abjuration'].map(s => `<button class="chip" aria-pressed="false">${s}</button>`).join('')}
+					<button class="chip" aria-pressed="false">Концентрація</button>
+					<button class="chip" aria-pressed="false">Ритуал</button>
+				</div>
+				<div class="rows scrolly grow" id="L" style="flex:0 0 170px"></div>
+				<div class="splitter" id="S"><i></i></div>
+				${changesHtml}
+				<div class="grow scrolly" id="A"></div></div>`;
+			const filtered = SPELLS.filter(s => s.lvl === 2).slice(0, 12);
+			el.querySelector('#L').innerHTML = rowsHtml(asOptions(filtered, 'spell'), 1);
+			el.querySelector('#A').innerHTML = articleHtml('Гримучий Болт');
+			el.querySelectorAll('.chip').forEach(c => c.onclick = () => c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'));
+			const L = el.querySelector('#L'), S = el.querySelector('#S');
+			S.onpointerdown = (e) => {
+				S.setPointerCapture(e.pointerId);
+				const y0 = e.clientY, h0 = L.getBoundingClientRect().height;
+				const move = (ev) => { L.style.flex = `0 0 ${Math.max(90, Math.min(380, h0 + ev.clientY - y0))}px`; };
+				const up = () => { S.removeEventListener('pointermove', move); S.removeEventListener('pointerup', up); };
+				S.addEventListener('pointermove', move); S.addEventListener('pointerup', up);
+			};
+		},
+	},
+	{
+		id: 'v5', label: 'V5 · Стаття позичає ширину аркуша',
+		note: `<b>Експериментальний.</b> Місця на дві колонки в панелі нема — але воно є ліворуч.
+			Список лишається у своїй колонці, а стаття виїжджає НАЛІВО поверх аркуша і отримує ~1100&nbsp;px:
+			колонки на дві таблиці, повний текст без переносів. Аркуш тобі не потрібен, поки ти читаєш статтю,
+			а діф лишається видимим. Найближчий родич — VS Code «Peek» і бічні панелі Figma.
+			Ризик: перекриття треба вміти закрити (Esc, клік-поза, повторний клік по рядку) — інакше це двері в один бік.`,
+		render(el) {
+			el.className = 'insp';
+			el.style.overflow = 'hidden';
+			el.innerHTML = `<div class="v-pane">
+				${head('Клас', 'Що вміє персонаж: кістка життя, рятівні, список навичок і кожна здібність за рівнем.')}
+				<div class="search"><input placeholder="Пошук 12…"><span class="n">12</span></div>
+				<div class="rows scrolly grow" id="L"></div>
+				${changesHtml}</div>`;
+			el.querySelector('#L').innerHTML = rowsHtml(asOptions(CLASSES), 11);
+			// the overlay belongs to the PAGE frame, not the inspector — that is the whole point:
+			// it borrows the sheet's width while you read.
+			const frame = el.closest('.frame');
+			const scrim = document.createElement('div');
+			scrim.className = 'scrim';
+			const ov = document.createElement('div');
+			ov.className = 'overlay-article scrolly';
+			ov.innerHTML = `<button class="backbar" id="X">✕ закрити статтю (Esc · клік поза нею)</button>
+				<div style="columns:2;column-gap:28px">${articleHtml('Wizard')}</div>`;
+			const close = () => { ov.remove(); scrim.remove(); };
+			scrim.onclick = close;
+			el.querySelectorAll('.orow').forEach(b => b.onclick = () => frame.append(scrim, ov));
+			ov.querySelector('#X').onclick = close;
+			document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+			el.insertAdjacentHTML('afterbegin', `<span class="hint" style="top:96px">клікни клас →</span>`);
+		},
+	},
+	{
+		id: 'v6', label: 'V6 · Малі пікери: сітка',
+		note: `<b>Сітка замість списку, як у Baldur's Gate 3</b> (BG3-3, BG3-4): 12 класів стають 3 рядками
+			замість 12 — скролу нема взагалі. <b>Прев'ю тут нема навмисно</b>: мета класу коротка
+			(<code>d6 · INT, WIS</code>) і живе прямо в комірці, тож тизер не додав би нічого, крім мерехтіння
+			під курсором. Клік відкриває той самий поповер, що у V8 — один компонент на обидва пікери.
+			<span class="verdict">Із 8 наших пікерів 6 малі (клас 12, вид 9, походження 5, підклас ~4,
+			фіт 18, мова 35) — для них це прибирає скрол цілком.</span>`,
+		render(el) {
+			el.className = 'insp';
+			el.style.overflow = 'hidden';
+			el.innerHTML = `<div class="v-pane">
+				${head('Клас', 'Що вміє персонаж: кістка життя, рятівні, список навичок і кожна здібність за рівнем.')}
+				<div class="search"><input placeholder="Пошук 12…"><span class="n">12</span></div>
+				<div class="grid" id="G"></div>
+				${changesHtml}
+				<div class="grow scrolly" id="A"></div></div>`;
+			const DIE = ['d12','d8','d8','d8','d10','d8','d10','d10','d8','d6','d8','d6'];
+			const SAVES = ['STR CON','DEX CHA','WIS CHA','INT WIS','STR CON','STR DEX','WIS CHA','STR DEX','DEX INT','CON CHA','WIS CHA','INT WIS'];
+			el.querySelector('#G').innerHTML = CLASSES.map((c, i) =>
+				`<button class="cell${i === 11 ? ' on taken' : ''}" data-i="${i}">
+					<span>${c}</span><span class="cm">${DIE[i]} · ${SAVES[i]}</span></button>`).join('');
+			el.querySelector('#A').innerHTML = articleHtml('Wizard');
+			const frame = el.closest('.frame');
+			// the SAME popover component as V8 — the list shape differs, what you read does not
+			const pop = makePopover(frame, {
+				onTake: (cell) => {
+					el.querySelectorAll('.cell').forEach((c) => c.classList.remove('taken'));
+					cell.classList.add('taken');
+					return true; // a class is one-of: taking one replaces the other, never un-takes
+				},
+			});
+			const grid = el.querySelector('#G');
+			el.querySelectorAll('.cell').forEach((b) => (b.onclick = () => pop.open(b, {
+				title: CLASSES[+b.dataset.i],
+				meta: 'Клас · SRD 5.1',
+				paras: [PROSE[0], PROSE[1], PROSE[3]],
+				cost: [`Кістка ${DIE[+b.dataset.i]}`, SAVES[+b.dataset.i], '2 навички'],
+				taken: b.classList.contains('taken'),
+				anchorTo: grid,
+			})));
+			el.insertAdjacentHTML('afterbegin', `<span class="hint" style="top:96px">клікни клас →</span>`);
+		},
+	},
+	{
+		id: 'v7', label: 'V7 · Закляття: рівень як навігація',
+		note: `<b>~300 у візарда 20-го — але BG3 ніколи не показує 300.</b> Рівень закляття це не фільтр,
+			а розділ, який задають самі правила: ти ніколи не обираєш «з усіх 300», ти обираєш «два третього».
+			Тому рівень стає ОСНОВНОЮ навігацією зі своїми лічильниками (300 → ~30), школи й
+			концентрація/ритуал добивають (~30 → ~8). Повний текст несе виноска збоку, як у
+			<code>BG3-spell-entry</code>, тому окрема панель статті не потрібна —
+			<span class="verdict">і в панелі лишається рівно ОДНА скрол-поверхня. Виноска йде за підсвіткою,
+			тож ↑/↓ працюють так само, як миша.</span>`,
+		render(el) {
+			el.className = 'insp';
+			el.style.overflow = 'hidden';
+			const LEVELS = [
+				{ n: 0, label: '✦', taken: 4, cap: 4 }, { n: 1, taken: 4, cap: 4 }, { n: 2, taken: 3, cap: 3 },
+				{ n: 3, taken: 1, cap: 2 }, { n: 4, taken: 0, cap: 2 }, { n: 5, taken: 0, cap: 1 },
+			];
+			let active = 3;
+			el.innerHTML = `<div class="v-pane">
+				${head('Закляття · Wizard', 'Ти ніколи не обираєш «з усіх 300» — ти обираєш «два третього рівня».')}
+				<div class="search"><input placeholder="Пошук серед 312…"><span class="n" id="N">28</span></div>
+				<div class="lvltabs" id="T"></div>
+				<div class="facets" id="F">
+					${['Evocation','Abjuration','Conjuration','Necromancy'].map(s => `<button class="chip" aria-pressed="false">${s}</button>`).join('')}
+					<button class="chip" aria-pressed="false">Концентрація</button>
+					<button class="chip" aria-pressed="false">Ритуал</button>
+				</div>
+				<div class="rows scrolly grow" id="L" style="margin-top:8px"></div></div>`;
+			const T = el.querySelector('#T'), L = el.querySelector('#L');
+			const paintTabs = () => {
+				T.innerHTML = LEVELS.map((l) => {
+					const state = l.taken >= l.cap ? 'full' : 'open';
+					return `<button class="lvltab ${state}" data-n="${l.n}" aria-selected="${l.n === active}">
+						${l.label ?? `Рів. ${l.n}`}<span class="c">${l.taken}/${l.cap}</span></button>`;
+				}).join('');
+				T.querySelectorAll('.lvltab').forEach((b) => (b.onclick = () => { active = +b.dataset.n; paintTabs(); paintList(); }));
+			};
+			const fly = document.createElement('div');
+			fly.className = 'flyout';
+			fly.hidden = true;
+			el.closest('.frame').append(fly);
+			// the wide overlay: the SECOND tier of the flyout, opened only from a clamped one
+			const frame = el.closest('.frame');
+			const scrim = document.createElement('div');
+			scrim.className = 'scrim';
+			const ov = document.createElement('div');
+			ov.className = 'overlay-article scrolly';
+			const closeOv = () => { ov.remove(); scrim.remove(); };
+			scrim.onclick = closeOv;
+			document.addEventListener('keydown', (e) => e.key === 'Escape' && closeOv());
+			const openOv = (name, meta, paras) => {
+				ov.innerHTML = `<button class="backbar" id="X">✕ закрити (Esc · клік поза нею)</button>
+					<div class="article" style="border:0;background:none;padding:0">
+						<h3>${name}</h3><div class="eyebrow" style="margin-bottom:8px">${meta}</div>
+						<div style="columns:2;column-gap:30px">${paras.map((p) => `<p>${p}</p>`).join('')}</div>
+					</div>`;
+				frame.append(scrim, ov);
+				ov.querySelector('#X').onclick = closeOv;
+			};
+
+			let hideTimer;
+			const paintList = () => {
+				const items = SPELLS.filter((s) => s.lvl === active).slice(0, 28);
+				if (active >= 3) items.splice(3, 0, { name: 'Бажання', lvl: active, school: 'Conjuration', long: true });
+				el.querySelector('#N').textContent = String(items.length);
+				L.innerHTML = items
+					.map((s, i) => `<div class="srowwrap${i < 1 ? ' taken' : ''}${i === 2 ? ' on' : ''}">
+						<button class="addbtn${i < 1 ? ' taken' : ''}" title="${i < 1 ? 'Прибрати' : 'Взяти'}">✓</button>
+						<button class="srow" data-i="${i}"><b>${s.name}</b><span class="sm">${s.school} · 120 ft · conc.</span></button>
+					</div>`)
+					.join('');
+				// the + is the whole commit: one click takes it, one click gives it back (п.8 — жодного «підтвердити»)
+				L.querySelectorAll('.addbtn').forEach((b) => (b.onclick = () => {
+					const on = b.classList.toggle('taken');
+					b.parentElement.classList.toggle('taken', on);
+					b.title = on ? 'Прибрати' : 'Взяти'; // the glyph never changes — only whether it is lit
+				}));
+				const f = el.closest('.frame').getBoundingClientRect();
+				L.querySelectorAll('.srow').forEach((b, i) => {
+					const it = items[i];
+					const paras = it.long ? WISH : [PROSE[0]];
+					const meta = `Рівень ${active} · ${it.school}`;
+					const show = () => {
+						clearTimeout(hideTimer); // moving to the NEXT row must not fire the previous row's hide
+						const r = b.getBoundingClientRect();
+						fly.className = 'flyout';
+						fly.innerHTML = `
+							<div class="fh"><b>${it.name}</b><span class="meta">${meta}</span></div>
+							<div class="body">${paras.map((p) => `<p>${p}</p>`).join('')}</div>
+							<div class="cost"><span>◆ 1 дія</span><span>◆ 120 ft</span><span>◆ Концентрація</span></div>
+							<button class="expand">◎ Розгорнути на всю ширину</button>`;
+						fly.hidden = false;
+						// clamp BY MEASUREMENT, not by guessing which spells are long
+						const body = fly.querySelector('.body');
+						if (body.scrollHeight > 300) fly.classList.add('clamped');
+						fly.querySelector('.expand').onclick = () => { fly.hidden = true; openOv(it.name, meta, paras); };
+						const h = fly.getBoundingClientRect().height;
+						fly.style.top = `${Math.min(Math.max(14, r.top - f.top - 10), f.height - h - 14)}px`;
+						fly.style.left = `${b.parentElement.getBoundingClientRect().left - f.left - fly.offsetWidth - GAP}px`;
+					};
+					b.onmouseenter = show;
+					b.onfocus = show;
+					// the pointer must be able to REACH the flyout (to press Розгорнути) without it vanishing
+					b.onmouseleave = () => { hideTimer = setTimeout(() => { if (!fly.matches(':hover')) fly.hidden = true; }, 220); };
+					fly.onmouseleave = () => (fly.hidden = true);
+				});
+			};
+			paintTabs();
+			paintList();
+			el.querySelectorAll('.chip').forEach((c) => (c.onclick = () =>
+				c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true')));
+			el.insertAdjacentHTML('afterbegin', `<span class="hint" style="top:96px">наведи на закляття →</span>`);
+		},
+	},
+	{
+		id: 'v8', label: 'V8 · Поповер над аркушем',
+		note: `<b>V7, але читання відкриває КЛІК, а поповер живе над аркушем.</b> Проти ховера з V7:
+			працює на тачі, працює з клавіатури без винятків, не блимає, поки ведеш мишу вниз списком,
+			і не потребує крихкого «містка», щоб не зникнути дорогою до себе. Ширина 470 px замість 330 —
+			<b>Бажання</b> вміщається цілком без обрізання. Скриму нема навмисно: клік по наступному рядку
+			просто перемальовує поповер, тож переглядати підряд швидко. Esc / ✕ / клік поза ним закривають.
+			<span class="verdict">Кнопка «Взяти» дублюється у підвалі поповера — там, де вже дивишся.</span>`,
+		render(el) {
+			el.className = 'insp';
+			el.style.overflow = 'hidden';
+			const LEVELS = [
+				{ n: 0, label: '✦', taken: 4, cap: 4 }, { n: 1, taken: 4, cap: 4 }, { n: 2, taken: 3, cap: 3 },
+				{ n: 3, taken: 1, cap: 2 }, { n: 4, taken: 0, cap: 2 }, { n: 5, taken: 0, cap: 1 },
+			];
+			let active = 3;
+			el.innerHTML = `<div class="v-pane">
+				${head('Закляття · Wizard', 'Клік по назві — читати. Плюс — взяти. Одне не робить іншого.')}
+				<div class="search"><input placeholder="Пошук серед 312…"><span class="n" id="N">28</span></div>
+				<div class="lvltabs" id="T"></div>
+				<div class="facets">
+					${['Evocation','Abjuration','Conjuration','Necromancy'].map((s) => `<button class="chip" aria-pressed="false">${s}</button>`).join('')}
+					<button class="chip" aria-pressed="false">Концентрація</button>
+					<button class="chip" aria-pressed="false">Ритуал</button>
+				</div>
+				<div class="rows scrolly grow" id="L" style="margin-top:8px"></div></div>`;
+			const T = el.querySelector('#T'), L = el.querySelector('#L'), frame = el.closest('.frame');
+
+			const pop = document.createElement('div');
+			pop.className = 'popover';
+			pop.hidden = true;
+			const peek = document.createElement('div');
+			peek.className = 'peek';
+			peek.hidden = true;
+			frame.append(pop, peek);
+			const closePop = () => {
+				pop.hidden = true;
+				L.querySelectorAll('.srowwrap.on').forEach((w) => {
+					w.classList.remove('on');
+					w.dataset.wasOpen = '1'; // so a second click on the SAME row closes instead of reopening
+					setTimeout(() => delete w.dataset.wasOpen, 0);
+				});
+			};
+			document.addEventListener('keydown', (e) => e.key === 'Escape' && closePop());
+			// ANY click outside closes — no exceptions to hunt for. Capture phase, so this runs BEFORE a
+			// row's own handler: clicking another spell closes this popover and that row then opens its
+			// own, which reads as a swap without needing a special case for it.
+			document.addEventListener(
+				'click',
+				(e) => { if (!pop.hidden && !pop.contains(e.target)) closePop(); },
+				true,
+			);
+
+			const paintTabs = () => {
+				T.innerHTML = LEVELS.map((l) =>
+					`<button class="lvltab ${l.taken >= l.cap ? 'full' : 'open'}" data-n="${l.n}" aria-selected="${l.n === active}">
+						${l.label ?? `Рів. ${l.n}`}<span class="c">${l.taken}/${l.cap}</span></button>`).join('');
+				T.querySelectorAll('.lvltab').forEach((b) => (b.onclick = () => { active = +b.dataset.n; closePop(); paintTabs(); paintList(); }));
+			};
+			const paintList = () => {
+				const items = SPELLS.filter((s) => s.lvl === active).slice(0, 28);
+				if (active >= 3) items.splice(3, 0, { name: 'Бажання', lvl: active, school: 'Conjuration', long: true });
+				el.querySelector('#N').textContent = String(items.length);
+				L.innerHTML = items.map((s, i) => `<div class="srowwrap${i < 1 ? ' taken' : ''}">
+					<button class="addbtn${i < 1 ? ' taken' : ''}" title="${i < 1 ? 'Прибрати' : 'Взяти'}">✓</button>
+					<button class="srow" data-i="${i}"><b>${s.name}</b><span class="sm">${s.school} · 120 ft · conc.</span></button>
+				</div>`).join('');
+				const toggleTake = (wrap) => {
+					const btn = wrap.querySelector('.addbtn');
+					const on = btn.classList.toggle('taken');
+					wrap.classList.toggle('taken', on);
+					btn.title = on ? 'Прибрати' : 'Взяти';
+					return on;
+				};
+				L.querySelectorAll('.addbtn').forEach((b) => (b.onclick = () => toggleTake(b.parentElement)));
+
+				// the peek: teaser only, and it stands down entirely while the popover is open
+				L.querySelectorAll('.srow').forEach((b, i) => {
+					const it = items[i];
+					const showPeek = () => {
+						if (!pop.hidden) return;
+						// anchored to the WHOLE row, not the name — otherwise the card lands on the take
+						// toggle, and the one control the hand goes to disappears under what it opened
+						const f = frame.getBoundingClientRect(), r = b.parentElement.getBoundingClientRect();
+						peek.innerHTML = `
+							<div class="kh"><b>${it.name}</b><span class="meta">Рівень ${active} · ${it.school} · 1 дія · 120 ft · V,S,M</span></div>
+							<p class="kt">${(it.long ? WISH : [PROSE[0]])[0]}</p>
+							<span class="kmore">Клік — читати повністю</span>`;
+						peek.hidden = false;
+						const h = peek.getBoundingClientRect().height;
+						peek.style.top = `${Math.min(Math.max(14, r.top - f.top - 8), f.height - h - 14)}px`;
+						peek.style.left = `${r.left - f.left - peek.offsetWidth - GAP}px`;
+					};
+					b.onmouseenter = showPeek;
+					b.onfocus = showPeek;
+					b.onmouseleave = () => (peek.hidden = true);
+					b.onblur = () => (peek.hidden = true);
+				});
+				L.querySelectorAll('.srow').forEach((b, i) => (b.onclick = () => {
+					const wrap = b.parentElement;
+					// the capture-phase closer already ran; `wasOpen` is how "same row again" still toggles
+					if (wrap.dataset.wasOpen === '1') { delete wrap.dataset.wasOpen; return; }
+					peek.hidden = true; // the teaser steps aside for the real thing
+					L.querySelectorAll('.srowwrap').forEach((w) => w.classList.remove('on'));
+					wrap.classList.add('on');
+					const it = items[i];
+					const paras = it.long ? WISH : [PROSE[0], PROSE[1]];
+					const isTaken = wrap.classList.contains('taken');
+					pop.innerHTML = `
+						<div class="ph"><div><b>${it.name}</b><span class="meta">Рівень ${active} · ${it.school} · SRD 5.1</span></div>
+							<button class="x" title="Закрити (Esc)">✕</button></div>
+						<div class="pbody scrolly">${paras.map((p) => `<p>${p}</p>`).join('')}</div>
+						<div class="pfoot"><span>◆ 1 дія</span><span>◆ 120 ft</span><span>◆ Концентрація</span>
+							<button class="take${isTaken ? ' taken' : ''}">${isTaken ? '✓ Взято' : '+ Взяти'}</button></div>`;
+					pop.hidden = false;
+					const f = frame.getBoundingClientRect(), r = wrap.getBoundingClientRect();
+					pop.style.maxHeight = `${f.height - 28}px`;
+					pop.querySelector('.pbody').style.maxHeight = `${f.height - 150}px`;
+					const h = pop.getBoundingClientRect().height;
+					pop.style.top = `${Math.min(Math.max(14, r.top - f.top - 12), f.height - h - 14)}px`;
+					// clears the take toggle: the row's own left edge, minus the card, minus a real gap
+					pop.style.left = `${r.left - f.left - pop.offsetWidth - GAP}px`;
+					pop.querySelector('.x').onclick = closePop;
+					pop.querySelector('.take').onclick = (ev) => {
+						const on = toggleTake(wrap);
+						ev.currentTarget.classList.toggle('taken', on);
+						ev.currentTarget.textContent = on ? '✓ Взято' : '+ Взяти';
+					};
+				}));
+			};
+			paintTabs();
+			paintList();
+			el.querySelectorAll('.chip').forEach((c) => (c.onclick = () =>
+				c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true')));
+			el.insertAdjacentHTML('afterbegin', `<span class="hint" style="top:96px">клікни назву →</span>`);
+		},
+	},
+];
+
+/**
+ * V9 — one spell list, level as STRUCTURE rather than as a filter.
+ *
+ * Collapsible sticky sections AND a jump rail are not two designs — they are one control, and the
+ * only real question is what starts open. So there is one implementation and `defaultOpen` picks
+ * the policy; nothing about the control changes with it.
+ */
+function renderSpellList(el, defaultOpen) {
+	el.className = 'insp';
+	el.style.overflow = 'hidden';
+	const MAX = 5;
+	const LEVELS = Array.from({ length: MAX + 1 }, (_, n) => n);
+	const countOf = (n) => (n === 0 ? 15 : [0, 26, 31, 28, 24, 19][n]);
+	const takenOf = { 0: 4, 1: 5, 2: 3, 3: 2, 4: 0, 5: 0 };
+	const label = (n) => (n === 0 ? 'Замовляння' : `Рівень ${n}`);
+	// the REAL caps: two per class, not one per level (build/derive.ts — cantripCap + preparedCap)
+	const CANTRIP_CAP = 5, PREPARED_CAP = 14;
+	const cantripsTaken = takenOf[0];
+	const leveledTaken = [1, 2, 3, 4, 5].reduce((s, n) => s + takenOf[n], 0);
+
+	// the only thing the policies differ in. Everything below is identical.
+	const OPEN_POLICY = {
+		// nothing open: the whole structure at a glance, zero scroll, one click to the level you want
+		none: [],
+		// where a level-up adds, plus every level you already own something in
+		smart: LEVELS.filter((n) => n === MAX || takenOf[n] > 0),
+		all: LEVELS,
+	};
+	const openSet = new Set(OPEN_POLICY[defaultOpen]);
+
+	el.innerHTML = `<div class="v-pane">
+		${head('Закляття · Wizard', 'Рівень — це розділ списку, а не фільтр: решта нікуди не дівається.')}
+		<div class="search"><input id="Q" placeholder="Пошук серед 143…"><span class="n">143</span></div>
+		<div class="caps">
+			<div class="cap ${cantripsTaken >= CANTRIP_CAP ? 'done' : 'open'}">Замовляння<b>${cantripsTaken}/${CANTRIP_CAP}</b></div>
+			<div class="cap ${leveledTaken >= PREPARED_CAP ? 'done' : 'open'}">Відомі<b>${leveledTaken}/${PREPARED_CAP}</b></div>
+		</div>
+		<div class="facets">
+			${['Evocation','Abjuration','Conjuration','Necromancy'].map((s) => `<button class="chip" aria-pressed="false">${s}</button>`).join('')}
+			<button class="chip" aria-pressed="false">Концентрація</button>
+			<button class="chip" aria-pressed="false">Ритуал</button>
+		</div>
+		<div class="jump" id="J"></div>
+		<div class="rows scrolly grow" id="L" style="margin-top:8px"></div></div>`;
+
+	const L = el.querySelector('#L'), frame = el.closest('.frame');
+	const taken = new Set(['0:1', '1:0', '3:2']);
+	const peek = document.createElement('div');
+	peek.className = 'peek';
+	peek.hidden = true;
+	frame.append(peek);
+	const pop = makePopover(frame, {
+		onTake: (row) => {
+			const on = !taken.has(row.dataset.k);
+			on ? taken.add(row.dataset.k) : taken.delete(row.dataset.k);
+			paint();
+			return on;
+		},
+	});
+
+	function paint() {
+		L.innerHTML = LEVELS.map((n) => {
+			const open = openSet.has(n);
+			const items = SPELLS.filter((s) => s.lvl === n).slice(0, Math.min(countOf(n), 14));
+			const got = [...taken].filter((k) => k.startsWith(`${n}:`)).length;
+			const head = `<button class="sect${open ? '' : ' shut'}" data-n="${n}">
+				<span class="caret">${open ? '▾' : '▸'}</span><span class="nm">${label(n)}</span>
+				<span class="of">${got ? `<span class="got">${got} взято</span> · ` : ''}${countOf(n)}</span></button>`;
+			if (!open) return head;
+			return head + items.map((s, i) => {
+				const k = `${n}:${i}`, on = taken.has(k);
+				return `<div class="srowwrap${on ? ' taken' : ''}" data-k="${k}">
+					<button class="addbtn${on ? ' taken' : ''}" title="${on ? 'Прибрати' : 'Взяти'}">✓</button>
+					<button class="srow" data-k="${k}"><b>${s.name}</b><span class="sm">${s.school} · 120 ft · conc.</span></button>
+				</div>`;
+			}).join('');
+		}).join('');
+
+		L.querySelectorAll('.sect').forEach((h) => (h.onclick = () => {
+			const n = +h.dataset.n;
+			openSet.has(n) ? openSet.delete(n) : openSet.add(n);
+			paint();
+		}));
+		L.querySelectorAll('.addbtn').forEach((b) => (b.onclick = () => toggleAt(b.parentElement.dataset.k)));
+		// the teaser: enough to scan a list without a click per row. Stands down while the popover is up.
+		L.querySelectorAll('.srow').forEach((b) => {
+			const showPeek = () => {
+				if (!pop.el.hidden) return;
+				const f = frame.getBoundingClientRect(), r = b.parentElement.getBoundingClientRect();
+				peek.innerHTML = `
+					<div class="kh"><b>${b.querySelector('b').textContent}</b><span class="meta">${
+						label(+b.dataset.k.split(':')[0])} · 1 дія · 120 ft · V,S,M</span></div>
+					<p class="kt">${PROSE[0]}</p>
+					<span class="kmore">Клік — читати повністю</span>`;
+				peek.hidden = false;
+				const h = peek.getBoundingClientRect().height;
+				peek.style.top = `${Math.min(Math.max(14, r.top - f.top - 8), f.height - h - 14)}px`;
+				peek.style.left = `${L.getBoundingClientRect().left - f.left - peek.offsetWidth - GAP}px`;
+			};
+			b.onmouseenter = showPeek;
+			b.onfocus = showPeek;
+			b.onmouseleave = () => (peek.hidden = true);
+			b.onblur = () => (peek.hidden = true);
+		});
+
+		L.querySelectorAll('.srow').forEach((b) => (b.onclick = () => {
+			const wrap = b.parentElement;
+			peek.hidden = true;
+			pop.open(wrap, {
+				title: b.querySelector('b').textContent,
+				meta: `${label(+b.dataset.k.split(':')[0])} · SRD 5.1`,
+				paras: b.querySelector('b').textContent.length > 13 ? WISH : [PROSE[0], PROSE[1]],
+				cost: ['1 дія', '120 ft', 'Концентрація'],
+				taken: taken.has(b.dataset.k),
+				anchorTo: L,
+			});
+		}));
+	}
+	function toggleAt(k) { taken.has(k) ? taken.delete(k) : taken.add(k); paint(); }
+
+	// the jump rail: opens the section if it is shut, then scrolls to it. Same navigation as the
+	// headers, at a density that survives everything being open.
+	const J = el.querySelector('#J');
+	J.innerHTML =
+		LEVELS.map((n) => `<button class="jumpbtn" data-n="${n}">${n === 0 ? '✦' : n}${
+			takenOf[n] ? ` <span class="g">${takenOf[n]}</span>` : ''}</button>`).join('') +
+		`<button class="jumpbtn" id="ALL" style="margin-left:auto">розгорнути все</button>`;
+	/**
+	 * Scroll a section to the top of the list.
+	 *
+	 * NOT `offsetTop` arithmetic: `offsetTop` is measured from each element's own `offsetParent`, and
+	 * here both happen to resolve to `.insp`, so `h.offsetTop - L.offsetTop` cancels *by accident*. Put
+	 * `position: relative` on any wrapper between them — a sticky-header shim, a transition wrapper —
+	 * and the two offsets stop being comparable, silently. Live rects have no such dependency.
+	 *
+	 * The first section is snapped to a true 0: the list's own padding + the header's margin put its
+	 * natural target 7px down, so the jump left a sliver you could still scroll up past.
+	 */
+	const LIST_PAD_TOP = 8; // matches .rows padding-top
+	function scrollToSection(n) {
+		const h = L.querySelector(`.sect[data-n="${n}"]`);
+		const first = h === L.querySelector('.sect');
+		const top = first
+			? 0
+			: L.scrollTop + h.getBoundingClientRect().top - L.getBoundingClientRect().top - LIST_PAD_TOP;
+		L.scrollTo({ top, behavior: 'smooth' });
+	}
+	J.querySelectorAll('.jumpbtn[data-n]').forEach((b) => (b.onclick = () => {
+		const n = +b.dataset.n;
+		openSet.add(n);
+		paint();
+		scrollToSection(n);
+	}));
+	const allBtn = J.querySelector('#ALL');
+	allBtn.onclick = () => {
+		const expand = openSet.size < LEVELS.length;
+		openSet.clear();
+		if (expand) LEVELS.forEach((n) => openSet.add(n));
+		allBtn.textContent = expand ? 'згорнути все' : 'розгорнути все';
+		paint();
+	};
+	// scroll-spy: the chips say where you ARE; they never cut the list down. Live rects again — a
+	// section is "current" once its header has reached the top of the list's viewport.
+	L.addEventListener('scroll', () => {
+		const lt = L.getBoundingClientRect().top;
+		let cur = 0;
+		L.querySelectorAll('.sect').forEach((h) => {
+			if (h.getBoundingClientRect().top - lt <= LIST_PAD_TOP + 2) cur = +h.dataset.n;
+		});
+		J.querySelectorAll('.jumpbtn[data-n]').forEach((b) => b.classList.toggle('here', +b.dataset.n === cur));
+	});
+	// a collapsed section must never hide a match — typing opens everything that has one
+	el.querySelector('#Q').oninput = (e) => {
+		if (!e.target.value.trim()) return;
+		LEVELS.forEach((n) => openSet.add(n));
+		paint();
+	};
+	paint();
+	L.dispatchEvent(new Event('scroll'));
+	el.querySelectorAll('.chip').forEach((c) => (c.onclick = () =>
+		c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true')));
+}
+
+VARIANTS.push(
+	{
+		id: 'v9', label: 'V9 · Секції — усе закрите',
+		note: `<b>Ти мав рацію: V9 і V10 були одним контролом із різним дефолтом, і я подав це як вибір.</b>
+			Тепер це одна річ — липкі секції, що згортаються, плюс рейка переходу. Рівень це розділ,
+			а не фільтр: нічого не зникає, тому нічого не «відриває». Рейка відкриває секцію і скролить
+			до неї, підсвічуючись сама (scroll-spy); пошук примусово розгортає все, бо згорнута секція
+			не сміє ховати збіг. <span class="verdict">Виправлено: ліміти в 5e НЕ по рівнях — це два
+			числа на клас (<code>derive.ts:315</code>), тому вони переїхали в шапку. «1/2» на рівні, які я малював
+			у V7/V8, — вигадані правила.</span> <b>Дефолт тут — усе закрите:</b> вся структура списку
+			на одному екрані без скролу, один клік до потрібного рівня. Сусідні вкладки — ТОЙ САМИЙ код,
+			змінюється рівно один рядок політики.`,
+		render: (el) => renderSpellList(el, 'none'),
+	},
+	{
+		id: 'v9b', label: 'V9 · дефолт «розумний»',
+		note: `Той самий контрол, інший дефолт: відкрито рівень, куди додає левелап, плюс усі, де вже щось
+			узято. Ніякого кліку, щоб побачити «що в мене є». Плата: старт довший за екран, і при
+			мультикласі відкритих секцій стає багато.`,
+		render: (el) => renderSpellList(el, 'smart'),
+	},
+	{
+		id: 'v9c', label: 'V9 · дефолт «усе відкрито»',
+		note: `Той самий контрол, дефолт «усе розгорнуто» — те, що раніше називалося V10.
+			Суцільний список, заголовки липкі, рейка працює як scroll-spy.
+			Плата: 143 рядки лишаються 143 рядками, структура нічого не компресує.`,
+		render: (el) => renderSpellList(el, 'all'),
+	},
+);
+
+const tabsEl = document.getElementById('tabs'), noteEl = document.getElementById('note'), inspEl = document.getElementById('insp');
+let current = 'v1';
+function show(id) {
+	current = id;
+	VARIANTS.forEach(v => tabsEl.querySelector(`[data-v="${v.id}"]`).setAttribute('aria-selected', String(v.id === id)));
+	const v = VARIANTS.find(x => x.id === id);
+	noteEl.innerHTML = v.note;
+	// variants append their floating layers to the FRAME, not the inspector, so clearing the inspector
+	// alone leaves them behind and a stale card from V5/V7 shows up under V8's cursor
+	document.querySelectorAll('.frame > .flyout, .frame > .popover, .frame > .peek, .frame > .overlay-article, .frame > .scrim')
+		.forEach((n) => n.remove());
+	inspEl.replaceChildren();
+	inspEl.removeAttribute('style');
+	v.render(inspEl);
+}
+tabsEl.innerHTML = VARIANTS.map(v => `<button class="tab" data-v="${v.id}">${v.label}</button>`).join('');
+tabsEl.querySelectorAll('.tab').forEach(b => b.onclick = () => show(b.dataset.v));
+show('v0');
+</script>
+</body>
+</html>
