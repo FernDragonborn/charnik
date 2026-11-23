@@ -572,7 +572,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (217 modules)
+## Library functions & types (218 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -586,6 +586,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/actions/dragMotion.ts`
 
 - `const TOUCH_HOLD_MS` — What every zone passes as `delayTouchStart`: the silence plus the fill, so the ring closes at the * exact moment the …
+- `const NO_LIBRARY_TAB_STOPS` — What every zone passes so the LIBRARY adds no Tab stops of its own: left at its default it makes * the list and every…
 - `const dragMotion`
 
 ### `src/lib/actions/floatInBody.ts`
@@ -2747,6 +2748,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const recordOf` — * Build a `Record<K, V>` that has EVERY key in `keys`, computing each value from its key.
 - `const countAt` — * The count a partial map holds under `key`, where the key is one CONTENT names — a resource id.
 
+### `src/lib/util/remove-keeping-focus.ts`
+
+- `function removeKeepingFocus` — * Remove the row holding `control`, then put focus somewhere real — the same control in the row * that takes its plac…
+
 ### `src/lib/util/say.ts`
 
 - `type SaidValue` — One value inside a said sentence: a literal (an id, a column, a count), another catalog word, a * list of candidates,…
@@ -2769,4 +2774,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_51 tokens · 108 global classes · 63 components · 1694 exports across 234 modules · 123 duplicate suspects._
+_51 tokens · 108 global classes · 63 components · 1696 exports across 235 modules · 123 duplicate suspects._

@@ -47,6 +47,11 @@ const HOLD_FILL_MS = 400;
  *  a player may eventually be given (`work/ui.md` ▸ A11Y-TIMING). */
 export const TOUCH_HOLD_MS = HOLD_QUIET_MS + HOLD_FILL_MS;
 
+/** What every zone passes so the LIBRARY adds no Tab stops of its own: left at its default it makes
+ *  the list and every row focusable, which is one stop per row on top of the row's own controls
+ *  (`work/ui.md` ▸ KEYBOARD-NAV). A row is moved from the keyboard by its own grip (`RowGrip`). */
+export const NO_LIBRARY_TAB_STOPS = { zoneTabIndex: -1, zoneItemTabIndex: -1 } as const;
+
 /** How far a finger may drift and still be holding rather than scrolling. Matched to the library's
  *  own `MIN_MOVEMENT_BEFORE_DRAG_START_PX`: past it, it has already dropped the drag, and a ring that
  *  kept filling would be promising something that is no longer going to happen. */

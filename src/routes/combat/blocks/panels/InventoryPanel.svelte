@@ -18,7 +18,8 @@
 	import { provenance } from '#lib/actions/provenance.ts';
 	import AddItemPopover from '../AddItemPopover.svelte';
 	import { dndzone } from 'svelte-dnd-action';
-	import { dragMotion, TOUCH_HOLD_MS } from '#lib/actions/dragMotion.ts';
+	import { removeKeepingFocus } from '#lib/util/remove-keeping-focus.ts';
+	import { dragMotion, TOUCH_HOLD_MS, NO_LIBRARY_TAB_STOPS } from '#lib/actions/dragMotion.ts';
 	import RowGrip from '../RowGrip.svelte';
 	import type { InventoryRow } from '../../inventory.svelte';
 
@@ -127,6 +128,7 @@
 		delayTouchStart: TOUCH_HOLD_MS,
 		flipDurationMs: 150,
 		dropTargetStyle: {},
+		...NO_LIBRARY_TAB_STOPS,
 		morphDisabled: true,
 	}}
 	onconsider={(e) => (dragging = e.detail.items)}
@@ -241,7 +243,13 @@
 				     offers Undo, which puts the row back with its quantity, attunement and answers -->
 				<button
 					class="row-remove"
-					onclick={() => inv.remove(row.entry.iid)}
+					onclick={(e) =>
+						void removeKeepingFocus(
+							e.currentTarget,
+							'.inv-row',
+							() => inv.remove(row.entry.iid),
+							e.currentTarget.closest('.panel-region')?.querySelector<HTMLElement>('.htoggle'),
+						)}
 					aria-label={$_('combat.inventory.remove', { values: { name: row.name } })}
 					use:provenance={$_('combat.inventory.remove', { values: { name: row.name } })}
 					><Icon name="trash-2" size={12} /></button

@@ -55,7 +55,12 @@
 </script>
 
 <div class="panel-head">
-	<button class="htoggle" aria-expanded={!collapsed[pid]} onclick={() => toggle(pid)}>
+	<button
+		class="htoggle"
+		id={`panel-title-${pid}`}
+		aria-expanded={!collapsed[pid]}
+		onclick={() => toggle(pid)}
+	>
 		<span class="chevron"
 			><Icon name={collapsed[pid] ? 'chevron-right' : 'chevron-down'} size={13} /></span
 		>{$_(`combat.panel.${pid}`)}

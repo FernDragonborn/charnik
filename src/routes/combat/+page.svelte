@@ -5,7 +5,7 @@
 	import { onMount } from 'svelte';
 	import { _ } from '#lib/i18n/index.ts';
 	import { dragHandleZone } from 'svelte-dnd-action';
-	import { dragMotion, TOUCH_HOLD_MS } from '#lib/actions/dragMotion.ts';
+	import { dragMotion, TOUCH_HOLD_MS, NO_LIBRARY_TAB_STOPS } from '#lib/actions/dragMotion.ts';
 	import { combat } from './combat-view-model.svelte';
 	import { content } from '#lib/content/store.svelte.ts';
 	import { saveCharacterGuarded, saveCharacterToStore } from '#lib/character/store.svelte.ts';
@@ -146,6 +146,7 @@
 					delayTouchStart: TOUCH_HOLD_MS,
 					flipDurationMs,
 					dropTargetStyle: {},
+					...NO_LIBRARY_TAB_STOPS,
 					// The floating card keeps the size it is given. Left on, the library resizes it into
 					// whatever slot it is currently over — and these panels are wildly different heights, so
 					// the background kept collapsing and re-growing under text that stayed put.
@@ -160,7 +161,13 @@
 				onfinalize={(e) => dndFinalize(ci, e)}
 			>
 				{#each col as item (item.id)}
-					<div class="card"><PanelCard pid={item.id} {c} {s} /></div>
+					<!-- the library makes each card a list item, so the landmark is a section inside it: a panel
+					     is reached by its name, not as "item 3 of 6" -->
+					<div class="card">
+						<section class="panel-region" aria-labelledby={`panel-title-${item.id}`}>
+							<PanelCard pid={item.id} {c} {s} />
+						</section>
+					</div>
 				{/each}
 			</div>
 		{/each}

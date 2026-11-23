@@ -26,7 +26,7 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import RowGrip from '../RowGrip.svelte';
 	import { dndzone } from 'svelte-dnd-action';
-	import { dragMotion, TOUCH_HOLD_MS } from '#lib/actions/dragMotion.ts';
+	import { dragMotion, TOUCH_HOLD_MS, NO_LIBRARY_TAB_STOPS } from '#lib/actions/dragMotion.ts';
 	import { ROW_PANEL } from '#lib/combat/row-order.ts';
 	import {
 		FEATURE_SECTION,
@@ -114,6 +114,7 @@
 			delayTouchStart: TOUCH_HOLD_MS,
 			flipDurationMs: 150,
 			dropTargetStyle: {},
+			...NO_LIBRARY_TAB_STOPS,
 			morphDisabled: true,
 		}}
 		onconsider={(e) => (dragging = { key: group.key, items: e.detail.items })}

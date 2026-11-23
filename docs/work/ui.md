@@ -98,6 +98,11 @@
       concept: a sheet is kept in pencil because its numbers keep changing; then a MINIATURE on
       its base — it is your character on the table. A GM screen's three panels got no yes. Tally
       marks and an hourglass for rounds are undrawn and unjudged.
+      **Drawn, waiting on the pick:** `design-preview/favicon-variants.html` — three pencil stubs
+      (P1–P3) and three miniatures (M1–M3), each in a real 16px tab on a dark and a light chrome, each
+      with the risk of what it reads as. The miniatures run into a chess pawn at tab size. Once one
+      is picked, the SVG goes into `static/` and `app.html`, and `pnpm tauri icon` renders the desktop
+      set from it.
 
 - [ ] **DAMAGE-GLYPHS · three of the thirteen damage glyphs are redrawn.** A damage type is its
       `DamageIcon` and never a word wherever room is scarce (`../internals/ui.md` ▸ the hit line),
@@ -148,15 +153,16 @@
   Ctrl and matches `e.code`. Already built and reused: `trapFocus` + `dismissOnEscape`,
   `walkOptions`, `SectionedPicker`'s roving stop, `focusHalo`, `RowGrip`'s arrow move, `takeFocus`,
   `provenance`'s one-layer Escape.
-  **What the play screen breaks** (measured on the demo character in a browser): 342 Tab stops.
-  `svelte-dnd-action` makes every row and list focusable — about 45 duplicate stops its
-  `zoneTabIndex` / `zoneItemTabIndex` options turn off; every row's grip is a stop of its own,
-  invisible at rest (`RowGrip`); a feature row costs five stops; the combat menus are marked modal
-  but neither take the focus nor trap it, and sit after every panel in the page order, so Tab from
-  their button walks the whole sheet first (`CombatMenus.svelte`, `+page.svelte`); removing an
-  inventory item drops the focus to `<body>`; there is no way between regions but the skip link,
-  and the panels are unlabelled `div`s. Not checked: ten controls a script flagged as ringless,
-  and whether the sticky top bar ever covers the focus (2.4.11).
+  **What the play screen still breaks** (walked by Tab on the demo character in a browser): 281 Tab
+  stops in `main`. Every row's grip is a stop of its own, invisible at rest (`RowGrip`, 41 of
+  them); a feature row costs five stops; the combat menus are marked modal but neither take the
+  focus nor trap it, and sit after every panel in the page order, so Tab from their button walks
+  the whole sheet first (`CombatMenus.svelte`, `+page.svelte`); there is no way between regions but
+  the skip link. Each of these waits on an answer below. Not checked: ten controls a script flagged
+  as ringless, and whether the sticky top bar ever covers the focus (2.4.11). What is fixed and
+  holds: the drag library adds no stops of its own (`NO_LIBRARY_TAB_STOPS`), each panel is a
+  landmark named by its title, and removing an item or an effect puts the focus on the same control
+  in the row that takes its place (`removeKeepingFocus`).
   **Open, the maintainer's:** F6 / Shift+F6 between the top bar, the hero and each panel (a desktop
   convention, not a W3C one); per-row controls (prepare · cast · pin) as grid cells reached by ←/→,
   or one stop per row; the combat menus as true modals, or popups that take the focus and close when

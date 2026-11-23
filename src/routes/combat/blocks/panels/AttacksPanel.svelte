@@ -20,7 +20,7 @@
 	import { describedRules } from '#lib/content/overrides.svelte.ts';
 	import { app } from '#lib/stores/app.svelte.ts';
 	import { dndzone } from 'svelte-dnd-action';
-	import { dragMotion, TOUCH_HOLD_MS } from '#lib/actions/dragMotion.ts';
+	import { dragMotion, TOUCH_HOLD_MS, NO_LIBRARY_TAB_STOPS } from '#lib/actions/dragMotion.ts';
 	import RowGrip from '../RowGrip.svelte';
 	import { ROW_PANEL, uniqueRowKeys } from '#lib/combat/row-order.ts';
 	import type { Attack } from '#lib/combat/attacks.ts';
@@ -82,6 +82,7 @@
 		delayTouchStart: TOUCH_HOLD_MS,
 		flipDurationMs: 150,
 		dropTargetStyle: {},
+		...NO_LIBRARY_TAB_STOPS,
 		morphDisabled: true,
 	}}
 	onconsider={(e) => (dragging = e.detail.items)}

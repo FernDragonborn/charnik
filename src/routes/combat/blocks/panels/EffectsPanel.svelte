@@ -3,6 +3,7 @@
 	// mechanical tags, a duration dropdown + remove), then read-only sections for item/feature-derived
 	// contributions, unrecognized tokens, and L3 plugin notes. Owns the duration-menu local state
 	// and the per-effect row snippet.
+	import { removeKeepingFocus } from '#lib/util/remove-keeping-focus.ts';
 	import Icon from '#lib/components/Icon.svelte';
 	import { _ } from '#lib/i18n/index.ts';
 	import { provenance } from '#lib/actions/provenance.ts';
@@ -110,7 +111,13 @@
 				class="icon-button effect-remove"
 				use:provenance={$_('combat.effects.remove')}
 				aria-label={$_('combat.effects.remove')}
-				onclick={() => combat.effects.removeEffect(e.iid)}><Icon name="x" size={13} /></button
+				onclick={(ev) =>
+					void removeKeepingFocus(
+						ev.currentTarget,
+						'.effect-row',
+						() => combat.effects.removeEffect(e.iid),
+						ev.currentTarget.closest('.panel-region')?.querySelector<HTMLElement>('.htoggle'),
+					)}><Icon name="x" size={13} /></button
 			>
 		</span>
 	</div>
@@ -226,7 +233,13 @@
 						class="icon-button effect-remove"
 						use:provenance={$_('combat.effects.remove')}
 						aria-label={$_('combat.effects.remove')}
-						onclick={() => combat.effects.removeEffect(r.iid)}><Icon name="x" size={12} /></button
+						onclick={(e) =>
+							void removeKeepingFocus(
+								e.currentTarget,
+								'.resource-row',
+								() => combat.effects.removeEffect(r.iid),
+								e.currentTarget.closest('.panel-region')?.querySelector<HTMLElement>('.htoggle'),
+							)}><Icon name="x" size={12} /></button
 					>
 				</div>
 			{/each}
