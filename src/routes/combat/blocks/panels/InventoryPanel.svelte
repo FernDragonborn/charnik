@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { contextAct } from '#lib/actions/contextAct.ts';
+	import { articleHref } from '#lib/combat/row-menu.ts';
 	// N1: what the character is carrying, at play time. The builder decides WHAT is owned; this panel
 	// is the four things that change mid-session — equip, attune, how many, use one up — plus the load
 	// bar, which is the only place carrying capacity has ever been shown (it was computed and never
@@ -140,7 +142,23 @@
 	{#each items as item (item.id)}
 		{@const row = item.row}
 		{#if row}
-			<div class="inv-row">
+			<div
+				class="inv-row"
+				use:contextAct={(e) =>
+					combat.menus.openRowMenu(
+						{
+							title: row.name,
+							compendium: row.item ? articleHref(row.item.row.effectiveId) : undefined,
+							acts: [
+								{
+									label: $_('combat.inventory.remove', { values: { name: row.name } }),
+									run: () => inv.remove(row.entry.iid),
+								},
+							],
+						},
+						e,
+					)}
+			>
 				<RowGrip
 					panel="inventory"
 					id={row.entry.iid}

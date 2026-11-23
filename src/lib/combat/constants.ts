@@ -25,7 +25,9 @@ export type MenuKind =
 	| 'restshort'
 	| 'restlong'
 	| 'coins'
-	| 'experience';
+	| 'experience'
+	/** A row's own menu (`row-menu.ts`). */
+	| 'row';
 
 /** Why the character died — the dead banner's subtitle, one key per `play.death.cause`. Catalog
  *  keys rather than phrases: this module has no locale, and both consumers can read one. */

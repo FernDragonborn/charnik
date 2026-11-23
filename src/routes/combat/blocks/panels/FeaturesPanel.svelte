@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { contextAct } from '#lib/actions/contextAct.ts';
+	import { articleHref } from '#lib/combat/row-menu.ts';
 	// Features panel body: what this character HAS, to read. Class features by the level they were
 	// gained at, then species traits, background and feats — separate sections, never one blob
 	// (plan.md ▸ Character sheet fields).
@@ -130,7 +132,21 @@
 			{@const f = item.f}
 			{@const prose = describedProse(f.row, app.activeLocale)}
 			{@const id = idOf(f)}
-			<div class="row-wrap">
+			<div
+				class="row-wrap"
+				use:contextAct={(e) =>
+					combat.menus.openRowMenu(
+						{
+							title: nameOf(f),
+							pin: {
+								on: combat.featureView.isPinned(id),
+								toggle: () => combat.featureView.togglePinned(id),
+							},
+							compendium: articleHref(f.row.effectiveId),
+						},
+						e,
+					)}
+			>
 				<details class="feature-item">
 					<!-- the same row a panel uses everywhere else (`.combat-row` in components.css): name on
 					     the left, its figures on the right. A feature carries no second line, so the grid's

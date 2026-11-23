@@ -180,11 +180,16 @@ of NARROW-DESKTOP are built, because a column card with tabs is exactly a region
   **A wave of its own** — the maintainer's call: neither the wide desktop nor the new layouts take it
   before that wave, so until then the furniture stands where it stands today.
 
-- [ ] **ROW-MENU · hold a row, or right-click it** (P10, P14, P17, P23): the one place a row's
+- [~] **ROW-MENU · hold a row, or right-click it** (P10, P14, P17, P23): the one place a row's
   secondary acts live — why the number is what it is, the roll's swing, Pin to Mine, Open in the
   compendium, and the row's own acts (Remove, own words). It is reached from the keyboard too, by the
   context-menu key and Shift+F10, per KEYBOARD-NAV. On a row it takes the browser's own context
   menu's place — the maintainer's call.
+  **Built** (`../internals/ui.md` ▸ Accessibility): the right click, the context-menu key and
+  Shift+F10 open it on a skill (its parts and the check with a swing), a spell and a feature (the
+  pin, the article) and an item (the article, Remove). **Left:** the HOLD on a finger, which today is
+  how a row is dragged — it arrives with PHONE-PLAY, once dragging is ARRANGE-MODE's; the attack and
+  action rows; a spell's parts; the own-words editor in the menu.
 
 - [ ] **RESOURCE-PIN · pin ANY trackable thing to the play surface, not only spells.** Asked for in
   feedback. Today `ui.spellsPinned` pins spells to the top of the combat spell list and nothing else

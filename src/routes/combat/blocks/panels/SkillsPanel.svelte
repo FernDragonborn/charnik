@@ -9,9 +9,25 @@
 	import { why, signed, titleCase, ABIL } from '#lib/combat/helpers.ts';
 	import { skillRoll } from '#lib/combat/sheet-roll-specs.ts';
 	import { provenance } from '#lib/actions/provenance.ts';
+	import { contextAct } from '#lib/actions/contextAct.ts';
 
 	let { s }: { s: CharacterSheet } = $props();
 	const { roll } = combat;
+
+	/** A skill's row menu: what its number is made of, and the check rolled with a swing. */
+	const skillMenu = (skill: SkillId, e: Event) => {
+		const sk = s.skills[skill];
+		if (!sk) return;
+		const check = skillRoll(skill, s);
+		combat.menus.openRowMenu(
+			{
+				title: $_(`skillName.${skill}`, { default: titleCase(skill) }),
+				why: why(sk, $_),
+				roll: (swing) => combat.rollSwung(check.name, check.mod, swing, check.target),
+			},
+			e,
+		);
+	};
 
 	// Which ability a 5e tool check swings with is the table's call, not ours (`derive-stats.ts` ▸
 	// TABLE_CHOSEN_ABILITY), so the row asks — and remembers the answer for as long as the sheet is
@@ -42,6 +58,7 @@
 						<button
 							class="skill-row"
 							use:provenance={why(sk, $_)}
+							use:contextAct={(e) => skillMenu(skill, e)}
 							onclick={(e) => {
 								const check = skillRoll(skill, s);
 								roll(check.name, check.mod, e, check.target);

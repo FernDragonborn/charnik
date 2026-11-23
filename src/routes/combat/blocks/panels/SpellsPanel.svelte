@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { contextAct } from '#lib/actions/contextAct.ts';
+	import { articleHref } from '#lib/combat/row-menu.ts';
 	// Spells panel body: per-class cast line (save DC / attack), an armor-block warning, then spell
 	// groups with slot pips and rows (prepare toggle, pin, ritual-cast badge, cast on click).
 	import Icon from '#lib/components/Icon.svelte';
@@ -103,7 +105,18 @@
 					     Tab went row, row, out — prepare, pin, ritual cast and the cast-time note were
 					     reachable by mouse only, and ritual casting by nothing else anywhere in the app. The
 					     NAME is the cast button, so the widest cell of the row still casts on a click. -->
-					<div class="spell-row">
+					<div
+						class="spell-row"
+						use:contextAct={(e) =>
+							combat.menus.openRowMenu(
+								{
+									title: r.name,
+									pin: { on: !!pinned[r.ref], toggle: () => combat.togglePin(r.ref) },
+									compendium: articleHref(r.ref),
+								},
+								e,
+							)}
+					>
 						<span class="row-name">
 							<button
 								class="prep"

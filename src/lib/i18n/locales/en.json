@@ -554,6 +554,15 @@
 		"pp": "Platinum"
 	},
 	"combat": {
+		"rowMenu": {
+			"swing": "Roll with",
+			"disadvantage": "Disadvantage",
+			"roll": "Roll",
+			"advantage": "Advantage",
+			"pin": "Pin",
+			"unpin": "Unpin",
+			"compendium": "Open in the compendium"
+		},
 		"action": {
 			"attack": "Attack",
 			"attackDesc": "weapon / spell / unarmed",

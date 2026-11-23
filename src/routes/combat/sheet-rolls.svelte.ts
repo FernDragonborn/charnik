@@ -6,6 +6,7 @@
  * satisfies (docs/internals/roller.md).
  */
 import { toast } from '#lib/toast/toast.ts';
+import type { RollSwing } from '#lib/combat/row-menu.ts';
 import { t, translator } from '#lib/i18n/index.ts';
 import { attackRollName, extraAttackMark, extraAttackRollName } from '#lib/combat/attack-names.ts';
 import type { ExtraAttackRow } from '#lib/combat/attacks.ts';
@@ -153,6 +154,15 @@ export class SheetRolls {
 		if (!test) return;
 		if (wantsTray(e)) this.openRoll(test, e);
 		else this.host().journal.rollDiceNow(test);
+	};
+
+	/** A sheet roll the player swings from a row's menu: their advantage or disadvantage joins
+	 *  whatever the sheet already applies, and one of each cancels, as RAW has them. */
+	rollSwung = (name: RollName, mod: number, swing: RollSwing, target?: RollTarget) => {
+		const spec = this.sheetTest(name, mod, target);
+		if (!spec?.test) return;
+		const advantage = Math.sign((spec.test.advantage ?? 0) + swing);
+		this.host().journal.rollDiceNow({ ...spec, test: { ...spec.test, advantage } });
 	};
 
 	/**

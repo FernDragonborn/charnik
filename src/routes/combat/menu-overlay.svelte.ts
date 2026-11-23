@@ -16,6 +16,7 @@
 import { parseDamageParts, type MenuKind } from '#lib/combat/helpers.ts';
 import { registerDiceTray, type DiceTrayRequest } from '#lib/dice/tray.svelte.ts';
 import type { RollJournal } from './roll-journal.svelte';
+import type { RowMenuSpec } from '#lib/combat/row-menu.ts';
 
 /** What the menus need from the sheet around them: somewhere to put a prefilled roll. */
 export interface MenuOverlayHost {
@@ -59,6 +60,15 @@ export class MenuOverlay {
 			left: anchorRight ? null : r.left,
 			right: anchorRight ? document.documentElement.clientWidth - r.right : null,
 		};
+	};
+
+	/** What the open row menu offers; read by the menu while `overlay.kind` is 'row'. */
+	rowMenu = $state<RowMenuSpec | null>(null);
+
+	/** Open a row's menu under the row (`work/play-layout.md` ▸ ROW-MENU). */
+	openRowMenu = (spec: RowMenuSpec, e: Event) => {
+		this.rowMenu = spec;
+		this.openMenu('row', e);
 	};
 
 	openDice = (e: Event) => {

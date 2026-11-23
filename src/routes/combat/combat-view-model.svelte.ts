@@ -217,6 +217,7 @@ class CombatVM {
 	effectsFor = (...a: Parameters<SheetRolls['effectsFor']>) => this.rolls.effectsFor(...a);
 	openRoll = (...a: Parameters<SheetRolls['openRoll']>) => this.rolls.openRoll(...a);
 	roll = (...a: Parameters<SheetRolls['roll']>) => this.rolls.roll(...a);
+	rollSwung = (...a: Parameters<SheetRolls['rollSwung']>) => this.rolls.rollSwung(...a);
 	attackRoll = (at: Attack, e: Event) =>
 		this.inventory.shoot(at.id, e, () => this.rolls.attackRoll(at, e));
 	/** An extra attack fires like any other shot: what it spends in ammunition waits on the roll. */

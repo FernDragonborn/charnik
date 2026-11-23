@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ROLL_SWING } from '#lib/combat/row-menu.ts';
 	import { FOCUSABLE } from '#lib/actions/trapFocus.ts';
 	// Anchored dropdown menus dispatcher (temp HP, level-up, add-state, custom-effect, show/hide,
 	// pin-skills, spellbook). The heavier dice-tray + roll-log bodies are their own
@@ -26,6 +27,7 @@
 	import { app } from '#lib/stores/app.svelte.ts';
 
 	const overlay = $derived(combat.overlay);
+	const rowMenu = $derived(combat.menus.rowMenu);
 	const actions = $derived(combat.actions);
 	const hiddenActions = $derived(combat.hiddenActions);
 	const passiveSkills = $derived(combat.passiveSkills);
@@ -470,6 +472,69 @@
 						>{/if}
 				</button>
 			{/each}
+		{:else if overlay.kind === 'row' && rowMenu}
+			<!-- a row's own menu (work/play-layout.md ▸ ROW-MENU): what its number is made of, the roll's
+			     swing, its pin, its article, its own acts — only what this row has -->
+			<div class="popup-heading eyebrow">
+				{rowMenu.title}<button class="icon-button" onclick={() => (combat.overlay = null)}
+					><Icon name="x" size={13} label={$_('combat.menu.close')} /></button
+				>
+			</div>
+			{#if rowMenu.why}<p class="row-why">{rowMenu.why}</p>{/if}
+			{#if rowMenu.roll}
+				{@const rollIt = rowMenu.roll}
+				<div class="row-swing" role="group" aria-label={$_('combat.rowMenu.swing')}>
+					<button
+						class="pill-btn"
+						onclick={() => {
+							rollIt(ROLL_SWING.disadvantage);
+							combat.overlay = null;
+						}}>▼ {$_('combat.rowMenu.disadvantage')}</button
+					>
+					<button
+						class="pill-btn accent"
+						onclick={() => {
+							rollIt(ROLL_SWING.straight);
+							combat.overlay = null;
+						}}>{$_('combat.rowMenu.roll')}</button
+					>
+					<button
+						class="pill-btn"
+						onclick={() => {
+							rollIt(ROLL_SWING.advantage);
+							combat.overlay = null;
+						}}>▲ {$_('combat.rowMenu.advantage')}</button
+					>
+				</div>
+			{/if}
+			{#if rowMenu.pin}
+				{@const pin = rowMenu.pin}
+				<button
+					class="menu-row"
+					aria-pressed={pin.on}
+					onclick={() => {
+						pin.toggle();
+						combat.overlay = null;
+					}}
+					><Icon name="star" size={13} fill={pin.on ? 'currentColor' : 'none'} />
+					{$_(pin.on ? 'combat.rowMenu.unpin' : 'combat.rowMenu.pin')}</button
+				>
+			{/if}
+			{#if rowMenu.compendium}
+				<a class="menu-row" href={rowMenu.compendium} onclick={() => (combat.overlay = null)}
+					><Icon name="book-open" size={13} /> {$_('combat.rowMenu.compendium')}</a
+				>
+			{/if}
+			{#each rowMenu.acts ?? [] as act (act.label)}
+				<button
+					class="menu-row"
+					class:is-gone={act.gone}
+					onclick={() => {
+						act.run();
+						combat.overlay = null;
+					}}>{act.label}</button
+				>
+			{/each}
 		{:else if overlay.kind === 'pinskills'}
 			<div class="popup-heading eyebrow">
 				{$_('combat.menu.passiveSenses')}<EyeIcon on={true} />{$_('combat.menu.legendShown')}<button
@@ -756,6 +821,21 @@
 		font-size: var(--font-size-micro);
 		padding: var(--space-2-5) var(--space-3);
 		border-bottom: 1px solid var(--color-border);
+	}
+	.row-why {
+		margin: 0;
+		padding: var(--space-1-5) var(--space-3);
+		white-space: pre-line;
+		font-size: var(--font-size-xs);
+		color: var(--color-text-muted);
+	}
+	.row-swing {
+		display: flex;
+		gap: var(--space-1-5);
+		padding: var(--space-1-5) var(--space-3);
+	}
+	.menu-row.is-gone {
+		color: var(--color-danger);
 	}
 	.menu-row {
 		display: flex;

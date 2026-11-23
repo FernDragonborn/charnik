@@ -983,6 +983,12 @@ controls, the status row and each panel — wrapping round, landing on a region'
 panel's title) or on the region itself when it has none. A desktop convention rather than a W3C one;
 a region joins by being marked.
 
+**A row's secondary acts are its menu** (`contextAct` → `openRowMenu`, `lib/combat/row-menu.ts`): a
+right click — which takes the browser's own context menu's place on that row — the context-menu key
+or Shift+F10 opens what the row has of: what its number is made of, the check with a swing (the
+player's advantage or disadvantage joining the sheet's, one of each cancelling), its pin, its
+article and its own acts. A row says what it has; the menu shows only that.
+
 **`Ctrl+K` opens the command palette** — all content and every character. Views switch by tab bar
 or from the palette. A local search of the active character (`Ctrl+Shift+K`) and `Ctrl+1..4` between
 views are not built; they are KEYBOARD-NAV's (`../work/ui.md`).

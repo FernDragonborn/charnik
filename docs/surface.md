@@ -22,7 +22,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `REPORT` ×11 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/durable-write/+page.svelte · src/routes/dev/locked-seed/+page.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/page-reach/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte · src/routes/dev/table-live/+page.svelte
 - `check` ×10 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/durable-write/+page.svelte · src/routes/dev/locked-seed/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/page-reach/+page.svelte · src/routes/dev/plugin-consent/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/storage-edges/+page.svelte · src/routes/dev/table-link/+page.svelte · src/routes/dev/table-live/+page.svelte
 - `open` ×8 — src/lib/actions/provenance.ts · src/lib/components/OwnWords.svelte · src/lib/effects/dependency-graph.ts · src/lib/storage/tab-sync.ts · src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
-- `onKeydown` ×6 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/provenance.ts · src/lib/actions/rowGrid.ts · src/lib/actions/submitOnEnter.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
+- `onKeydown` ×7 — src/lib/actions/contextAct.ts · src/lib/actions/dismissOnEscape.ts · src/lib/actions/provenance.ts · src/lib/actions/rowGrid.ts · src/lib/actions/submitOnEnter.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
 - `place` ×6 — src/lib/actions/provenance.ts · src/routes/build/blocks/PickerCard.svelte · src/routes/build/blocks/PickerPeek.svelte · src/routes/build/blocks/RarityRange.svelte · src/routes/combat/CombatMenus.svelte · src/routes/dev/storage-edges/+page.svelte
 - `label` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/blocks/RarityRange.svelte · src/routes/build/rows.ts
 - `add` ×4 — src/lib/components/UpcastBuilder.svelte · src/routes/build/ability-allocation.svelte.ts · src/routes/build/blocks/ItemInstanceAsk.svelte · src/routes/build/blocks/OwnEntries.svelte
@@ -573,12 +573,16 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (220 modules)
+## Library functions & types (222 modules)
 
 ### `src/lib/actions/anchored.ts`
 
 - `interface AnchoredOptions`
 - `const anchored` — * Keep a `position: fixed` surface with the control that opened it: just below, right edges * aligned, and closed by …
+
+### `src/lib/actions/contextAct.ts`
+
+- `const contextAct` — * A row's secondary menu, reached the ways a desktop reaches one (`work/play-layout.md` ▸ ROW-MENU): * a right click …
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -1137,6 +1141,14 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type AutoOutcome`
 - `function autoOutcome` — A forced roll outcome for `key`, or null to roll normally.
 - `const netAdvantage` — Advantage + disadvantage cancel to a straight roll (5e rule) → the −1/0/+1 the roller takes.
+
+### `src/lib/combat/row-menu.ts`
+
+- `const ROLL_SWING` — Which way a player swings a d20 test from the menu: against the sheet's own reading of it.
+- `type RollSwing`
+- `interface RowMenuAct`
+- `interface RowMenuSpec`
+- `function articleHref` — A row's article in the compendium, from its `type:source:id`; none for a ref of another shape.
 
 ### `src/lib/combat/row-order.ts`
 
@@ -2786,4 +2798,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_51 tokens · 108 global classes · 63 components · 1701 exports across 237 modules · 124 duplicate suspects._
+_51 tokens · 108 global classes · 63 components · 1707 exports across 239 modules · 124 duplicate suspects._
