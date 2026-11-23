@@ -73,7 +73,8 @@
 		padding: var(--space-1) var(--space-2-5);
 		cursor: pointer;
 		color: var(--color-text-muted);
-		max-width: 8rem;
+		/* room for the longest step in any shipped locale; the fold animates from it */
+		max-width: 12rem;
 		overflow: hidden;
 		transition:
 			opacity 140ms linear,
