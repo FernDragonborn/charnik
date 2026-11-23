@@ -100,6 +100,33 @@
 			>
 		</div>
 	</div>
+	<!-- what is on the character, one chip each — concentration first, with its way out — and the way
+	     in last, so the row never disappears (the mock's chips line) -->
+	<div class="chips">
+		{#if combat.conc}
+			{@const conc = combat.conc}
+			<span class="chip conc"
+				><Icon name="target" size={11} />{conc.label}<button
+					class="chip-x"
+					onclick={combat.endConcentrationByHand}
+					aria-label={$_('combat.hp.endConcentration', { values: { spell: conc.label } })}
+					use:provenance={$_('combat.hp.endConcentration', { values: { spell: conc.label } })}
+					><Icon name="x" size={10} /></button
+				></span
+			>
+		{/if}
+		{#each c.play.effects as effect (effect.iid)}
+			<span class="chip" class:good={effect.positive} class:bad={!effect.positive}
+				>{effect.label}</span
+			>
+		{/each}
+		<button
+			class="chip add"
+			aria-label={$_('combat.narrow.addEffect')}
+			use:provenance={$_('combat.narrow.addEffect')}
+			onclick={(e) => combat.openMenu('addstate', e)}><Icon name="plus" size={11} /></button
+		>
+	</div>
 </section>
 
 {#if open?.what === OPEN.title}
@@ -260,6 +287,49 @@
 	.stat span {
 		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
+	}
+	.chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-1);
+		margin-top: var(--space-2);
+	}
+	.chip {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-1);
+		padding: 1px var(--space-2);
+		border: 1px solid var(--color-border-strong);
+		border-radius: var(--radius-full);
+		background: transparent;
+		color: var(--color-text-muted);
+		font-size: var(--font-size-xs);
+		white-space: nowrap;
+	}
+	.chip.conc,
+	.chip.bad {
+		color: var(--color-accent-bright);
+		border-color: var(--color-accent);
+	}
+	.chip.conc {
+		background: var(--color-accent-soft);
+	}
+	.chip.good {
+		color: var(--color-good);
+		border-color: var(--color-good-line);
+	}
+	.chip.add {
+		border-style: dashed;
+		cursor: pointer;
+	}
+	.chip-x {
+		display: inline-grid;
+		place-items: center;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: inherit;
+		cursor: pointer;
 	}
 	.facts {
 		display: grid;

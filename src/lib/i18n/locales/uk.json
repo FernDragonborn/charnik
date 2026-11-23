@@ -555,6 +555,7 @@
 	},
 	"combat": {
 		"narrow": {
+			"addEffect": "Додати стан чи ефект",
 			"tab": {
 				"effects": "Ефекти",
 				"inventory": "Предмети"

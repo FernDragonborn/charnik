@@ -555,6 +555,7 @@
 	},
 	"combat": {
 		"narrow": {
+			"addEffect": "Add a condition or effect",
 			"tab": {
 				"effects": "Effects",
 				"inventory": "Items"

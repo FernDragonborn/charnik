@@ -72,10 +72,11 @@ of NARROW-DESKTOP are built, because a column card with tabs is exactly a region
   decides how many stand side by side.
   **Built** (`../internals/ui.md` ▸ A narrow window): the layout below 1024px for a mouse, two
   columns dealt as the mock deals them and three from 760px; the top block with the name, the hit
-  points and AC opening their popovers (D5, D10, D11); the Skills tab carrying the abilities, the
-  passives, the defenses and the resources; a spell row in two lines in a column. **Left:** the
-  effects as chips in the top block (the mock's `◎ Hex ✕ Shield of Faith …`); the strip as the mock's
-  one line — today the controls and the time slide sideways; the hit-point popover as the mock's
+  points and AC opening their popovers (D5, D10, D11) and the effects as chips under them, concentration
+  first with its way out and the way to add one last; the Skills tab carrying the abilities, the
+  passives, the defenses and the resources; a spell row in two lines in a column. **Left:** the strip as the mock's
+  one line — today the controls and the time slide sideways, and concentration still also stands
+  there beside its save prompt; the hit-point popover as the mock's
   field and two buttons rather than the wide screen's whole block; a column's chosen tab kept across
   a reload; D12–D15's slot cells and the ritual and blocked readings; the widths in
   `tools/visual/shot.mjs`.
