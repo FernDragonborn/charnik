@@ -371,6 +371,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const CONFLICT_CHOICE` — What the player may answer a conflict with.
 - `type ConflictChoice`
 - `function resolveConflict` — * Settle an open conflict the way the player chose.
+- `function settleOutsideChange` — * The open character's file changed outside the app — most often a sync bringing another device's * copy.
 - `function startCharacterWatcher` — Watch `characters/` the way `content/` is watched (desktop only — the web store has no folder * anyone else writes to…
 - `function stopCharacterWatcher`
 - `function saveCharacterGuarded` — * Persist a character and SAY SO when it does not happen.
@@ -891,6 +892,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function saveCharacter` — * Write a character (validates first; refuses to persist an invalid one), in its turn on the * character's queue.
 - `function adoptCharacter` — * Load a character as the copy the app will EDIT: the same parse → migrate → validate, and the * file's text is remem…
 - `function characterChangedOutside` — Has `character.json` stopped being the text this app holds?
+- `function isWhatThisAppHolds` — * Is `character` the state this app last wrote or adopted for its file?
 - `function characterSlugOfPath` — The slug a path under the data folder names, when that path is a character's own save.
 - `function uniqueCharacterId` — A collision-free character id: the readable slug plus a short random suffix (`hero-a3f9`), retried * against storage …
 - `function loadCharacter` — Load one character: parse → migrate → validate.
@@ -2717,4 +2719,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1674 exports across 229 modules · 117 duplicate suspects._
+_50 tokens · 102 global classes · 62 components · 1676 exports across 229 modules · 117 duplicate suspects._

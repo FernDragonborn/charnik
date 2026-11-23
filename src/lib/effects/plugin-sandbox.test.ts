@@ -272,7 +272,8 @@ describe('budgets (PLG-SEC 9) — hostile code is contained, then the context re
 		);
 		const out = callOn(ev, 'plugin:ns1:bomb');
 		expect(out.ok).toBe(false);
-	});
+		// filling the sandbox's memory takes about 3 s alone, so a loaded full run passes the default 5 s
+	}, 20_000);
 	it('an oversized result string is rejected before parse (PLG-SEC 1c)', async () => {
 		const ev = await evaluatorFor(
 			'ns1',

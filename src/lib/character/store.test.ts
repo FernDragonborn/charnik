@@ -15,6 +15,7 @@ import {
 	recreateDemoCharacter,
 	saveBuildToStore,
 	resolveConflict,
+	settleOutsideChange,
 	CONFLICT_CHOICE,
 } from './store.svelte';
 import { loadCharacter } from './repository';
@@ -175,6 +176,34 @@ describe('character store · a file changed outside the app (CHARACTER-WRITER)',
 		expect(characters.roster).toHaveLength(2);
 		// a second character, not the first one twice
 		expect((await onDisk(mine.id))?.uid).not.toBe((await onDisk('mira'))?.uid);
+	});
+
+	it('a file changed outside while nothing changed here is taken quietly, and saves go on', async () => {
+		await saveCharacterToStore(newCharacter('mira', 'Mira', '5.5e'));
+		const open = (await openCharacter('mira'))!;
+		const s = getUserStorage();
+		await s.write(FILE, (await s.read(FILE)).replace('"Mira"', '"Synced"'));
+		await settleOutsideChange(open);
+		expect(characters.conflict).toBeNull();
+		expect(characters.active).toBe(open); // the same object the views hold
+		expect(open.build.name).toBe('Synced');
+		expect(characters.roster.map((e) => e.name)).toEqual(['Synced']);
+		// what makes the sheet editable again: the next save is not refused
+		open.play.hp.current = 5;
+		await saveCharacterToStore(open);
+		expect((await onDisk('mira'))?.play.hp.current).toBe(5);
+		expect((await onDisk('mira'))?.build.name).toBe('Synced');
+	});
+
+	it('a file changed outside while the screen changed too is asked about', async () => {
+		await saveCharacterToStore(newCharacter('mira', 'Mira', '5.5e'));
+		const open = (await openCharacter('mira'))!;
+		const s = getUserStorage();
+		await s.write(FILE, (await s.read(FILE)).replace('"Mira"', '"Synced"'));
+		open.play.hp.current = 3; // not written yet
+		await settleOutsideChange(open);
+		expect(characters.conflict?.mine.play.hp.current).toBe(3);
+		expect(open.build.name).toBe('Mira');
 	});
 
 	it("the builder's save leaves the open character and its play alone", async () => {

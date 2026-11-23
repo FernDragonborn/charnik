@@ -64,7 +64,15 @@ remembers the text of each file as it was last adopted for editing or written, a
 other bytes there is refused, as is one whose `rev` does not match. The bytes are compared rather
 than an mtime: a hand edit keeps the `rev`, a sync tool touches a date without changing a byte, and
 `Storage` reports a date only through a directory listing. On desktop `characters/` is watched the
-way `content/` is, so the question is raised when the file changes rather than at the next save.
+way `content/` is, so the change is met when the file changes rather than at the next save.
+
+**Only a change on both sides is a question.** When the state on screen is exactly what the app
+last wrote or adopted (`isWhatThisAppHolds`, key order aside — any doubt answers no), the screen
+holds nothing the file lacks, and the change is most often a sync bringing another device's copy.
+The file's state is then taken the way "the file's" answer takes it — adopted, so the next save is
+not refused, and put into the object the views hold — and a toast says so, with "put back what was
+here", which writes the earlier state the way "keep mine" does (`store.svelte.ts` ▸
+`settleOutsideChange`).
 
 The question is a dialog a click on the backdrop does not close, with three answers
 (`store.svelte.ts` ▸ `resolveConflict`): the state on screen wins, the file's does, or both are kept

@@ -39,6 +39,11 @@
 		"reloadHeld": "The reload was held back so the unsaved change is not lost. Reload again once saving works.",
 		"closeHeld": "The window stayed open so the unsaved change is not lost. Close it again to leave without it.",
 		"portraitOf": "Portrait of {name}",
+		"outside": {
+			"taken": "“{name}” updated from disk",
+			"takenWhy": "Its file was changed outside Charnik — most often a sync from another device. Nothing had changed here, so nothing was lost.",
+			"putBack": "Put back what was here"
+		},
 		"conflict": {
 			"title": "This character changed outside Charnik",
 			"subtitle": "Another program wrote the file of {name} while it was open here. Nothing has been overwritten — choose which state to keep.",

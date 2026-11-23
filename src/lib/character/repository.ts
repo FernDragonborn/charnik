@@ -385,6 +385,29 @@ export function characterChangedOutside(storage: Storage, slug: string): Promise
 	});
 }
 
+/**
+ * Is `character` the state this app last wrote or adopted for its file? Asked when that file changed
+ * outside the app: a screen holding nothing the file did not already hold loses nothing when the
+ * file's state is taken. Key order is no difference; anything else is, so a doubt answers no and the
+ * player is asked instead.
+ */
+export function isWhatThisAppHolds(storage: Storage, character: Character): Promise<boolean> {
+	return enqueue(character.id, async () => {
+		const heldText = heldBy(storage).get(character.id);
+		const held = heldText === undefined ? undefined : readSavedCharacter(heldText).character;
+		return held !== undefined && sortedJson(held) === sortedJson(character);
+	});
+}
+
+/** JSON with every object's keys in one order, so two equal values print the same. */
+function sortedJson(value: unknown): string {
+	return JSON.stringify(value, (_key, inner: unknown) =>
+		inner !== null && typeof inner === 'object' && !Array.isArray(inner)
+			? Object.fromEntries(Object.entries(inner).sort(([a], [b]) => a.localeCompare(b)))
+			: inner,
+	);
+}
+
 /** The slug a path under the data folder names, when that path is a character's own save. */
 export function characterSlugOfPath(path: string): string | null {
 	const parts = path.split(/[/\\]/);

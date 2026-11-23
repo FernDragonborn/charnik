@@ -4,7 +4,7 @@
  * charnik-guid-not-counter). Persistence goes through the repository over the runtime writable
  * Storage (`getUserStorage()`), so the same code works on web (IndexedDB) and Tauri (fs).
  */
-import { toast } from '$lib/toast/toast';
+import { sayIfFails, toast } from '$lib/toast/toast';
 import { t } from '$lib/i18n';
 import { detectPlatform, Platform, getUserStorage } from '$lib/storage/provider';
 import {
@@ -17,6 +17,7 @@ import {
 	uniqueCharacterId,
 	characterChangedOutside,
 	characterSlugOfPath,
+	isWhatThisAppHolds,
 	dirOf,
 	CharacterConflictError,
 	SAVE_MODE,
@@ -255,6 +256,34 @@ export async function resolveConflict(choice: ConflictChoice): Promise<void> {
 	characters.conflict = null;
 }
 
+/**
+ * The open character's file changed outside the app — most often a sync bringing another device's
+ * copy. With nothing on screen the file did not already hold, the file's state is taken the way
+ * "take the file" takes it, and said, with the way back; only a change on both sides is asked about.
+ */
+export async function settleOutsideChange(active: Character): Promise<void> {
+	const before = $state.snapshot(active);
+	if (!(await isWhatThisAppHolds(getUserStorage(), before))) return raiseConflict(active);
+	const theirs = await adoptBySlug(active.id);
+	if (!theirs) return raiseConflict(active);
+	putIntoActive(theirs);
+	upsertRosterEntry(theirs);
+	toast(t('character.outside.taken', { name: theirs.build.name }), {
+		description: t('character.outside.takenWhy'),
+		action: {
+			label: t('character.outside.putBack'),
+			onClick: () => sayIfFails(t('app.actionFailed'), putBack(before)),
+		},
+	});
+}
+
+/** Undo a quiet take: what was on screen is written over the file, as "keep mine" writes it. */
+async function putBack(before: Character): Promise<void> {
+	await saveCharacter(getUserStorage(), before, SAVE_MODE.overwrite);
+	if (characters.active?.id === before.id) putIntoActive(before);
+	upsertRosterEntry(before);
+}
+
 let stopWatching: (() => void) | null = null;
 
 /** Watch `characters/` the way `content/` is watched (desktop only — the web store has no folder
@@ -269,7 +298,7 @@ export function startCharacterWatcher(): void {
 		characterChangedOutside(storage, active.id)
 			.then(async (changed) => {
 				if (changed && characters.active === active && !characters.conflict)
-					await raiseConflict(active);
+					await settleOutsideChange(active);
 			})
 			// a file caught mid-write by its other writer: the next event, or the next save, asks again
 			.catch((e: unknown) => logger.warn('character: watch check failed', { error: errText(e) }));
