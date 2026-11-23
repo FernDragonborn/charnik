@@ -1,16 +1,13 @@
 <script lang="ts">
 	import { asText } from '$lib/util/format';
-	import Icon from './Icon.svelte';
+	import DialogShell from './DialogShell.svelte';
 	import { _ } from '$lib/i18n';
-	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
-	import { trapFocus } from '$lib/actions/trapFocus';
 	// Schema-discard warning — the house attention-dialog template
 	// (charnik-dialog-design-template), single-pane notice variant. Fires when the draft cache holds
 	// drafts saved under a DIFFERENT content-schema version: ephemeral WIP that can't be migrated, so it
 	// WILL be dropped. We surface exactly what's being lost + let the user acknowledge, rather than
 	// having their unsaved work vanish silently on the next read (PLAN DRAFT-CACHE backlog).
 	import type { DraftEnvelope } from '$lib/drafts/store';
-	import LangSwitcher from './LangSwitcher.svelte';
 
 	let {
 		drafts,
@@ -52,35 +49,23 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-<div class="dialog-backdrop" onclick={onKeep}></div>
-<div
-	class="dialog discard-dialog"
-	role="dialog"
-	aria-modal="true"
-	aria-labelledby="discard-title"
-	tabindex="-1"
-	use:dismissOnEscape={onKeep}
-	use:trapFocus
+<DialogShell
+	titleId="discard-title"
+	title={$_('drafts.discard.title')}
+	subtitle={[
+		drafts.length ? $_('drafts.discard.stale', { values: { count: drafts.length } }) : '',
+		unreadable.length
+			? $_('drafts.discard.unreadable', { values: { count: unreadable.length } })
+			: '',
+	]
+		.filter(Boolean)
+		.join(' ')}
+	width="min(560px, calc(100vw - 2 * var(--space-4)))"
+	onDismiss={onKeep}
 >
-	<header class="dialog-head">
-		<div class="dialog-lang-corner"><LangSwitcher /></div>
-		<span class="dialog-badge warn"><Icon name="flag" size={17} /></span>
-		<h2 id="discard-title" class="dialog-title">
-			{$_('drafts.discard.title')}{#if total > 1}<span class="count-pill">{total}</span>{/if}
-		</h2>
-		<!-- each count is a WHOLE sentence per plural branch, never a phrase glued to a number: a
-		     language with more than two branches (Ukrainian has three) cannot be served by picking
-		     between two English fragments and appending the rest. -->
-		<p class="dialog-subtitle">
-			{#if drafts.length}{$_('drafts.discard.stale', { values: { count: drafts.length } })}{/if}
-			{#if unreadable.length}{$_('drafts.discard.unreadable', {
-					values: { count: unreadable.length },
-				})}{/if}
-			{$_('drafts.discard.tail')}
-		</p>
-	</header>
-
+	<!-- each count is a WHOLE sentence per plural branch, never a phrase glued to a number: a
+	     language with more than two branches (Ukrainian has three) cannot be served by picking
+	     between two English fragments and appending the rest. -->
 	<div class="dialog-body list">
 		{#each drafts as env (env.target)}
 			{@const l = draftLabel(env)}
@@ -102,21 +87,19 @@
 				</div>
 			</div>
 		{/each}
+		<p class="tail">{$_('drafts.discard.tail')}</p>
 	</div>
 
 	<footer class="dialog-foot">
+		<button class="btn" onclick={onKeep}>{$_('drafts.discard.keep')}</button>
 		<span class="dialog-spacer"></span>
-		<button class="btn ghost" onclick={onKeep}>{$_('drafts.discard.keep')}</button>
-		<button class="btn primary" onclick={onDiscard}
+		<button class="btn danger" onclick={onDiscard}
 			>{$_('drafts.discard.action', { values: { count: total } })}</button
 		>
 	</footer>
-</div>
+</DialogShell>
 
 <style>
-	.discard-dialog {
-		width: min(560px, calc(100vw - 2 * var(--space-4)));
-	}
 	/* base look = global .dialog-body / .dialog-card; only the tighter gap + row layout are local */
 	.list {
 		gap: var(--space-2);
@@ -140,6 +123,11 @@
 		font-size: var(--font-size-sm);
 		color: var(--color-text-muted);
 		margin-top: 2px;
+	}
+	.tail {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--color-text-muted);
 	}
 	.ver {
 		font-family: var(--font-mono);

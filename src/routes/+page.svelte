@@ -42,9 +42,13 @@
 	// Both deletions are irreversible and take everything with them — a character's folder holds the
 	// sheet, the portrait, the roll log and every rotating backup — so each goes behind the same
 	// confirm the compendium already puts in front of deleting one homebrew ROW.
-	let confirming = $state<{ title: string; body: string; label: string; run: () => void } | null>(
-		null,
-	);
+	let confirming = $state<{
+		ask: string;
+		title: string;
+		body: string;
+		label: string;
+		run: () => void;
+	} | null>(null);
 
 	async function discardDraft(guid: string) {
 		await deleteDraft(getUserStorage(), guid);
@@ -121,7 +125,8 @@
 						onclick={() => {
 							const name = d.summary.name || $_('roster.draftUnnamed');
 							confirming = {
-								title: $_('roster.discardDraftTitle', { values: { name } }),
+								ask: $_('roster.discardDraftAsk'),
+								title: name,
 								body: $_('roster.discardDraftBody'),
 								label: $_('roster.discardDraftConfirm'),
 								run: () => sayIfFails($_('app.actionFailed'), discardDraft(d.guid)),
@@ -153,7 +158,8 @@
 						title={$_('roster.delete', { values: { name: c.name } })}
 						onclick={() => {
 							confirming = {
-								title: $_('roster.deleteTitle', { values: { name: c.name } }),
+								ask: $_('roster.deleteAsk'),
+								title: c.name,
 								body: $_('roster.deleteBody'),
 								label: $_('roster.deleteConfirm'),
 								run: () => sayIfFails($_('app.actionFailed'), removeCharacter(c.id)),
@@ -169,6 +175,7 @@
 
 	{#if confirming}
 		<ConfirmDialog
+			ask={confirming.ask}
 			title={confirming.title}
 			message={confirming.body}
 			confirmLabel={confirming.label}

@@ -639,9 +639,8 @@
 
 	{#if confirmDelete}
 		<ConfirmDialog
-			title={$_('compendium.deleteTitle', {
-				values: { name: localName(confirmDelete) },
-			})}
+			ask={$_('compendium.deleteAsk')}
+			title={localName(confirmDelete)}
 			message={$_('compendium.deleteBody')}
 			confirmLabel={$_('compendium.deleteConfirm')}
 			danger

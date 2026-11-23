@@ -316,7 +316,8 @@
 {#if confirmForget}
 	{@const kept = confirmForget}
 	<ConfirmDialog
-		title={$_('table.remembered.forgetTitle', { values: { table: kept.name } })}
+		ask={$_('table.remembered.forgetAsk')}
+		title={kept.name}
 		message={$_(`table.remembered.forgetBody.${kept.role}`)}
 		confirmLabel={$_('table.remembered.forget')}
 		danger
@@ -341,7 +342,8 @@
 
 {#if confirmClose}
 	<ConfirmDialog
-		title={$_('table.gm.closeTitle')}
+		ask={$_('table.gm.closeAsk')}
+		title={table.tableName}
 		message={$_('table.gm.closeBody')}
 		confirmLabel={$_('table.gm.close')}
 		danger

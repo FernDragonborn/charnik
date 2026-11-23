@@ -175,7 +175,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **the light a moving surface catches: a spark, a shaft, a bright edge** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`, `--color-death`, `--color-glint`
 
-## Global CSS classes (102)
+## Global CSS classes (103)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -198,22 +198,23 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.combat-row-desc` | components.css |  |
 | `.combat-row-hint` | components.css |  |
 | `.combat-row-marker` | components.css |  |
-| `.count-pill` | components.css | The "N of M" counter beside an attention-dialog title — one warning-toned pill shared by every multi-item review dial… |
-| `.danger` | components.css |  |
+| `.count-pill` | components.css | The "N of M" counter beside a title — the GM's request prompt still carries one. |
+| `.danger` | components.css | what cannot be undone: crimson words, a frame on hover — never a filled crimson block, which reads as the button to p… |
 | `.detail-body` | components.css | An article renders at very different widths — a compendium half-screen, a builder inspector — so its heads size again… |
 | `.detail-eyebrow` | components.css | the two-ended article eyebrow (label left, edition/type right) shared by the spell + monster heads; the `.monster-typ… |
 | `.detail-meta` | components.css |  |
 | `.deyebrow` | components.css |  |
 | `.dialog` | components.css | the centred panel: sized to its CONTENT height (capped at the viewport), never full-height — centring via transform, … |
+| `.dialog-ask` | components.css |  |
 | `.dialog-backdrop` | components.css | --- dialog shell: full-screen dark-backdrop modal (content-review pop-ups) --- (only the `.dialog` container's WIDTH … |
-| `.dialog-badge` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 | `.dialog-body` | components.css | scrollable dialog body: the vertical list of file/row cards between head + footer. |
 | `.dialog-card` | components.css | one card/row inside a .dialog-body (a file, a drift row, a discard entry). |
-| `.dialog-foot` | components.css |  |
-| `.dialog-head` | components.css |  |
+| `.dialog-foot` | components.css | no on one edge, the answer on the other: what declines or defers stands at the start, a `.dialog-spacer` pushes the a… |
+| `.dialog-head` | components.css | the head is words only: no badge, no accent line, no rule under it (`ui.md` ▸ Shared controls and dialogs) — what is … |
 | `.dialog-label` | components.css | dialog field/section label (mono uppercase eyebrow inside the review modals) |
 | `.dialog-lang-corner` | components.css | A plain grey chip is easy to miss in a dialog corner — give the language switcher a teal outline so it reads as an of… |
 | `.dialog-spacer` | components.css |  |
+| `.dialog-sub` | components.css | what the title concerns, under it; a path is smaller and lighter, so a long folder reads as one line of detail |
 | `.dialog-subtitle` | components.css |  |
 | `.dialog-title` | components.css |  |
 | `.dnd-rows` | components.css | --- a reorderable list of combat rows: the zone, and one row beside its grip --- A combat row IS a button, so its gri… |
@@ -232,6 +233,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.inv-row` | components.css |  |
 | `.is-blocked` | components.css | BLOCKED — readable, reachable, and visibly not takeable; its popover says why. |
 | `.is-open` | components.css |  |
+| `.is-path` | components.css |  |
 | `.is-pinned` | components.css | pinned, it is something being read rather than a note on what is under the pointer: it takes the pointer, so its text… |
 | `.is-prose` | components.css | a content row's PROSE: its paragraphs are elements, so runs of whitespace mean nothing and the first and last of them… |
 | `.loading` | components.css | --- full-view loading / empty state --- |
@@ -245,7 +247,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.on` | components.css | the SELECTED chip. |
 | `.panel-head` | components.css | panel header: click the whole title area (chev + name) to collapse |
 | `.pill-btn` | components.css | display-font pill button — the shared toolbar/disclosure control (combat toolbar, compendium group-by + disclosure su… |
-| `.primary` | components.css |  |
+| `.primary` | components.css | inside a dialog's footer the answer is the light button and the irreversible one is framed, so the colour of the bran… |
 | `.prose-break` | components.css | The air after a hard break in rendered CSV prose (`content/markdown.ts` puts one after every <br>): the source separa… |
 | `.prose-table-scroll` | ArticleProse.svelte :global |  |
 | `.provenance-description` | components.css | the same text as an accessible description. |
@@ -282,7 +284,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.type-pill` | components.css | the chevron is quieter than the type it belongs to until the pill is under the pointer |
 | `.types` | components.css | the type picker is every damage type there is — a dozen-odd rows. |
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
-| `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
 ## Shared components (62)
 
@@ -294,15 +295,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **ClassPicker** | `value`, `options`, `onChange` |  |
 | **CollisionManager** | — | Collision resolution (collisions.json, PLAN invariant). |
 | **CommandPalette** | — | Ctrl/Cmd+K command + global content search. |
-| **ConfirmDialog** | `title`, `message`, `confirmLabel`, `danger`, `onConfirm`, `onCancel` | Generic confirm dialog — the house attention-dialog template (charnik-dialog-design-template), |
+| **ConfirmDialog** | `ask`, `title`, `message`, `confirmLabel`, `danger`, `onConfirm`, `onCancel` | The confirm dialog: an explicit yes before something that cannot be taken back. |
 | **ContentHealth** | — | Content-health diagnostics — surfaces the loader's findings to the USER (not just the dev |
 | **ContentMetaModal** | `issues`, `onFillAndSave`, `onSkip`, `onNeverAsk` | Full-screen, dark-backdrop modal that reviews content files with missing metadata (DATA-VER-1). |
 | **DamageIcon** | `type`, `size` | A damage type's glyph. |
 | **DataConflictDialog** | `rows`, `currentPath`, `targetPath`, `onPickAnother`, `onRepoint`, `onMerge`, `onclose` |  |
 | **DataMigrationDialog** | `tone`, `title`, `detail`, `note`, `onclose` | Persistent result dialog for a data-folder move. |
 | **DefenseStrip** | `sheet`, `graph`, `system` |  |
-| **DiagnosticsModal** | `onDismiss` | The bug-report diagnostics step (audit DIAG-1). |
-| **DialogShell** | `titleId`, `title`, `subtitle`, `width`, `badge`, `onDismiss`, `children` | The shared attention-dialog shell: full-screen backdrop + the centred `.dialog` panel + the |
+| **DiagnosticsModal** | `onDismiss` | The bug report (audit DIAG-1): one field for what happened and one button that opens a GitHub |
+| **DialogShell** | `titleId`, `title`, `ask`, `sub`, `subIsPath`, `subtitle`, `width`, `onDismiss`, `children` | The shared dialog shell: full-screen backdrop, the centred `.dialog` panel, and its head — the |
 | **DiceIcon** | `size` | The dice-roll glyph: a d20 (icosahedron, top-down) with a small d4 (tetrahedron) tucked at its |
 | **DraftsPane** | `graph`, `onResume`, `onResolveOrphans` | Pending-drafts list — the full-width pane that replaces the editing block in the compendium right |
 | **EditableTitle** | `value`, `placeholder` | The article title field shown in edit/translate mode. |
@@ -555,7 +556,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (212 modules)
+## Library functions & types (213 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -1711,6 +1712,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function buildDiagnostics`
 - `function formatBundle` — Pretty JSON for the clipboard — fenced so it pastes cleanly into a GitHub issue body.
 
+### `src/lib/diag/issue-link.ts`
+
+- `const ISSUE_LINK_MAX` — The longest link handed to the browser.
+- `interface IssueWords`
+- `interface IssueLink`
+- `function issueLink`
+
 ### `src/lib/diag/logger.ts`
 
 - `function redactPath` — * A dataDir-relative path as the log is allowed to carry it.
@@ -2719,4 +2727,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 102 global classes · 62 components · 1676 exports across 229 modules · 117 duplicate suspects._
+_50 tokens · 103 global classes · 62 components · 1680 exports across 230 modules · 117 duplicate suspects._

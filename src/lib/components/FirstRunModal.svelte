@@ -3,12 +3,10 @@
 	// anything seeds to disk. Defaults to a visible ~/Documents/charnik; the user can point it at any
 	// folder. Presentation only — the folder picker + fs-scope grant are injected so this previews in a
 	// plain browser (see /dev/firstrun) and the Tauri wiring stays out of the component.
-	import Icon from './Icon.svelte';
 	import { untrack } from 'svelte';
+	import DialogShell from './DialogShell.svelte';
 	import { _ } from '$lib/i18n';
 	import { toastFailure } from '$lib/toast/toast';
-	import { trapFocus } from '$lib/actions/trapFocus';
-	import LangSwitcher from './LangSwitcher.svelte';
 
 	let {
 		defaultDir,
@@ -46,76 +44,30 @@
 	}
 </script>
 
-<div class="dialog-backdrop"></div>
-<div
-	class="dialog first-run-dialog"
-	role="dialog"
-	aria-modal="true"
-	aria-labelledby="fr-title"
-	tabindex="-1"
-	use:trapFocus
+<!-- no way out but its own button: nothing seeds to disk before a folder is chosen -->
+<DialogShell
+	titleId="fr-title"
+	title={$_('firstRun.title')}
+	sub={dir}
+	subIsPath
+	subtitle={$_('firstRun.subtitle')}
+	width="min(560px, calc(100vw - 2 * var(--space-4)))"
 >
-	<header class="dialog-head">
-		<div class="dialog-lang-corner"><LangSwitcher /></div>
-		<span class="dialog-badge"><Icon name="folder" size={17} /></span>
-		<h2 id="fr-title" class="dialog-title">{$_('firstRun.title')}</h2>
-		<p class="dialog-subtitle">{$_('firstRun.subtitle')}</p>
-	</header>
-
-	<div class="body">
-		<span class="dialog-label section-label">{$_('firstRun.folderLabel')}</span>
-		<div class="picker">
-			<code class="path" title={dir}>{dir}</code>
-			<button class="btn" onclick={choose} disabled={busy}>{$_('firstRun.choose')}</button>
-		</div>
-		<p class="hint">{$_('firstRun.hint')}</p>
-	</div>
-
+	<p class="hint">{$_('firstRun.hint')}</p>
 	<footer class="dialog-foot">
+		<button class="btn" onclick={choose} disabled={busy}>{$_('firstRun.choose')}</button>
 		<span class="dialog-spacer"></span>
 		<button class="btn primary" onclick={() => onConfirm(dir)} disabled={busy}
 			>{$_('firstRun.save')}</button
 		>
 	</footer>
-</div>
+</DialogShell>
 
 <style>
-	/* shared shell = global .dialog (styles/components.css); this only sets THIS dialog's width */
-	.first-run-dialog {
-		width: min(560px, calc(100vw - 2 * var(--space-4)));
-	}
-	.body {
-		padding: var(--space-5) var(--space-6);
-	}
-	.section-label {
-		display: block;
-		margin-bottom: var(--space-2);
-	}
-	.picker {
-		display: flex;
-		gap: var(--space-3);
-		align-items: stretch;
-	}
-	.path {
-		flex: 1;
-		min-width: 0;
-		display: flex;
-		align-items: center;
-		font-family: var(--font-mono);
-		font-size: var(--font-size-sm);
-		color: var(--color-text);
-		background: var(--color-bg);
-		border: 1px solid var(--color-border-strong);
-		border-radius: var(--radius-sm);
-		padding: var(--space-2) var(--space-3);
-		overflow: hidden;
-		white-space: nowrap;
-		text-overflow: ellipsis;
-	}
 	.hint {
-		margin: var(--space-3) 0 0;
+		margin: 0;
+		padding: 0 var(--space-6);
 		font-size: var(--font-size-sm);
 		color: var(--color-text-muted);
 	}
-	/* .dialog-* and .btn / .btn.primary are shared globals in styles/components.css */
 </style>

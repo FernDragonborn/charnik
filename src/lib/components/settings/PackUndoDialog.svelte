@@ -27,7 +27,6 @@
 	title={$_('settings.packs.undoTitle', { values: { pack } })}
 	subtitle={$_('settings.packs.undoSubtitle')}
 	width="min(560px, calc(100vw - 2 * var(--space-4)))"
-	badge="rotate-ccw"
 	onDismiss={onCancel}
 >
 	<div class="dialog-body">

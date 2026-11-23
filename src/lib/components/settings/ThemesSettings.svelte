@@ -310,7 +310,8 @@
 {#if deleting}
 	{@const theme = deleting}
 	<ConfirmDialog
-		title={$_('settings.themes.deleteTitle', { values: { name: theme.name } })}
+		ask={$_('settings.themes.deleteAsk')}
+		title={theme.name}
 		message={$_('settings.themes.deleteMessage')}
 		confirmLabel={$_('settings.themes.delete')}
 		danger
@@ -389,10 +390,6 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-1-5);
-	}
-	.btn.danger:hover {
-		color: var(--color-danger);
-		border-color: var(--color-danger);
 	}
 	.editor-head {
 		display: flex;

@@ -40,7 +40,6 @@
 		title={asking.rules.source}
 		subtitle={$_(asking.options.length ? 'combat.forms.choose' : 'combat.forms.none')}
 		width="760px"
-		badge="paw-print"
 		onDismiss={() => (combat.forms.asking = null)}
 	>
 		{#if asking.options.length}

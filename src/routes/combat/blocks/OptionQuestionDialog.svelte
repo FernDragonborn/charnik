@@ -17,7 +17,6 @@
 			values: { total: asking.total ?? 0 },
 		})}
 		width="360px"
-		badge="flame-kindling"
 		onDismiss={() => (combat.executor.asking = null)}
 	>
 		<div class="answers">

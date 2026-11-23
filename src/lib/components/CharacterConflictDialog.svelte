@@ -43,7 +43,6 @@
 		title={$_('character.conflict.title')}
 		subtitle={$_('character.conflict.subtitle', { values: { name: conflict.mine.build.name } })}
 		width="min(620px, calc(100vw - 2 * var(--space-4)))"
-		badge="folder"
 	>
 		<div class="dialog-body sides">
 			<section class="dialog-card">

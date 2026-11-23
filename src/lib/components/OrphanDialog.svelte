@@ -414,12 +414,4 @@
 	.cf-back {
 		margin-top: 14px;
 	}
-	.btn.danger {
-		color: var(--color-accent-bright);
-		border-color: transparent;
-		background: transparent;
-	}
-	.btn.danger:hover {
-		border-color: var(--color-accent);
-	}
 </style>

@@ -674,12 +674,19 @@ full-screen component adds it by hand, and `components/dialog-lang-switcher.test
 five dialogs built from the house template missed this clause equally, which is what a rule enforced
 only by memory costs.
 
-The **house dialog shape**, which every attention dialog bakes from: a centered modal on a dim
-backdrop; a round badge header with the title, an optional count pill ("1 of 2"), and one muted
-subtitle sentence; a **two-pane body** whenever the decision needs a comparison, with the user's work
-on the left and the thing being chosen on the right, plus a searchable picker and live preview; a
-footer running destructive action far-left, then a spacer, then Skip → secondary → primary. Share the
-shell through the global `.dialog` classes rather than restyling per dialog.
+The **house dialog shape**, which every dialog the app raises is built on (`DialogShell`; the
+variants it was picked from are `design-preview/service-dialogs-all.html`): a centred modal on a dim
+backdrop, whose head is **words only** — no badge, no accent line, no rule under it. What is
+happening is said small (`ask`); the thing the person must recognise is said large (`title`) — a
+character, a table, a theme — or the event itself where the event is the news ("Data moved. The old
+folder stayed"); what it concerns sits under it (`sub`, a path smaller still); what follows from the
+answer is a paragraph (`subtitle`). A dialog with something to compare shows it side by side —
+the two versions of one character, the two folders file by file, an orphaned draft beside the row it
+might belong to, differences picked out. **The footer puts no on one edge and the answer on the
+other**: what declines, defers or skips at the start, a `.dialog-spacer`, the answer at the end, so
+the two are never mistaken for each other; "don't ask again" is a link, not a third button. In a
+dialog the answer is the light `.btn.primary`; **crimson stands only where something will be gone
+for good**, as a framed `.btn.danger`. Share the shell rather than re-building a head per dialog.
 
 **The shell is for a QUESTION the app is asking** — a confirm, a collision, a review it wants
 settled before anything else happens. A working surface the user reached for on purpose is not one,
