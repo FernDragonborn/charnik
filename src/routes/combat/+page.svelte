@@ -27,6 +27,7 @@
 	import NoCharacter from '#lib/components/NoCharacter.svelte';
 	import PluginNeeds from '#lib/components/PluginNeeds.svelte';
 	import ColumnPlay from './narrow/ColumnPlay.svelte';
+	import PhonePlay from './narrow/PhonePlay.svelte';
 	import { playLayout, PLAY_LAYOUT } from './play-layout.svelte';
 
 	// The page is a thin shell: it renders the area blocks and owns only the draggable panel grid
@@ -114,7 +115,10 @@
 {:else}
 	{@const s = sheet}
 	{@const c = character}
-	{#if playLayout.current === PLAY_LAYOUT.columns}
+	{#if playLayout.current === PLAY_LAYOUT.phone}
+		<!-- a finger: one tab at a time, the tab bar under the thumb (work/play-layout.md ▸ PHONE-PLAY) -->
+		<PhonePlay {c} {s} />
+	{:else if playLayout.current === PLAY_LAYOUT.columns}
 		<!-- a desktop window dragged small: the panels dealt into columns of tabs (work/play-layout.md ▸
 		     NARROW-DESKTOP) -->
 		<ColumnPlay {c} {s} />

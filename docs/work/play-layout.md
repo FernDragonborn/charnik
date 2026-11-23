@@ -102,10 +102,17 @@ of NARROW-DESKTOP are built, because a column card with tabs is exactly a region
     nothing can be cast, the reason stands on top and everything under it greys out (D15).
   - The 0-hit-point states (D7–D9) are AT-ZERO-HP's.
 
-- [ ] **PHONE-PLAY · the play screen on a phone** (`narrow-combat-variants.html`, 360px, phone-sized
+- [~] **PHONE-PLAY · the play screen on a phone** (`narrow-combat-variants.html`, 360px, phone-sized
   text). It replaces MOBILE-ALPHA's narrow layout. A top block — name, ⋯, hit points, AC,
   Initiative, Speed, the effects row — then the tab's content, then the log's strip, then a tab bar:
   **Mine · Actions · Spells · Skills · Items · Bio**.
+  **Built** (`../internals/ui.md` ▸ A narrow window): the layout for a finger, the narrow top block
+  with the name on a line of its own, the controls and time in one sliding strip, the six tabs with
+  Spells left out of a sheet that casts nothing, the last roll above the bar. **Left:** Mine as the
+  pinned set — until RESOURCE-PIN it shows the attacks and the effects; Actions' standard actions
+  behind one row (P3, P3b); Items one line each in folding categories (P13, P14); Bio's About /
+  Features / Notes (P16–P16c); the hold for a row's menu (ROW-MENU); the bar hiding a tab the player
+  hid; and every *new idea* frame, which are their own items.
   - **The tabs.** *Mine* is the character's pinned set — RESOURCE-PIN's answer (P1). Out of combat,
     combat, rests and time sit under the vitals on every tab (P1); in combat that strip becomes the
     turn — round, movement, Next, ✕ ends combat (P2). *Actions* lists what this character does by

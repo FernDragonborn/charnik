@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (125)
+## Duplicate suspects (127)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -125,7 +125,9 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `settled` ×2 — src/lib/play/settle.ts · src/routes/dev/characters-write/+page.svelte
 - `SKILL_IDS` ×2 — src/lib/character/skills.ts · src/lib/combat/constants.ts
 - `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
+- `step` ×2 — src/lib/components/RollerLine.svelte · src/routes/combat/narrow/PhonePlay.svelte
 - `t` ×2 — src/lib/i18n/index.ts · src/routes/dev/storage/+page.svelte
+- `TABS` ×2 — src/routes/combat/narrow/PhonePlay.svelte · src/routes/settings/+page.svelte
 - `take` ×2 — src/lib/stores/flash.ts · src/routes/build/feat-slots.svelte.ts
 - `takeFocus` ×2 — src/lib/actions/takeFocus.ts · src/routes/build/blocks/OwnEntries.svelte
 - `that` ×2 — src/lib/content/remote/pack-lifecycle.ts · src/lib/util/say.ts
@@ -2802,4 +2804,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_51 tokens · 108 global classes · 63 components · 1710 exports across 239 modules · 125 duplicate suspects._
+_51 tokens · 108 global classes · 63 components · 1710 exports across 239 modules · 127 duplicate suspects._

@@ -181,6 +181,7 @@
 
 <style>
 	.narrow-head {
+		container-type: inline-size;
 		flex: none;
 		padding: var(--space-3) var(--space-3);
 		background: var(--color-surface);
@@ -364,5 +365,17 @@
 		margin: var(--space-2) 0 0;
 		font-size: var(--font-size-sm);
 		color: var(--color-text-muted);
+	}
+	/* a phone (P1): the name takes its own line and the numbers share the one under it */
+	@container (max-width: 420px) {
+		.headline {
+			flex-wrap: wrap;
+		}
+		.who {
+			flex-basis: 100%;
+		}
+		.hp {
+			flex: 1;
+		}
 	}
 </style>

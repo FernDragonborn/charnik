@@ -554,6 +554,17 @@
 		"pp": "Platinum"
 	},
 	"combat": {
+		"phone": {
+			"tab": {
+				"mine": "Mine",
+				"actions": "Actions",
+				"spells": "Spells",
+				"skills": "Skills",
+				"items": "Items",
+				"bio": "Bio"
+			},
+			"tabs": "Tabs"
+		},
 		"narrow": {
 			"addEffect": "Add a condition or effect",
 			"tab": {

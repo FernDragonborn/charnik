@@ -197,7 +197,9 @@ where narrow starts. **The play screen in a mouse window below 1024px deals its 
 of tabs** (`routes/combat/narrow/ColumnPlay.svelte`, `play-layout.svelte.ts`): a top that does not
 scroll — the character in one block (`NarrowHead`), the controls and the turn or the time in one
 strip — the last roll at the bottom, and between them two columns, three from 760px, each scrolling
-on its own. A view
+on its own. **Under a finger it shows one tab at a time** (`PhonePlay.svelte`): the same top, the
+tab's content, the last roll, and a tab bar under the thumb — Mine, Actions, Spells, Skills, Items,
+Bio, a tab with nothing in it not drawn. A view
 whose own floor is higher names its own width instead (the combat stat grid and the settings tab
 strip both at 640px): that number is a fact about the box's min-content, never about a device.
 
