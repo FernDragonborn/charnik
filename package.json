@@ -29,7 +29,7 @@
 		"knip": "knip --config config/knip.json",
 		"jscpd": "jscpd -c config/jscpd.json --reporters consoleFull",
 		"loc": "node tools/loc.mjs",
-		"sweep:rust": "node tools/sweep-cargo-target.mjs --clean",
+		"sweep:rust": "node tools/sweep-cargo-target.mjs --prune",
 		"postinstall": "simple-git-hooks",
 		"plugin:test": "tsx tools/plugin-test.ts"
 	},

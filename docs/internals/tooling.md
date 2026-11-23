@@ -301,17 +301,22 @@ read the report. `/dev/packs-write` is the worked example.
   no handler answers it, and the call is refused either way.
 - **A `cargo` build in `src-tauri/` while `pnpm tauri dev` runs reloads the app's page**, so a
   probe mid-run starts over. Build first, then run the test binary `--no-run` names.
-- **`src-tauri/target` is capped at 30 GiB, and only `pnpm sweep:rust` cleans it.** Cargo never
+- **`pnpm sweep:rust` removes from `src-tauri/target` what no build of ours uses.** Cargo never
   deletes an artifact, and every dependency bump and feature set leaves another copy.
   `tools/sweep-cargo-target.mjs` runs before every `tauri dev` and `tauri build` — except under a
   `--config` overlay that sets `beforeDevCommand`, as the live table drive does — and there only
-  says a profile is over the cap: cleaning costs a full Rust rebuild, so it is run when there is
-  time for one. It cleans a profile whole, never file by file, `cargo sweep` included: an
-  artifact every build uses but none rebuilds looks as old as one nothing uses, and a pruned folder
-  keeps fingerprints whose `.rmeta` is gone, so every build after fails with "extern location for
-  <crate> does not exist" until the profile is cleaned. The working set is about 15 GiB — the
-  default build, `--features table-link` and `cargo test` each keep their own copy of the app
-  crate.
+  says `target/debug` is over its 30 GiB cap. `pnpm sweep:rust` (`-- --dry-run` lists instead)
+  asks Cargo what is in use: it runs the four debug builds (`build` and `test --no-run`, each with
+  and without `table-link`) with `--message-format=json`, which names every unit's files, fresh
+  ones included, and with Cargo's fingerprint log on, which names every `.fingerprint/` folder —
+  those are not always named with their files' hash. What none of them names goes, and the four
+  builds stay fresh. It never goes by age, `cargo sweep` included: an artifact every build uses
+  but none rebuilds looks as old as one nothing uses, and a folder pruned that way keeps
+  fingerprints whose `.rmeta` is gone, so every build after fails with "extern location for
+  <crate> does not exist" until the profile is cleaned. Only `incremental/`, a cache of our own
+  crates whose loss costs one recompile, is aged out after two weeks. With `sccache` as the
+  machine's `rustc-wrapper`, a build from an empty `target/` takes about two minutes instead of
+  four.
 - **A debugging port on the webview breaks the table's question window.** Playwright reaches the
   desktop webview only through `--remote-debugging-port`, which Tauri takes from the window's
   `additionalBrowserArgs` in a `--config` overlay (it passes its own arguments, so
