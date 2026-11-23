@@ -26,7 +26,19 @@
 	import InventoryPanel from './panels/InventoryPanel.svelte';
 	import FeaturesPanel from './panels/FeaturesPanel.svelte';
 
-	let { pid, c, s }: { pid: string; c: Character; s: CharacterSheet } = $props();
+	// asTab: shown as one tab of a column (work/play-layout.md ▸ NARROW-DESKTOP). The tab names it, so
+	// the title and its fold go, and a tab is not dragged; only the buttons of the panel itself stay.
+	let {
+		pid,
+		c,
+		s,
+		asTab = false,
+	}: {
+		pid: string;
+		c: Character;
+		s: CharacterSheet;
+		asTab?: boolean;
+	} = $props();
 
 	// keyed on `e.code`, so it is the physical arrow key on every layout (AGENTS.md ▸ Taste)
 	const ARROW_MOVE: Record<string, PanelMove> = {
@@ -57,17 +69,19 @@
 	const { toggle } = combat.layout;
 </script>
 
-<div class="panel-head">
-	<button
-		class="htoggle"
-		id={`panel-title-${pid}`}
-		aria-expanded={!collapsed[pid]}
-		onclick={() => toggle(pid)}
-	>
-		<span class="chevron"
-			><Icon name={collapsed[pid] ? 'chevron-right' : 'chevron-down'} size={13} /></span
-		>{$_(`combat.panel.${pid}`)}
-	</button>
+<div class="panel-head" class:as-tab={asTab}>
+	{#if !asTab}
+		<button
+			class="htoggle"
+			id={`panel-title-${pid}`}
+			aria-expanded={!collapsed[pid]}
+			onclick={() => toggle(pid)}
+		>
+			<span class="chevron"
+				><Icon name={collapsed[pid] ? 'chevron-right' : 'chevron-down'} size={13} /></span
+			>{$_(`combat.panel.${pid}`)}
+		</button>
+	{/if}
 	{#if pid === 'actions'}
 		<button class="pill-btn" onclick={(e) => openMenu('showhide', e)}>
 			<EyeIcon on={true} />
@@ -136,18 +150,18 @@
 	     and its test for that is `e.target.value !== undefined` — which every <button> passes, because
 	     `HTMLButtonElement.value` is `""`. `dragHandle` sets `role="button"` and owns the tab stop; the
 	     arrow keys, which move a panel without a pointer, stay ours. -->
-	<span
-		id="panel-grip-{pid}"
-		class="drag-handle"
-		use:dragHandle
-		role="button"
-		tabindex="0"
-		aria-label={moveLabel}
-		use:provenance={moveLabel}
-		onkeydown={moveOnArrow}><Icon name="grip-vertical" size={15} /></span
-	>
+	{#if !asTab}<span
+			id="panel-grip-{pid}"
+			class="drag-handle"
+			use:dragHandle
+			role="button"
+			tabindex="0"
+			aria-label={moveLabel}
+			use:provenance={moveLabel}
+			onkeydown={moveOnArrow}><Icon name="grip-vertical" size={15} /></span
+		>{/if}
 </div>
-{#if !collapsed[pid]}
+{#if asTab || !collapsed[pid]}
 	<!-- the panel's rows are ONE Tab stop, walked by the arrows (work/ui.md ▸ KEYBOARD-NAV) -->
 	<div class="panel-body" use:rowGrid={PANEL_ROWS}>
 		{#if pid === 'skills'}

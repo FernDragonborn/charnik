@@ -30,7 +30,8 @@ of NARROW-DESKTOP are built, because a column card with tabs is exactly a region
   told apart by the POINTER, not the width — the maintainer's call: a finger gets the phone layout
   (`pointer: coarse`), a mouse gets the column layout however narrow the window, since the narrow
   desktop mock is "driven by a mouse and a keyboard" and a desktop window dragged to 360px is not a
-  phone. Open: where wide desktop ends and the column layout begins; and what a character's saved
+  phone. The column layout begins below 1024px (`COLUMNS_WINDOW_QUERY`), three columns from 760px.
+  Open: what a character's saved
   layout (`ui.panelColumns`, the row orders, the pins) means in each — one arrangement read three
   ways, or one per layout. `tools/visual/narrow.mjs` and `shot.mjs` gain the narrow desktop widths
   (512 and 768 are the mock's) beside 393 and 1280.
@@ -65,10 +66,19 @@ of NARROW-DESKTOP are built, because a column card with tabs is exactly a region
 
   Nothing here is blocked on code. What it needs first is RENDERED variants of the wide desktop.
 
-- [ ] **NARROW-DESKTOP · the column layout for a small desktop window** (`narrow-desktop-variants.html`).
+- [~] **NARROW-DESKTOP · the column layout for a small desktop window** (`narrow-desktop-variants.html`).
   A fixed top — the character in one block, one strip that becomes the turn — the last roll at the
   bottom, and between them columns about 250px wide, each a card whose title is its tabs; the window
   decides how many stand side by side.
+  **Built** (`../internals/ui.md` ▸ A narrow window): the layout below 1024px for a mouse, two
+  columns dealt as the mock deals them and three from 760px; the top block with the name, the hit
+  points and AC opening their popovers (D5, D10, D11); the Skills tab carrying the abilities, the
+  passives, the defenses and the resources; a spell row in two lines in a column. **Left:** the
+  effects as chips in the top block (the mock's `◎ Hex ✕ Shield of Faith …`); the strip as the mock's
+  one line — today the controls and the time slide sideways; the hit-point popover as the mock's
+  field and two buttons rather than the wide screen's whole block; a column's chosen tab kept across
+  a reload; D12–D15's slot cells and the ritual and blocked readings; the widths in
+  `tools/visual/shot.mjs`.
   - **D1–D3 · a third of the screen, 512px: two columns, six panels.** Actions beside Skills (what
     the character does on the left, what is looked up on the right; neither scrolls), Spells beside
     Effects (concentration, bonus action and reaction marked; an action carries no mark), Items

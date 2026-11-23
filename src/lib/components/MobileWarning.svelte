@@ -3,7 +3,7 @@
 	import { _ } from '#lib/i18n/index.ts';
 	import LangSwitcher from './LangSwitcher.svelte';
 	import { trapFocus } from '#lib/actions/trapFocus.ts';
-	import { NARROW_WINDOW_QUERY } from '#lib/config/narrow-window.ts';
+	import { FINGER_QUERY, NARROW_WINDOW_QUERY } from '#lib/config/narrow-window.ts';
 
 	// The narrow layout is alpha, not absent: nothing overflows any more (`tools/visual/narrow.mjs`
 	// holds that line), but the dense views are cramped and most controls are still mouse-sized. A
@@ -12,7 +12,9 @@
 	// agree on where narrow starts. Dismiss is in-memory only: this component lives in the root layout
 	// (never remounted across SPA navigation), so a dismissal lasts the whole visit but a real page
 	// reload shows the warning again — the point is that every fresh visit gets the heads-up.
-	const QUERY = NARROW_WINDOW_QUERY;
+	// a finger, not a width: a desktop window dragged small is driven by a mouse and has a layout of
+	// its own (work/play-layout.md ▸ LAYOUT-WIDTHS, the maintainer's call)
+	const QUERY = `${NARROW_WINDOW_QUERY} and ${FINGER_QUERY}`;
 
 	let narrow = $state(false);
 	let dismissed = $state(false);

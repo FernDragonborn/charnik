@@ -554,6 +554,19 @@
 		"pp": "Платина"
 	},
 	"combat": {
+		"narrow": {
+			"tab": {
+				"effects": "Ефекти",
+				"inventory": "Предмети"
+			},
+			"ac": "КБ",
+			"initiative": "Ініц.",
+			"speed": "Швидкість",
+			"species": "Вид",
+			"background": "Передісторія",
+			"rules": "Правила",
+			"advancement": "Розвиток"
+		},
 		"rowMenu": {
 			"swing": "Кинути з",
 			"disadvantage": "Завада",

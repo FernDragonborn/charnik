@@ -554,6 +554,19 @@
 		"pp": "Platinum"
 	},
 	"combat": {
+		"narrow": {
+			"tab": {
+				"effects": "Effects",
+				"inventory": "Items"
+			},
+			"ac": "AC",
+			"initiative": "Init",
+			"speed": "Speed",
+			"species": "Species",
+			"background": "Background",
+			"rules": "Rules",
+			"advancement": "Advancement"
+		},
 		"rowMenu": {
 			"swing": "Roll with",
 			"disadvantage": "Disadvantage",

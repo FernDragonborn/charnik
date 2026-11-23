@@ -136,7 +136,8 @@ is fine, while a 550-line one carrying 221 lines of script is not.
   > the file that caused it: knip compiles a `.svelte` file to find its imports, and when one trips
   > that step the whole import graph below it disappears, so **every component it pulled in is
   > reported as unused while the file itself is not**. One `$derived` holding a template literal in
-  > `PanelCard.svelte` reported eight untouched combat panels. Read the list as a POINTER — the
+  > `PanelCard.svelte` reported eight untouched combat panels; so did a `/** … */` doc comment inside
+  > the `$props()` type annotation there — keep a prop's comment above the `let`. Read the list as a POINTER — the
   > culprit is whatever imports them — and bisect the file you actually edited.
 - **`pnpm jscpd`** — copy-paste detection, threshold 1.8%. The config reporter is `silent`, i.e. the
   one-line verdict and nothing else, because a hook that prints two hundred lines of CSS on every

@@ -219,6 +219,7 @@
 	}
 	.spell-rows {
 		margin-top: 2px;
+		container-type: inline-size;
 	}
 	/* mono/uppercase/tracking/muted come from the shared .eyebrow primitive; keep layout + micro size */
 	.spell-category {
@@ -474,5 +475,26 @@
 	.ritual-cast:hover {
 		color: var(--color-accent-bright);
 		border-color: var(--color-accent-bright);
+	}
+	/* last, so it wins over the rows' own tracks above: a column of a narrow window (work/play-layout.md ▸ NARROW-DESKTOP) is about 250px, where the
+	   three fixed tracks leave the name nothing: the row takes two lines there — the name and how it
+	   is cast on top, what it rolls and how it resolves under it */
+	@container (max-width: 380px) {
+		.spell-row {
+			grid-template-columns: minmax(0, 1fr) auto;
+			row-gap: var(--space-0);
+		}
+		.spell-row .spell-level {
+			grid-column: 2;
+			grid-row: 1;
+		}
+		.spell-row .spell-summary {
+			grid-column: 1;
+			grid-row: 2;
+		}
+		.spell-row .resolution-tag {
+			grid-column: 2;
+			grid-row: 2;
+		}
 	}
 </style>

@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (124)
+## Duplicate suspects (125)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -34,9 +34,11 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `rowName` ×4 — src/lib/components/OrphanDialog.svelte · src/lib/content/loader.ts · src/routes/build/rows.ts · src/routes/combat/delta-text.ts
 - `save` ×4 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/lib/components/OwnWords.svelte · src/routes/translate/+page.svelte
 - `says` ×4 — src/lib/character/derive-gather.ts · src/lib/combat/attack-properties.ts · src/routes/combat/blocks/panels/SpellsPanel.svelte · src/routes/combat/sheet-rolls.svelte.ts
+- `toggle` ×4 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/combat/narrow/NarrowHead.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `cell` ×3 — src/lib/components/UpcastBuilder.svelte · src/lib/content/locale-merge.ts · src/lib/content/migrations.ts
 - `choose` ×3 — src/lib/components/FirstRunModal.svelte · src/lib/components/LanguagePicker.svelte · src/lib/components/settings/TableSettings.svelte
 - `cleanup` ×3 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/storage-edges/+page.svelte
+- `close` ×3 — src/lib/actions/provenance.ts · src/lib/dice/roller.ts · src/routes/combat/narrow/NarrowHead.svelte
 - `fieldLabel` ×3 — src/lib/components/EditContentForm.svelte · src/lib/components/OrphanDialog.svelte · src/lib/content/detail.ts
 - `fileOf` ×3 — src/lib/character/draft-repository.ts · src/lib/character/repository.ts · src/lib/styles/themeFiles.ts
 - `has` ×3 — src/lib/components/ClassPicker.svelte · src/lib/content/translate.ts · src/routes/dev/plugin-consent/+page.svelte
@@ -55,7 +57,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `show` ×3 — src/lib/actions/focusHalo.ts · src/lib/actions/provenance.ts · src/routes/dev/storage/+page.svelte
 - `SKILLS` ×3 — src/routes/build/blocks/FeatSubChoices.svelte · src/routes/build/blocks/SkillRows.svelte · src/routes/build/blocks/SkillsPane.svelte
 - `sourceOf` ×3 — src/lib/components/RollerLine.svelte · src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
-- `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `adoptCharacter` ×2 — src/lib/character/repository.ts · src/lib/play/outcome.ts
 - `AMOUNT_MAX` ×2 — src/lib/table-link/wire-schema.ts · src/routes/table/AskComposer.svelte
 - `answerOf` ×2 — src/lib/actions/focusHalo.ts · src/routes/build/blocks/StartingEquipmentPane.svelte
@@ -66,12 +67,12 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `carrier` ×2 — src/lib/effects/plugin.bench.ts · src/test-support/plugin-fixtures.ts
 - `CASES` ×2 — src/routes/dev/roller/+page.svelte · src/routes/dev/rolltoast/+page.svelte
 - `change` ×2 — src/lib/play/changes.ts · src/lib/play/delta.ts
-- `close` ×2 — src/lib/actions/provenance.ts · src/lib/dice/roller.ts
 - `closeOnOutside` ×2 — src/lib/actions/anchored.ts · src/routes/combat/CombatMenus.svelte
 - `COMMANDS` ×2 — src/lib/components/CommandPalette.svelte · src/routes/dev/table-link/+page.svelte
 - `CONFIG_PATH` ×2 — src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts
 - `CONTENT_DIR` ×2 — src/lib/content/disk.ts · src/lib/effects/plugin-host.ts
 - `countOf` ×2 — src/lib/components/settings/DataConflictDialog.svelte · src/routes/combat/delta-text.ts
+- `current` ×2 — src/lib/character/repository.ts · src/routes/combat/narrow/ColumnPlay.svelte
 - `DC_MAX` ×2 — src/lib/table-link/wire-schema.ts · src/routes/table/AskComposer.svelte
 - `DEATH_SAVE_TRACK` ×2 — src/lib/play/hit-points.ts · src/lib/table-link/wire-schema.ts
 - `deleteDraft` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
@@ -1219,6 +1220,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/config/narrow-window.ts`
 
 - `const NARROW_WINDOW_QUERY` — Where the app's narrow layout starts (`docs/internals/ui.md` ▸ A narrow window): one width, so * the warning, the lay…
+- `const FINGER_QUERY` — A finger rather than a mouse — what tells a phone from a desktop window dragged small * (`work/play-layout.md` ▸ LAYO…
+- `const COLUMNS_WINDOW_QUERY` — Below this a mouse-driven play screen deals its panels into columns of tabs * (`work/play-layout.md` ▸ NARROW-DESKTOP…
+- `const THREE_COLUMNS_QUERY` — Wide enough for three columns of tabs rather than two.
 
 ### `src/lib/content/content-vocabulary.ts`
 
@@ -2798,4 +2802,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_51 tokens · 108 global classes · 63 components · 1707 exports across 239 modules · 124 duplicate suspects._
+_51 tokens · 108 global classes · 63 components · 1710 exports across 239 modules · 125 duplicate suspects._

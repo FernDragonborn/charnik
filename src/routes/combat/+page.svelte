@@ -26,6 +26,8 @@
 	import Loading from '#lib/components/Loading.svelte';
 	import NoCharacter from '#lib/components/NoCharacter.svelte';
 	import PluginNeeds from '#lib/components/PluginNeeds.svelte';
+	import ColumnPlay from './narrow/ColumnPlay.svelte';
+	import { playLayout, PLAY_LAYOUT } from './play-layout.svelte';
 
 	// The page is a thin shell: it renders the area blocks and owns only the draggable panel grid
 	// (which needs the dnd wiring). Everything else lives in the `combat` view-model + blocks/.
@@ -112,66 +114,72 @@
 {:else}
 	{@const s = sheet}
 	{@const c = character}
-	<Hero {c} {s} />
+	{#if playLayout.current === PLAY_LAYOUT.columns}
+		<!-- a desktop window dragged small: the panels dealt into columns of tabs (work/play-layout.md ▸
+		     NARROW-DESKTOP) -->
+		<ColumnPlay {c} {s} />
+	{:else}
+		<Hero {c} {s} />
 
-	<Controls {c} />
+		<Controls {c} />
 
-	<!-- the turn/time bar and the last-roll strip share ONE row: both are one-line status strips, and
+		<!-- the turn/time bar and the last-roll strip share ONE row: both are one-line status strips, and
 	     stacked they left a wide empty band down the middle of an already-crowded screen -->
-	<div class="statusrow" data-region>
-		{#if c.play.inCombat}
-			<Turnbar {c} />
-		{:else}
-			<TimeSkip />
-		{/if}
-		<Playbar />
-	</div>
+		<div class="statusrow" data-region>
+			{#if c.play.inCombat}
+				<Turnbar {c} />
+			{:else}
+				<TimeSkip />
+			{/if}
+			<Playbar />
+		</div>
 
-	<PluginNeeds issues={s.deriveIssues} />
+		<PluginNeeds issues={s.deriveIssues} />
 
-	<CombatStrip {s} />
+		<CombatStrip {s} />
 
-	<Abilities {s} />
+		<Abilities {s} />
 
-	<section class="panels">
-		{#each columns as col, ci (ci)}
-			<div
-				class="panel-column"
-				use:dragMotion
-				use:dragHandleZone={{
-					items: col,
-					type: 'panel',
-					// on a finger a drag is TAKEN, not started: hold still and the row becomes yours to move.
-					// The wait is shown by `dragMotion`'s ring and must stay its two halves added up.
-					delayTouchStart: TOUCH_HOLD_MS,
-					flipDurationMs,
-					dropTargetStyle: {},
-					...NO_LIBRARY_TAB_STOPS,
-					// The floating card keeps the size it is given. Left on, the library resizes it into
-					// whatever slot it is currently over — and these panels are wildly different heights, so
-					// the background kept collapsing and re-growing under text that stayed put.
-					morphDisabled: true,
-					// …and what it is given is CAPPED: a full-height clone of Skills is taller than the
-					// viewport, which made it impossible to aim, and a clone cut down to its title bar left
-					// the question of what you were carrying unanswered. The class caps and fades it
-					// (`styles/components.css`) — enough panel to recognise, never more than a hand carries.
-					transformDraggedElement: (el) => el?.classList.add('dragging-panel'),
-				}}
-				onconsider={(e) => dndConsider(ci, e)}
-				onfinalize={(e) => dndFinalize(ci, e)}
-			>
-				{#each col as item (item.id)}
-					<!-- the library makes each card a list item, so the landmark is a section inside it: a panel
+		<section class="panels">
+			{#each columns as col, ci (ci)}
+				<div
+					class="panel-column"
+					use:dragMotion
+					use:dragHandleZone={{
+						items: col,
+						type: 'panel',
+						// on a finger a drag is TAKEN, not started: hold still and the row becomes yours to move.
+						// The wait is shown by `dragMotion`'s ring and must stay its two halves added up.
+						delayTouchStart: TOUCH_HOLD_MS,
+						flipDurationMs,
+						dropTargetStyle: {},
+						...NO_LIBRARY_TAB_STOPS,
+						// The floating card keeps the size it is given. Left on, the library resizes it into
+						// whatever slot it is currently over — and these panels are wildly different heights, so
+						// the background kept collapsing and re-growing under text that stayed put.
+						morphDisabled: true,
+						// …and what it is given is CAPPED: a full-height clone of Skills is taller than the
+						// viewport, which made it impossible to aim, and a clone cut down to its title bar left
+						// the question of what you were carrying unanswered. The class caps and fades it
+						// (`styles/components.css`) — enough panel to recognise, never more than a hand carries.
+						transformDraggedElement: (el) => el?.classList.add('dragging-panel'),
+					}}
+					onconsider={(e) => dndConsider(ci, e)}
+					onfinalize={(e) => dndFinalize(ci, e)}
+				>
+					{#each col as item (item.id)}
+						<!-- the library makes each card a list item, so the landmark is a section inside it: a panel
 					     is reached by its name, not as "item 3 of 6" -->
-					<div class="card">
-						<section class="panel-region" data-region aria-labelledby={`panel-title-${item.id}`}>
-							<PanelCard pid={item.id} {c} {s} />
-						</section>
-					</div>
-				{/each}
-			</div>
-		{/each}
-	</section>
+						<div class="card">
+							<section class="panel-region" data-region aria-labelledby={`panel-title-${item.id}`}>
+								<PanelCard pid={item.id} {c} {s} />
+							</section>
+						</div>
+					{/each}
+				</div>
+			{/each}
+		</section>
+	{/if}
 	<CombatMenus />
 	<FormDialog />
 	<OptionQuestionDialog />

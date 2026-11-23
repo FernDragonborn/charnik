@@ -67,14 +67,11 @@
 <style>
 	.grid {
 		display: grid;
-		grid-template-columns: repeat(6, 1fr);
+		/* six across where there is room, and as many as fit where there is not — a narrow window's
+		   column is about 250px (work/play-layout.md ▸ NARROW-DESKTOP) */
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 5rem), 1fr));
 		gap: var(--space-2-5);
 		margin-bottom: 22px;
-	}
-	@media (max-width: 640px) {
-		.grid {
-			grid-template-columns: repeat(3, 1fr);
-		}
 	}
 	/* UBUG-18: the ability cards are panels like every other block on the sheet, so they sit on
 	   --color-surface with their inner controls on --color-surface-2 (the HpPanel relationship), not

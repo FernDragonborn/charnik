@@ -24,7 +24,15 @@
 	import { provenance } from '#lib/actions/provenance.ts';
 	import { SOURCE_KEY } from '#lib/rules/pipeline.ts';
 
-	let { s }: { s: CharacterSheet } = $props();
+	let {
+		s,
+		tiles = true,
+	}: {
+		s: CharacterSheet;
+		/** The AC, Initiative and Speed tiles, and the section's own fold. A narrow window's top block
+		 *  carries those three numbers, so its Skills tab shows the rest of the section without them. */
+		tiles?: boolean;
+	} = $props();
 	const passives = $derived(combat.passives);
 	const collapsed = $derived(combat.layout.collapsed);
 	const { toggle } = combat.layout;
@@ -47,60 +55,61 @@
 	);
 </script>
 
-<div class="sectlab">
-	<button class="slabtoggle" onclick={() => toggle('combat')}
-		><span class="chevron"
-			><Icon name={collapsed.combat ? 'chevron-right' : 'chevron-down'} size={13} /></span
-		>{$_('combat.section.combat')}</button
-	>
-</div>
-{#if !collapsed.combat}
-	<section class="combat-grid" class:has-resources={s.resources.length}>
-		<button
-			class="tile"
-			use:provenance={why(s.ac, $_)}
-			onclick={(e) => roll({ text: 'AC (touch)', key: 'combat.roll.acTouch' }, 0, e)}
+{#if tiles}<div class="sectlab">
+		<button class="slabtoggle" onclick={() => toggle('combat')}
+			><span class="chevron"
+				><Icon name={collapsed.combat ? 'chevron-right' : 'chevron-down'} size={13} /></span
+			>{$_('combat.section.combat')}</button
 		>
-			<div class="tile-key">{$_('combat.section.armorClass')}</div>
-			<div class="tile-value">{s.ac.value}</div>
-			<!-- one piece per contribution, never broken inside: a source's own name carries spaces, commas
+	</div>{/if}
+{#if !tiles || !collapsed.combat}
+	<section class="combat-grid" class:has-resources={s.resources.length} class:stacked={!tiles}>
+		{#if tiles}
+			<button
+				class="tile"
+				use:provenance={why(s.ac, $_)}
+				onclick={(e) => roll({ text: 'AC (touch)', key: 'combat.roll.acTouch' }, 0, e)}
+			>
+				<div class="tile-key">{$_('combat.section.armorClass')}</div>
+				<div class="tile-value">{s.ac.value}</div>
+				<!-- one piece per contribution, never broken inside: a source's own name carries spaces, commas
 			     and plus signs ("Cloak of Protection +1"), so a run of them joined by spaces read as one -->
-			<div class="tile-text">
-				{#each shownTrace(s.ac) as part, index (index)}<span class="tile-part"
-						>{contributionText(part, $_)}</span
-					>{/each}
-			</div>
-		</button>
-		<button
-			class="tile"
-			use:provenance={why(s.initiative, $_)}
-			onclick={(e) =>
-				roll(
-					{ text: 'Initiative', key: 'combat.roll.initiative' },
-					s.initiative.value,
-					e,
-					'initiative',
-				)}
-		>
-			<div class="tile-key">{$_('combat.roll.initiative')}</div>
-			<div class="tile-value">{signed(s.initiative.value)}</div>
-			<div class="tile-text">
-				{abilityShortLabel('dex', $_)} <b>{signed(s.abilities.dex.mod)}</b>
-			</div>
-		</button>
-		<div class="tile" use:provenance={why(s.speed, $_)}>
-			<div class="tile-key">{$_('combat.section.speed')}</div>
-			<!-- the space goes OUTSIDE <small>: Svelte trims whitespace at an element's edges, so a leading
+				<div class="tile-text">
+					{#each shownTrace(s.ac) as part, index (index)}<span class="tile-part"
+							>{contributionText(part, $_)}</span
+						>{/each}
+				</div>
+			</button>
+			<button
+				class="tile"
+				use:provenance={why(s.initiative, $_)}
+				onclick={(e) =>
+					roll(
+						{ text: 'Initiative', key: 'combat.roll.initiative' },
+						s.initiative.value,
+						e,
+						'initiative',
+					)}
+			>
+				<div class="tile-key">{$_('combat.roll.initiative')}</div>
+				<div class="tile-value">{signed(s.initiative.value)}</div>
+				<div class="tile-text">
+					{abilityShortLabel('dex', $_)} <b>{signed(s.abilities.dex.mod)}</b>
+				</div>
+			</button>
+			<div class="tile" use:provenance={why(s.speed, $_)}>
+				<div class="tile-key">{$_('combat.section.speed')}</div>
+				<!-- the space goes OUTSIDE <small>: Svelte trims whitespace at an element's edges, so a leading
 			     one inside it is dropped and the metric hugs the "ft" -->
-			<div class="tile-value">{s.speed.value} ft <small>({metres(s.speed.value)})</small></div>
-			<div class="tile-text">
-				{[
-					$_('combat.section.baseWalk'),
-					...movementModes.map((mode) => $_(mode.key, { values: { feet: mode.speed.value } })),
-				].join(' · ')}
+				<div class="tile-value">{s.speed.value} ft <small>({metres(s.speed.value)})</small></div>
+				<div class="tile-text">
+					{[
+						$_('combat.section.baseWalk'),
+						...movementModes.map((mode) => $_(mode.key, { values: { feet: mode.speed.value } })),
+					].join(' · ')}
+				</div>
 			</div>
-		</div>
-
+		{/if}
 		{#if s.resources.length}
 			<!-- tall Resources block (right column, spans both rows); chips wrap by size to fill it -->
 			<div class="resources-block">
@@ -196,6 +205,15 @@
 		align-items: stretch;
 	}
 	/* passive-senses + defenses rows span the full stat width */
+	/* without the three tiles the section is a column's own: one block under another */
+	.combat-grid.stacked,
+	.combat-grid.stacked.has-resources {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.combat-grid.stacked.has-resources .resources-block {
+		grid-column: auto;
+		grid-row: auto;
+	}
 	.combat-grid .senses-strip {
 		grid-column: 1 / -1;
 	}
