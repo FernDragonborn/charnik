@@ -130,11 +130,11 @@
   (`../internals/table-link.md` ▸ Driving a live table) — a seat, a sheet, a page that loads again,
   a roll asked and answered, a hit declined, the door, the close. A requested roll is built in the
   dice tray too, driven over `/dev/table?…&tray`.
-  The live drive passes on protocol 4, the log's roll and its hide among it; protocol 5 added a
-  reveal to the roll record, and the drive on it is TABLE-LINK-LOG's. **Left:** the
+  The live drive passes on protocol 5, the log's roll, its hide and both seats' reveal among it.
+  **Left:** the
   desktop app that twice quit on its own, exit 0, during early drives — once with the question
   window open and blank, once ten seconds after the player was let in, the window only switched
-  away from. Not reproduced since, over the live drive and a quit-and-Return; the log says nothing
+  away from. Not reproduced since, over the live drives on protocols 4 and 5 and a quit-and-Return; the log says nothing
   before it. Those drives ran the player through `cargo test`, whose build writes into
   `src-tauri/`, which `tauri dev` watches — the suspect, unproven; the drive now runs the test
   binary directly and does not touch it. A roll built in the tray needs a player APP at the
@@ -148,8 +148,10 @@
   table whole again and nobody asked anything — a power cut is an ordinary evening for part of
   the people this is for, and what a path does after ten minutes of silence (a NAT mapping gone,
   an address changed, a phone's hotspot in place of the router) is iroh's and the network's to
-  show, not a timer's; two Charnik versions at one table; `cargo audit` over the crates the
-  feature adds. A player's own app at the table, which no one-machine drive has: a request
+  show, not a timer's; two Charnik versions at one table. `cargo audit` over the crates the
+  feature adds finds nothing of theirs alone: `url`, which iroh shares with Tauri, was bumped past
+  its advisory, and `chrono` is the app's own as well (AUDIT-DRIFT); it is run again with the
+  rest before the release that turns the feature on. A player's own app at the table, which no one-machine drive has: a request
   answered from the page, and a roll built in the dice tray first. **The Windows firewall's
   question**: Windows asks once per program the first time it listens, and Settings ▸ Table (the
   first table's dialog too) says so under *no relay* — what a no-relay table does for a player on
@@ -180,9 +182,11 @@
   `TableLogPanel`). A live request carries the GM's signed ask and the player's answer is a
   signed record; hello is protocol 5 and refuses any other before admission, saying whose app is the
   older; the invitation format stays at version 2 (`session.rs`, `wire.rs` and `table.test.ts` hold
-  it). The live drive covers the log on protocol 4: the player's roll arrives and the GM hides it.
+  it). The live drive covers the log on protocol 5: the player's roll arrives and the GM hides it,
+  and a roll either seat kept to the GM is shown the table in its place, the GM's never reaching the
+  player kept.
   A reveal is held by `records.rs`'s and `session.rs`'s tests over the real transport and by
-  `table.test.ts`. **Left:** the live drive on protocol 5; hiding ONE roll of an action — the record is the
+  `table.test.ts`. **Left:** hiding ONE roll of an action — the record is the
   action, so a hide takes the whole of it; a VTT's targets would make a single roll worth hiding
   (damage dealt to an unseen creature), and the control is undrawn.
 - [~] **TABLE-LINK-REMEMBER · a table that is there next week — and after the app went down.**
