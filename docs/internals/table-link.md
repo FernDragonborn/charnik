@@ -53,7 +53,8 @@ on the refusal so an Enter pressed by habit says no, and navigates nowhere. That
 from the start, since it says where Enter goes and the filled yes would otherwise claim it: a soft
 halo that travels to the other answer on an arrow or Tab — a halo that moves reads as "you are
 here" where a still ring reads as the button's own look — and the key under it (`↵ Enter`,
-`↩ Return` on a Mac). Picked from rendered variants, `design-preview/question-focus-ring.html`; closing it is a no. It
+`↩ Return` on a Mac). Picked from rendered variants, `design-preview/question-focus-ring.html`;
+every question is shown in that page at `/dev/table-question`, which `shot.mjs` captures; closing it is a no. It
 does not follow the user's theme on purpose: a theme is the page's to set. One question is on
 screen at a time. The words come in four parts, each a catalog string of its own: the question
 said small (`ask`), the one thing the person must recognise said large (`fact` — the table, or the

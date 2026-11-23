@@ -60,11 +60,12 @@
 			(document.activeElement === deny ? allow : deny).focus();
 		}
 	});
-	/** The halo and the key stand under whichever answer has the focus, and are gone when none has. */
+	/** The halo and the key stand under whichever answer has the focus, and go when neither has. */
 	const showFocus = () => {
 		const focused = document.activeElement;
 		if (focused !== allow && focused !== deny) {
-			delete footer.dataset.focusShown;
+			// the window losing the focus to another one keeps the mark: back here, Enter is the same
+			if (document.hasFocus() || answered) delete footer.dataset.focusShown;
 			return;
 		}
 		for (const mark of [halo, key]) {

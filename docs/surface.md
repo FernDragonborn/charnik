@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (119)
+## Duplicate suspects (120)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -40,6 +40,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `has` ×3 — src/lib/components/ClassPicker.svelte · src/lib/content/translate.ts · src/routes/dev/plugin-consent/+page.svelte
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
 - `isOpen` ×3 — src/lib/play/option-activation.ts · src/lib/rules/spellcasting.ts · src/routes/build/blocks/SectionedPicker.svelte
+- `key` ×3 — src/lib/content/issue-text.ts · src/routes/build/blocks/PickerCard.svelte · src/routes/dev/table-question/+page.svelte
 - `name` ×3 — src/lib/content/item-tags.ts · src/lib/storage/browser.ts · src/lib/styles/themeFiles.ts
 - `norm` ×3 — src/lib/storage/browser.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
 - `now` ×3 — src/lib/content/remote/install.ts · src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
@@ -86,7 +87,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `inScope` ×2 — src/lib/combat/attack-properties.ts · src/lib/combat/roll.ts
 - `isRecord` ×2 — src/lib/character/migrations.ts · src/lib/play/delta.ts
 - `isTaken` ×2 — src/routes/build/blocks/OptionGrid.svelte · src/routes/build/blocks/StartingEquipmentPane.svelte
-- `key` ×2 — src/lib/content/issue-text.ts · src/routes/build/blocks/PickerCard.svelte
+- `KINDS` ×2 — src/routes/dev/table-question/+page.svelte · src/routes/table/AskComposer.svelte
 - `link` ×2 — src/lib/content/spellAccess.ts · src/routes/+layout.svelte
 - `listDrafts` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
 - `load` ×2 — src/lib/stores/app.svelte.ts · src/routes/+layout.ts
@@ -2734,4 +2735,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 103 global classes · 63 components · 1684 exports across 230 modules · 119 duplicate suspects._
+_50 tokens · 103 global classes · 63 components · 1684 exports across 230 modules · 120 duplicate suspects._

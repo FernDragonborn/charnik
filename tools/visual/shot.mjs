@@ -250,6 +250,12 @@ const ROUTES = [
 	// the roll-card gallery: every shape RollRow has to render (check, attack, crit, volley, nat 1),
 	// on one page — the cheapest guard there is on the component four surfaces now share
 	{ path: '/dev/rolltoast', wait: 'h1', states: [{ name: 'dev-rolltoast' }] },
+	// the table's native question window, every question; the frames are fitted to their words
+	{
+		path: '/dev/table-question?still',
+		wait: '.frames[data-fitted="6"]',
+		states: [{ name: 'dev-table-question' }],
+	},
 	// every KIND of defence chip at once. It is here because the three newest kinds ship on eleven
 	// magic items and on nothing the demo character owns, so they rendered zero times in every state
 	// this file covered and nobody had ever looked at them.
