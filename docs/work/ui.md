@@ -93,8 +93,8 @@
       concept: a sheet is kept in pencil because its numbers keep changing; then a MINIATURE on
       its base — it is your character on the table. A GM screen's three panels got no yes. Tally
       marks and an hourglass for rounds are undrawn and unjudged.
-      **Drawn, waiting on the pick:** `design-preview/favicon-variants.html` — three pencil stubs
-      (P1–P3) and three miniatures (M1–M3), each in a real 16px tab on a dark and a light chrome, each
+      **Drawn, waiting on the pick:** `design-preview/favicon-variants.html` — three pencil tips
+      (P1–P3, only the sharpened end, the body leaving the frame) and three miniatures (M1–M3), each in a real 16px tab on a dark and a light chrome, each
       with the risk of what it reads as. The miniatures run into a chess pawn at tab size. Once one
       is picked, the SVG goes into `static/` and `app.html`, and `pnpm tauri icon` renders the desktop
       set from it.
