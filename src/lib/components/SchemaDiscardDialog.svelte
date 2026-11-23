@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { asText } from '$lib/util/format';
+	import { asText } from '#lib/util/format.ts';
 	import DialogShell from './DialogShell.svelte';
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	// Schema-discard warning — the house attention-dialog template
 	// (charnik-dialog-design-template), single-pane notice variant. Fires when the draft cache holds
 	// drafts saved under a DIFFERENT content-schema version: ephemeral WIP that can't be migrated, so it
 	// WILL be dropped. We surface exactly what's being lost + let the user acknowledge, rather than
 	// having their unsaved work vanish silently on the next read (PLAN DRAFT-CACHE backlog).
-	import type { DraftEnvelope } from '$lib/drafts/store';
+	import type { DraftEnvelope } from '#lib/drafts/store.ts';
 
 	let {
 		drafts,

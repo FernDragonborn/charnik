@@ -5,11 +5,11 @@
  * empty `rarity` IS in the data (`content.md`), and it is where a starting character shops — the SRD
  * ships 234 magic rows against 149 priced mundane ones, so an unfiltered list buries the basics.
  */
-import { ITEM_CATEGORIES, RARITIES } from '$lib/content/schemas';
-import { itemRarities } from '$lib/content/options';
-import type { ContentGraph, LoadedRowOf } from '$lib/content/loader';
-import { titleCase } from '$lib/util/format';
-import { asText } from '$lib/util/format';
+import { ITEM_CATEGORIES, RARITIES } from '#lib/content/schemas.ts';
+import { itemRarities } from '#lib/content/options.ts';
+import type { ContentGraph, LoadedRowOf } from '#lib/content/loader.ts';
+import { titleCase } from '#lib/util/format.ts';
+import { asText } from '#lib/util/format.ts';
 
 export const RARITY_BAND = ['none', ...RARITIES] as const;
 type RarityRung = (typeof RARITY_BAND)[number];

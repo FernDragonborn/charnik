@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from './memory';
 import { withWriteLog } from './logged';
-import { getLogTail, LogLevel, redactPath } from '$lib/diag/logger';
+import { getLogTail, LogLevel, redactPath } from '#lib/diag/logger.ts';
 
 /** The newest entry the ring holds — every assertion here is about the line a call just left. */
 const lastEntry = () => getLogTail(1)[0];

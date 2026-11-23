@@ -2,10 +2,10 @@
  * The left-pane LIST the Compendium, the Spellbook and the translator share: a row's entry, the
  * sub-line under its name, and the grouping. Pure — the components render these models.
  */
-import type { LoadedRow } from '$lib/content/loader';
-import { abilityShortLabel, asText, titleCase } from '$lib/util/format';
-import type { ContentType } from '$lib/content/schemas';
-import type { Translate } from '$lib/i18n';
+import type { LoadedRow } from '#lib/content/loader.ts';
+import { abilityShortLabel, asText, titleCase } from '#lib/util/format.ts';
+import type { ContentType } from '#lib/content/schemas.ts';
+import type { Translate } from '#lib/i18n/index.ts';
 import { editionLabel } from './detail';
 import { itemRarities } from './options';
 

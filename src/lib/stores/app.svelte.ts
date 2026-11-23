@@ -7,12 +7,12 @@
 // reload / app restart. Loaded synchronously at module init so the very first paint (and
 // startI18n in +layout.ts) already uses the saved locale/theme.
 
-import { SYSTEMS } from '$lib/content/schemas';
-import { CRIT_METHOD, type CritMethod } from '$lib/rules/dice';
-import { readStored, writeStored } from '$lib/util/persist';
-import { REDUCE_MOTION, type ReduceMotion } from '$lib/util/motion';
-import type { CustomTheme } from '$lib/styles/customThemes';
-import { AUDIENCE, RELAY_MODE, type Audience, type RelaySetting } from '$lib/table-link/types';
+import { SYSTEMS } from '#lib/content/schemas.ts';
+import { CRIT_METHOD, type CritMethod } from '#lib/rules/dice.ts';
+import { readStored, writeStored } from '#lib/util/persist.ts';
+import { REDUCE_MOTION, type ReduceMotion } from '#lib/util/motion.ts';
+import type { CustomTheme } from '#lib/styles/customThemes.ts';
+import { AUDIENCE, RELAY_MODE, type Audience, type RelaySetting } from '#lib/table-link/types.ts';
 
 /** Derived from the content-schema SYSTEMS list — ONE source of truth for the editions. */
 export type SystemId = (typeof SYSTEMS)[number];

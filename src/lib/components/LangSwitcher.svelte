@@ -2,8 +2,8 @@
 	// The one canonical language switcher — reused everywhere (topbar, dialogs) so it looks and behaves
 	// identically. Cycles the active locale through the discovered LOCALES; the layout's reactive effect
 	// pushes `app.activeLocale` into svelte-i18n, so the whole UI (including any open dialog) re-renders.
-	import { _, LOCALES, FALLBACK_LOCALE } from '$lib/i18n';
-	import { app } from '$lib/stores/app.svelte';
+	import { _, LOCALES, FALLBACK_LOCALE } from '#lib/i18n/index.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
 
 	function cycle() {
 		const ids = LOCALES.map((l) => l.id);

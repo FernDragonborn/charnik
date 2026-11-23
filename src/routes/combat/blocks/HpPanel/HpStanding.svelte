@@ -2,12 +2,12 @@
 	// The hit-point block on its feet: the number and its bar, the hit on the number's own line, and
 	// healing behind one green control. One height in every state — nothing appears INSIDE the block.
 	import type { Snippet } from 'svelte';
-	import Icon from '$lib/components/Icon.svelte';
-	import { _ } from '$lib/i18n';
-	import { provenance } from '$lib/actions/provenance';
-	import { whyHitPoints } from '$lib/combat/effects-view';
-	import type { Character } from '$lib/character/schema';
-	import type { CharacterSheet } from '$lib/character/derive';
+	import Icon from '#lib/components/Icon.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { whyHitPoints } from '#lib/combat/effects-view.ts';
+	import type { Character } from '#lib/character/schema.ts';
+	import type { CharacterSheet } from '#lib/character/derive.ts';
 	import { combat } from '../../combat-view-model.svelte';
 	import HitLine from './HitLine.svelte';
 

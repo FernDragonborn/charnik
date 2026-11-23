@@ -6,10 +6,10 @@
 	// It WRITES the token and hands it to the field beside it, which stays editable: the grammar is
 	// wider than the two shapes here (a `step()` ladder, a typed sub-slot, a guard), so the builder
 	// covers what an author reaches for and never becomes the only way in.
-	import { _ } from '$lib/i18n';
-	import { submitOnEnter } from '$lib/actions/submitOnEnter';
+	import { _ } from '#lib/i18n/index.ts';
+	import { submitOnEnter } from '#lib/actions/submitOnEnter.ts';
 	import Icon from './Icon.svelte';
-	import { UPCAST_KINDS, parseUpcast } from '$lib/effects/upcast';
+	import { UPCAST_KINDS, parseUpcast } from '#lib/effects/upcast.ts';
 
 	// `string | undefined` because a draft cell is a partial record read under
 	// `noUncheckedIndexedAccess` — the cell may simply not be there yet, and saying so is the honest

@@ -6,26 +6,26 @@
  * The cast's ROLLS — a spell attack, its damage, a heal — are asked of the host: they are the
  * player's to build, and nothing they come to lands in play-state.
  */
-import { tokensOf, type LoadedRowOf } from '$lib/content/loader';
-import { localizedName } from '$lib/content/detail';
+import { tokensOf, type LoadedRowOf } from '#lib/content/loader.ts';
+import { localizedName } from '#lib/content/detail.ts';
 import {
 	pactPool,
 	slotToSpend,
 	spendPactSlot,
 	PACT_SLOT_KEY,
 	type SlotSpend,
-} from '$lib/rules/spellcasting';
-import { withCastSlot, withSpellcastingMod } from '$lib/effects/context';
-import { evalUpcast } from '$lib/effects/upcast';
-import { canCastAsRitual, canCastWithSlots, spellEntries } from '$lib/character/spellcasting';
-import type { Character, CharacterPlay } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
-import type { ResourceDef } from '$lib/effects/facts';
-import type { SaidText } from '$lib/util/say';
-import { UNARMED_STRIKE_ID, type ActionSlot, type Attack } from '$lib/combat/helpers';
-import { durationToRounds } from '$lib/combat/effects-view';
-import { sheetAttacks } from '$lib/combat/form-attacks';
-import { casterForSpell, castingIcon, enhancementTokens } from '$lib/combat/spells';
+} from '#lib/rules/spellcasting.ts';
+import { withCastSlot, withSpellcastingMod } from '#lib/effects/context.ts';
+import { evalUpcast } from '#lib/effects/upcast.ts';
+import { canCastAsRitual, canCastWithSlots, spellEntries } from '#lib/character/spellcasting.ts';
+import type { Character, CharacterPlay } from '#lib/character/schema.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
+import type { ResourceDef } from '#lib/effects/facts.ts';
+import type { SaidText } from '#lib/util/say.ts';
+import { UNARMED_STRIKE_ID, type ActionSlot, type Attack } from '#lib/combat/helpers.ts';
+import { durationToRounds } from '#lib/combat/effects-view.ts';
+import { sheetAttacks } from '#lib/combat/form-attacks.ts';
+import { casterForSpell, castingIcon, enhancementTokens } from '#lib/combat/spells.ts';
 import { endConcentration } from './concentration';
 import { effectInstanceOf } from './effects';
 import {

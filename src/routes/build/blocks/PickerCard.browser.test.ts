@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { userEvent } from 'vitest/browser';
-import { startI18n } from '$lib/i18n';
+import { startI18n } from '#lib/i18n/index.ts';
 import PickerCard from './PickerCard.svelte';
 
 beforeAll(() => startI18n('en'));

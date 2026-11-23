@@ -18,11 +18,11 @@
  * The content watcher needs no suppression here: its callback only re-READS (debounced), so a bulk
  * write coalesces into one reload — which is the correct reaction to content having changed.
  */
-import type { Storage } from '$lib/storage/types';
+import type { Storage } from '#lib/storage/types.ts';
 import type { ContentGraph } from '../loader';
 import { rawUrl, type GithubRepo, type RemotePack } from './github';
 import type { PrefetchBudget, RemoteFetcher, UpdateError } from './types';
-import { listFilesRecursive } from '$lib/storage/walk';
+import { listFilesRecursive } from '#lib/storage/walk.ts';
 import { packNameOf } from '../disk';
 import { gitBlobSha } from '../hash';
 import type { CarryReport } from '../locale-merge';

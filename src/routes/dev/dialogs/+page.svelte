@@ -4,10 +4,10 @@
 	// changed under a character, a folder that is not empty. The dialogs are the real components.
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
-	import { characters } from '$lib/character/store.svelte';
-	import { newCharacter } from '$lib/character/schema';
+	import { characters } from '#lib/character/store.svelte.ts';
+	import { newCharacter } from '#lib/character/schema.ts';
 	import EditionSwitchDialog from '../../build/blocks/EditionSwitchDialog.svelte';
-	import { SYSTEM_LABELS } from '$lib/rules/pipeline';
+	import { SYSTEM_LABELS } from '#lib/rules/pipeline.ts';
 
 	const which = $derived(page.url.searchParams.get('d') ?? '');
 	let ready = $state(false);

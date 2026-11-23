@@ -4,11 +4,11 @@
  * CombatVM the way the resource tracker and the turn economy are; CombatVM composes it as
  * `combat.inventory`, passing getters for the reactive character / graph / sheet.
  *
- * The list semantics live in `$lib/character/inventory` (shared with the builder), and what each
- * press DOES is a pure action in `$lib/play/inventory`. What is here is the reactive projection the
+ * The list semantics live in `#lib/character/inventory.ts` (shared with the builder), and what each
+ * press DOES is a pure action in `#lib/play/inventory.ts`. What is here is the reactive projection the
  * panel renders, and firing a shot — which stack it spends, asked when there are several.
  */
-import { translator } from '$lib/i18n';
+import { translator } from '#lib/i18n/index.ts';
 import {
 	ATTUNEMENT_CAP,
 	attunedCount,
@@ -17,7 +17,7 @@ import {
 	isEquippable,
 	needsAttunement,
 	type InventoryEntry,
-} from '$lib/character/inventory';
+} from '#lib/character/inventory.ts';
 import {
 	attune,
 	changeQuantity,
@@ -30,26 +30,26 @@ import {
 	setItemAnswers,
 	toggleEquip,
 	useItem,
-} from '$lib/play/inventory';
-import type { PlayContext, PlayNotice, PlayOutcome } from '$lib/play/outcome';
-import { COINS, costSaid, purseWeightLb, type Purse } from '$lib/rules/currency';
-import { say } from '$lib/util/say';
-import { resolveItem, type ResolvedItem } from '$lib/content/resolved-item';
+} from '#lib/play/inventory.ts';
+import type { PlayContext, PlayNotice, PlayOutcome } from '#lib/play/outcome.ts';
+import { COINS, costSaid, purseWeightLb, type Purse } from '#lib/rules/currency.ts';
+import { say } from '#lib/util/say.ts';
+import { resolveItem, type ResolvedItem } from '#lib/content/resolved-item.ts';
 import {
 	instanceQuestions,
 	type InstanceAnswers,
 	type InstanceQuestions,
 	type InstanceScope,
-} from '$lib/content/item-instance';
-import { carriedName } from '$lib/combat/carried-name';
-import { type ContentGraph } from '$lib/content/loader';
-import { app } from '$lib/stores/app.svelte';
-import { isRowActive } from '$lib/content/sources.svelte';
-import { tagInt, ITEM_TAG } from '$lib/content/item-tags';
-import { ammunitionStacks, firedAmmunition } from '$lib/character/ammunition';
-import type { Character } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
-import type { MenuKind } from '$lib/combat/helpers';
+} from '#lib/content/item-instance.ts';
+import { carriedName } from '#lib/combat/carried-name.ts';
+import { type ContentGraph } from '#lib/content/loader.ts';
+import { app } from '#lib/stores/app.svelte.ts';
+import { isRowActive } from '#lib/content/sources.svelte.ts';
+import { tagInt, ITEM_TAG } from '#lib/content/item-tags.ts';
+import { ammunitionStacks, firedAmmunition } from '#lib/character/ammunition.ts';
+import type { Character } from '#lib/character/schema.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
+import type { MenuKind } from '#lib/combat/helpers.ts';
 
 /** The anchored menu a shot asks "which stack" through. */
 export interface InventoryMenus {
@@ -208,7 +208,7 @@ export class InventoryTracker {
 	equip = (row: string) => this.act((c, ctx) => toggleEquip(c, { row }, ctx));
 
 	/** Attune / un-attune. Un-attuning is always allowed; a fourth item is blocked in Strict and
-	 *  allowed with a note in Free (`$lib/play/inventory` ▸ `attune`). */
+	 *  allowed with a note in Free (`#lib/play/inventory` ▸ `attune`). */
 	attune = (row: string) => this.act((c, ctx) => attune(c, { row }, ctx));
 
 	bump = (row: string, by: number) => this.act((c, ctx) => changeQuantity(c, { row, by }, ctx));

@@ -5,7 +5,7 @@
  */
 import { makeTempContentRoot } from '../../test-support/fixtures';
 import { describe, it, expect, beforeEach } from 'vitest';
-import { type ContentGraph } from '$lib/content/loader';
+import { type ContentGraph } from '#lib/content/loader.ts';
 import { build } from './build-view-model.svelte';
 import { newClassRow } from './draft';
 

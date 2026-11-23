@@ -5,9 +5,9 @@
  * so this reads the drafted sheet's facts and knows nothing of druids. A form whose rules state no
  * count asks nothing here: 2014 Wild Shape takes any eligible beast at the table.
  */
-import type { FormRules } from '$lib/effects/facts';
-import { isEligibleForm, type MonsterRow } from '$lib/character/forms';
-import { isRowActive } from '$lib/content/sources.svelte';
+import type { FormRules } from '#lib/effects/facts.ts';
+import { isEligibleForm, type MonsterRow } from '#lib/character/forms.ts';
+import { isRowActive } from '#lib/content/sources.svelte.ts';
 import { rowName } from './rows';
 import { toggleCapped } from './draft';
 import type { BuildVM } from './build-view-model.svelte';

@@ -1,18 +1,18 @@
 <script lang="ts">
 	// Spells panel body: per-class cast line (save DC / attack), an armor-block warning, then spell
 	// groups with slot pips and rows (prepare toggle, pin, ritual-cast badge, cast on click).
-	import Icon from '$lib/components/Icon.svelte';
-	import SlotPips from '$lib/components/SlotPips.svelte';
-	import { _ } from '$lib/i18n';
-	import { abilityShortLabel } from '$lib/util/format';
-	import { toast } from '$lib/toast/toast';
-	import type { CharacterSheet } from '$lib/character/derive';
+	import Icon from '#lib/components/Icon.svelte';
+	import SlotPips from '#lib/components/SlotPips.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import { abilityShortLabel } from '#lib/util/format.ts';
+	import { toast } from '#lib/toast/toast.ts';
+	import type { CharacterSheet } from '#lib/character/derive.ts';
 	import { combat } from '../../combat-view-model.svelte';
-	import { why, signed } from '$lib/combat/helpers';
-	import { provenance } from '$lib/actions/provenance';
-	import { ISSUE_KEY } from '$lib/effects/token-parser';
-	import { spellcastingBlock } from '$lib/play/cast';
-	import { sayText } from '$lib/util/say';
+	import { why, signed } from '#lib/combat/helpers.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { ISSUE_KEY } from '#lib/effects/token-parser.ts';
+	import { spellcastingBlock } from '#lib/play/cast.ts';
+	import { sayText } from '#lib/util/say.ts';
 
 	let { s }: { s: CharacterSheet } = $props();
 	const spellGroups = $derived(combat.spellGroups);

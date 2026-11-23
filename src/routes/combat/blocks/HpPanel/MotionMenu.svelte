@@ -4,10 +4,10 @@
 	// is chosen, walking the list IS looking through the motions.
 	//
 	// It never covers the block: the block is where the choice is seen.
-	import { _ } from '$lib/i18n';
-	import { provenance } from '$lib/actions/provenance';
-	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
-	import { DOWN_MOTIONS, type DownMotion } from '$lib/character/schema';
+	import { _ } from '#lib/i18n/index.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { dismissOnEscape } from '#lib/actions/dismissOnEscape.ts';
+	import { DOWN_MOTIONS, type DownMotion } from '#lib/character/schema.ts';
 	import { DEAR_MOTIONS } from './down-motions';
 
 	let {

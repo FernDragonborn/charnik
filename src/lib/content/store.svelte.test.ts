@@ -12,7 +12,7 @@ const resetContentGraph = vi.fn();
 const resetUserStorage = vi.fn();
 
 vi.mock('./provider', () => ({ getContentGraph, resetContentGraph }));
-vi.mock('$lib/storage/provider', () => ({ resetUserStorage }));
+vi.mock('#lib/storage/provider.ts', () => ({ resetUserStorage }));
 // the store now loads the browse-config first; stub it out — this suite tests graph error-capture only
 vi.mock('./sources.svelte', () => ({ initSourceConfig: vi.fn() }));
 

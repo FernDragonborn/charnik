@@ -6,16 +6,16 @@
 	// Passive scores are NOT here: the sheet has one for every skill (`derive.ts` `passives`), so they
 	// read in the skill list beside the check they belong to, rather than in a card that could only
 	// ever show three of eighteen.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build, rowName, rowOfType } from '../build-view-model.svelte';
-	import { ABILITIES } from '$lib/character/schema';
-	import { abilityShortLabel, signed, titleCase } from '$lib/util/format';
-	import { why } from '$lib/combat/effects-view';
-	import { provenance } from '$lib/actions/provenance';
-	import DefenseStrip, { hasDefenseChips } from '$lib/components/DefenseStrip.svelte';
-	import { gatherProfGrants, withGrantedProfs, UNCONSTRAINED } from '$lib/rules/proficiency';
-	import { classEquipmentColumn, grantedEquipmentProfs } from '$lib/character/granted-proficiency';
-	import { splitList } from '$lib/content/schemas';
+	import { ABILITIES } from '#lib/character/schema.ts';
+	import { abilityShortLabel, signed, titleCase } from '#lib/util/format.ts';
+	import { why } from '#lib/combat/effects-view.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import DefenseStrip, { hasDefenseChips } from '#lib/components/DefenseStrip.svelte';
+	import { gatherProfGrants, withGrantedProfs, UNCONSTRAINED } from '#lib/rules/proficiency.ts';
+	import { classEquipmentColumn, grantedEquipmentProfs } from '#lib/character/granted-proficiency.ts';
+	import { splitList } from '#lib/content/schemas.ts';
 	const b = build;
 
 	const s = $derived(b.sheet);

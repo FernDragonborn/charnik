@@ -1,18 +1,18 @@
 <script lang="ts">
 	// The six ability tiles (score + mod + saving throw). Tapping a tile rolls a check; tapping the
 	// SAVE row rolls the save. Reads the `combat` view-model; the derived sheet comes in as a prop.
-	import Icon from '$lib/components/Icon.svelte';
-	import type { CharacterSheet } from '$lib/character/derive';
+	import Icon from '#lib/components/Icon.svelte';
+	import type { CharacterSheet } from '#lib/character/derive.ts';
 	import { combat } from '../combat-view-model.svelte';
-	import { why, signed, ABIL } from '$lib/combat/helpers';
+	import { why, signed, ABIL } from '#lib/combat/helpers.ts';
 	import {
 		abilityCheckRoll,
 		savingThrowRoll,
 		type SheetRollSpec,
-	} from '$lib/combat/sheet-roll-specs';
-	import { provenance } from '$lib/actions/provenance';
-	import { _ } from '$lib/i18n';
-	import { abilityShortLabel } from '$lib/util/format';
+	} from '#lib/combat/sheet-roll-specs.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { _ } from '#lib/i18n/index.ts';
+	import { abilityShortLabel } from '#lib/util/format.ts';
 
 	let { s }: { s: CharacterSheet } = $props();
 	const collapsed = $derived(combat.layout.collapsed);

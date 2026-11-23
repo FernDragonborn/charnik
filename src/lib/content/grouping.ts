@@ -6,8 +6,8 @@
  */
 import { rowName, type ContentGraph, type LoadedRow } from './loader';
 import { itemRarities } from './options';
-import { titleCase } from '$lib/util/format';
-import type { Translate } from '$lib/i18n';
+import { titleCase } from '#lib/util/format.ts';
+import type { Translate } from '#lib/i18n/index.ts';
 import { SYSTEMS, type ContentType } from './schemas';
 import { sourceLabel } from './detail';
 import { HOMEBREW_SOURCE } from './homebrew';

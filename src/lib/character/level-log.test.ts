@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MemoryStorage } from '$lib/storage/memory';
+import { MemoryStorage } from '#lib/storage/memory.ts';
 import { newCharacter, classRow } from './schema';
 import { readLog } from './log-repository';
 import { LOG_KIND } from './log-kind';

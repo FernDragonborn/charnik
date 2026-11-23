@@ -5,14 +5,14 @@
  * A pool's `spent` is stored by id and outlives whatever granted it, so every read here goes through
  * `resourceSpent`, which clamps it to what the sheet grants NOW.
  */
-import { LOG_KIND } from '$lib/character/log-kind';
-import { pipClick, titleCase } from '$lib/combat/helpers';
-import { RECHARGE_ALL } from '$lib/rules/recharge';
-import { rechargeCount } from '$lib/effects/recharge-amount';
-import type { Character } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
-import type { SaidText } from '$lib/util/say';
-import { countAt } from '$lib/util/records';
+import { LOG_KIND } from '#lib/character/log-kind.ts';
+import { pipClick, titleCase } from '#lib/combat/helpers.ts';
+import { RECHARGE_ALL } from '#lib/rules/recharge.ts';
+import { rechargeCount } from '#lib/effects/recharge-amount.ts';
+import type { Character } from '#lib/character/schema.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
+import type { SaidText } from '#lib/util/say.ts';
+import { countAt } from '#lib/util/records.ts';
 import { quietly, type PlayContext, type PlayNotice, type PlayOutcome } from './outcome';
 import { settled } from './settle';
 

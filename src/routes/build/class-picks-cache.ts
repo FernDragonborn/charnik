@@ -9,10 +9,10 @@
  * Pure and Svelte-free so it can be unit-tested without a runtime; the view-model owns the Map.
  */
 import { z } from 'zod';
-import { MAX_CHARACTER_LEVEL } from '$lib/build/rules';
-import type { Ability } from '$lib/rules/core';
+import { MAX_CHARACTER_LEVEL } from '#lib/build/rules.ts';
+import type { Ability } from '#lib/rules/core.ts';
 import { slotMapSchemas, type AsiShape, type DraftState, type FeatSpellChoice } from './draft';
-import { KIT_SOURCE } from '$lib/content/starting-equipment';
+import { KIT_SOURCE } from '#lib/content/starting-equipment.ts';
 import { dropKit } from './starting-kit';
 
 /** Everything in the draft that belongs to one class row's class choice. */

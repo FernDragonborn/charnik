@@ -7,24 +7,24 @@
 import { makeTempContentRoot } from '../../test-support/fixtures';
 import 'fake-indexeddb/auto'; // the draft session writes through the real Storage seam
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { getUserStorage } from '$lib/storage/provider';
-import { listDrafts, deleteDraft } from '$lib/character/draft-repository';
-import { loadCharacter } from '$lib/character/repository';
-import { readCharacterPhoto } from '$lib/character/portrait-files';
-import { type ContentGraph } from '$lib/content/loader';
+import { getUserStorage } from '#lib/storage/provider.ts';
+import { listDrafts, deleteDraft } from '#lib/character/draft-repository.ts';
+import { loadCharacter } from '#lib/character/repository.ts';
+import { readCharacterPhoto } from '#lib/character/portrait-files.ts';
+import { type ContentGraph } from '#lib/content/loader.ts';
 import {
 	characterSchema,
 	newCharacter,
 	type Character,
 	classRow,
 	inventoryRow,
-} from '$lib/character/schema';
-import { migrate, CHARACTER_SCHEMA_VERSION } from '$lib/schema/version';
-import { CHARACTER_MIGRATIONS } from '$lib/character/migrations';
+} from '#lib/character/schema.ts';
+import { migrate, CHARACTER_SCHEMA_VERSION } from '#lib/schema/version.ts';
+import { CHARACTER_MIGRATIONS } from '#lib/character/migrations.ts';
 import { build, ASI } from './build-view-model.svelte';
 import { newClassRow, ORIGIN_SLOT_KEY, SPECIES_SLOT_KEY } from './draft';
 import { targetForTodo, sameTarget } from './inspector-specs';
-import { toggleSource } from '$lib/content/sources.svelte';
+import { toggleSource } from '#lib/content/sources.svelte.ts';
 
 const S = 'SRD 5.2.1';
 

@@ -2,19 +2,19 @@
 	// Character header: eyebrow (class · species), name, the level/system/proficiency subline with
 	// the Level-up button, and the HP panel alongside. Reads the `combat` view-model; character +
 	// sheet come in as props.
-	import Portrait from '$lib/components/Portrait.svelte';
-	import { base } from '$app/paths';
+	import Portrait from '#lib/components/Portrait.svelte';
+	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
-	import type { Character } from '$lib/character/schema';
-	import type { CharacterSheet } from '$lib/character/derive';
+	import type { Character } from '#lib/character/schema.ts';
+	import type { CharacterSheet } from '#lib/character/derive.ts';
 	import { combat } from '../combat-view-model.svelte';
-	import { _ } from '$lib/i18n';
-	import { saveCharacterToStore } from '$lib/character/store.svelte';
-	import { signed } from '$lib/combat/helpers';
-	import { systemShortLabel } from '$lib/rules/pipeline';
+	import { _ } from '#lib/i18n/index.ts';
+	import { saveCharacterToStore } from '#lib/character/store.svelte.ts';
+	import { signed } from '#lib/combat/helpers.ts';
+	import { systemShortLabel } from '#lib/rules/pipeline.ts';
 	import HpPanel from './HpPanel/HpPanel.svelte';
 	import Exhaustion from './Exhaustion.svelte';
-	import { app } from '$lib/stores/app.svelte';
+	import { app } from '#lib/stores/app.svelte.ts';
 
 	let { c, s }: { c: Character; s: CharacterSheet } = $props();
 	const className = $derived(combat.className);
@@ -50,7 +50,7 @@
 						})}
 						onclick={async () => {
 							await saveCharacterToStore(c); // persist first (e.g. the demo) so the builder can load it
-							void goto(`${base}/build?levelup=${c.id}`);
+							void goto(resolve(`build?levelup=${c.id}`));
 						}}
 					>
 						{$_('combat.hero.level')}
@@ -80,10 +80,8 @@
 			</div>
 		</div>
 	</div>
-	<div class="hp-col">
-		<HpPanel {c} {s} />
-		<Exhaustion {c} />
-	</div>
+
+	<div class="hp-col"><HpPanel {c} {s} /> <Exhaustion {c} /></div>
 </section>
 
 <style>

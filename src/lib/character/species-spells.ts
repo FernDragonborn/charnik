@@ -1,8 +1,8 @@
-import type { ContentGraph, LoadedRowOf } from '$lib/content/loader';
-import { grantedAtLevel } from '$lib/content/level-gate';
-import { getSpellAccess } from '$lib/content/spellAccess';
-import { parseToken, splitGuard } from '$lib/effects/token-parser';
-import type { Ability } from '$lib/rules/core';
+import type { ContentGraph, LoadedRowOf } from '#lib/content/loader.ts';
+import { grantedAtLevel } from '#lib/content/level-gate.ts';
+import { getSpellAccess } from '#lib/content/spellAccess.ts';
+import { parseToken, splitGuard } from '#lib/effects/token-parser.ts';
+import type { Ability } from '#lib/rules/core.ts';
 import type { Character } from './schema';
 import type { SpellcastingClass } from './spellcasting';
 

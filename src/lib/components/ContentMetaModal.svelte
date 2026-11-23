@@ -4,12 +4,12 @@
 	// inline widgets; machine-fillable keys (id / hash / updated-at / schema) are a reassuring "we'll
 	// add these" FYI. Presentation only — detection + write-back live in the loader (thin-component).
 	import { untrack } from 'svelte';
-	import { _ } from '$lib/i18n';
-	import { submitOnEnter } from '$lib/actions/submitOnEnter';
+	import { _ } from '#lib/i18n/index.ts';
+	import { submitOnEnter } from '#lib/actions/submitOnEnter.ts';
 	import DialogShell from './DialogShell.svelte';
-	import { EDITABLE_KEYS, OPTIONAL_KEYS } from '$lib/content/meta';
-	import { SYSTEMS } from '$lib/rules/pipeline';
-	import type { FilledMeta, MetaIssue, MetaKey } from '$lib/content/meta';
+	import { EDITABLE_KEYS, OPTIONAL_KEYS } from '#lib/content/meta.ts';
+	import { SYSTEMS } from '#lib/rules/pipeline.ts';
+	import type { FilledMeta, MetaIssue, MetaKey } from '#lib/content/meta.ts';
 	let {
 		issues,
 		onFillAndSave,

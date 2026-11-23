@@ -6,8 +6,8 @@
  * `effects/action-token` resolver — the same treatment resource maxes get, and the same code the
  * `on_event` hook resolves its action with.
  */
-import { ISSUE_KEY } from '$lib/effects/token-parser';
-import { resolveActionFormula } from '$lib/effects/action-token';
+import { ISSUE_KEY } from '#lib/effects/token-parser.ts';
+import { resolveActionFormula } from '#lib/effects/action-token.ts';
 import type { ContentGraph, LoadedRow, LoadedRowOf } from '../content/loader';
 import type { EffectIssue } from '../effects/token-parser';
 import { evalExpression, type ExprContext } from '../effects/expression-evaluator';

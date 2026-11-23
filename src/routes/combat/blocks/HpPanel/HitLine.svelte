@@ -4,16 +4,16 @@
 	// two-column menu — or is typed without leaving the field (`12 f ↵`), found by the tray's own
 	// matcher (`hit-line.ts`). Amount, type, press: one pass, the order the table says "12 fire" in.
 	import { tick } from 'svelte';
-	import Icon from '$lib/components/Icon.svelte';
-	import DamageIcon from '$lib/components/DamageIcon.svelte';
-	import { damageGlyph } from '$lib/components/damage-glyphs';
-	import { _ } from '$lib/i18n';
-	import { app } from '$lib/stores/app.svelte';
-	import { provenance } from '$lib/actions/provenance';
-	import { damageTypeLabel } from '$lib/combat/attacks';
-	import { rollerCandidates } from '$lib/dice/roller-vocabulary';
-	import { damageTypeSources } from '$lib/dice/roller-sources';
-	import { optionDomId, walkOptions } from '$lib/util/option-walk';
+	import Icon from '#lib/components/Icon.svelte';
+	import DamageIcon from '#lib/components/DamageIcon.svelte';
+	import { damageGlyph } from '#lib/components/damage-glyphs.ts';
+	import { _ } from '#lib/i18n/index.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { damageTypeLabel } from '#lib/combat/attacks.ts';
+	import { rollerCandidates } from '#lib/dice/roller-vocabulary.ts';
+	import { damageTypeSources } from '#lib/dice/roller-sources.ts';
+	import { optionDomId, walkOptions } from '#lib/util/option-walk.ts';
 	import { combat } from '../../combat-view-model.svelte';
 	import { completionOf, DEFENCE_MARK, readTypedHit, typeRows, type TypeRow } from './hit-line';
 

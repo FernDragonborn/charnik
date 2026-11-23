@@ -6,12 +6,12 @@
 	// from a misclick. Nothing is written until every question it asks is answered; Escape or a press
 	// elsewhere writes nothing.
 	import { onMount, untrack } from 'svelte';
-	import { _ } from '$lib/i18n';
-	import { anchored } from '$lib/actions/anchored';
-	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
-	import { submitOnEnter } from '$lib/actions/submitOnEnter';
-	import type { InstanceAnswers } from '$lib/content/item-instance';
-	import { damageTypeLabel } from '$lib/combat/attacks';
+	import { _ } from '#lib/i18n/index.ts';
+	import { anchored } from '#lib/actions/anchored.ts';
+	import { dismissOnEscape } from '#lib/actions/dismissOnEscape.ts';
+	import { submitOnEnter } from '#lib/actions/submitOnEnter.ts';
+	import type { InstanceAnswers } from '#lib/content/item-instance.ts';
+	import { damageTypeLabel } from '#lib/combat/attacks.ts';
 	import type { InstanceAsk } from '../item-instance-picking.svelte';
 
 	let {

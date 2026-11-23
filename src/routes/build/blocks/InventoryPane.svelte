@@ -3,14 +3,14 @@
 	// STRUCTURE (ui.md §4), sections start collapsed, and the toggle on the left carries the item
 	// while the row body opens its article. A second click puts it back — no confirm step over an act
 	// that is already one click to undo. Quantity and equipping stay on the sheet's own row.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build } from '../build-view-model.svelte';
 	import { rowDetail } from '../rows';
 	import SectionedPicker from './SectionedPicker.svelte';
 	import RarityRange from './RarityRange.svelte';
 	import { WHOLE_BAND, itemSectionsWithin } from '../rarity';
-	import { isRowActive } from '$lib/content/sources.svelte';
-	import { app } from '$lib/stores/app.svelte';
+	import { isRowActive } from '#lib/content/sources.svelte.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
 	import { INSTANCE_SECTION, InstancePicking } from '../item-instance-picking.svelte';
 	import ItemInstanceAsk from './ItemInstanceAsk.svelte';
 	const b = build;

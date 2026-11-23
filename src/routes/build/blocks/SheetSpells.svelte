@@ -2,10 +2,10 @@
 	// Spellcasting as the sheet shows it: the slot pools this level opened, then the chosen spells
 	// grouped by level. Slots that a higher level will open are shown too, dimmed — a character built
 	// straight to level 5 should be able to see what level 9 is holding.
-	import { _ } from '$lib/i18n';
-	import { abilityShortLabel } from '$lib/util/format';
+	import { _ } from '#lib/i18n/index.ts';
+	import { abilityShortLabel } from '#lib/util/format.ts';
 	import { build, rowName, rowOfType } from '../build-view-model.svelte';
-	import { provenance } from '$lib/actions/provenance';
+	import { provenance } from '#lib/actions/provenance.ts';
 	const b = build;
 
 	const s = $derived(b.sheet);

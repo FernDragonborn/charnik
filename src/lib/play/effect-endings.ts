@@ -10,9 +10,9 @@ import {
 	type CharacterPlay,
 	type DeathCause,
 	type EffectInstance,
-} from '$lib/character/schema';
-import type { ContentGraph } from '$lib/content/loader';
-import { conditionRow } from '$lib/content/states';
+} from '#lib/character/schema.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
+import { conditionRow } from '#lib/content/states.ts';
 import { dropEffects } from './concentration';
 
 /** The condition whose row states how tall the exhaustion ladder is. */

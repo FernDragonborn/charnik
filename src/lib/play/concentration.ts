@@ -2,7 +2,7 @@
  * Concentration as play-state: one ref, and the effect the spell left on the character. They end
  * together — a ref cleared without its effect leaves a buff standing with no spell behind it.
  */
-import type { CharacterPlay, EffectInstance } from '$lib/character/schema';
+import type { CharacterPlay, EffectInstance } from '#lib/character/schema.ts';
 
 /** Stop concentrating: the ref goes, and the spell's own effect with it. */
 export function endConcentration(play: CharacterPlay): CharacterPlay {

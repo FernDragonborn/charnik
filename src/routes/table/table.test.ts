@@ -5,13 +5,13 @@
  */
 import 'fake-indexeddb/auto'; // accepting a request saves the character
 import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
-import { registerDiceTray } from '$lib/dice/tray.svelte';
-import { ADVANTAGE_MODE, rollPool } from '$lib/rules/dice';
+import { registerDiceTray } from '#lib/dice/tray.svelte.ts';
+import { ADVANTAGE_MODE, rollPool } from '#lib/rules/dice.ts';
 import { loadPacks } from '../../test-support/real-content';
-import type { ContentGraph } from '$lib/content/loader';
-import type { Character } from '$lib/character/schema';
-import { demoCharacter } from '$lib/demo/sheet';
-import { startI18n, locale, waitLocale } from '$lib/i18n';
+import type { ContentGraph } from '#lib/content/loader.ts';
+import type { Character } from '#lib/character/schema.ts';
+import { demoCharacter } from '#lib/demo/sheet.ts';
+import { startI18n, locale, waitLocale } from '#lib/i18n/index.ts';
 import {
 	AUDIENCE,
 	CLOSE_REASON,
@@ -38,9 +38,9 @@ import {
 	type TableLink,
 	type TableRequest,
 	type TableRole,
-} from '$lib/table-link/types';
-import { tableViewOf } from '$lib/table-link/view';
-import { LINES_PER_RECORD, type TableView } from '$lib/table-link/wire-schema';
+} from '#lib/table-link/types.ts';
+import { tableViewOf } from '#lib/table-link/view.ts';
+import { LINES_PER_RECORD, type TableView } from '#lib/table-link/wire-schema.ts';
 import { combat } from '../combat/combat-view-model.svelte';
 import { ASK_STATUS, NO_CHARACTER, TABLE_ROLE, TableVM } from './table-view-model.svelte';
 import type { PendingRequest } from './player-requests.svelte';

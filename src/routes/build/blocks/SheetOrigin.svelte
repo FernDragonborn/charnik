@@ -2,12 +2,12 @@
 	// Origin — species (+ its lineage) and background, side by side. Each is a `.slot`: filled it
 	// shows what the choice actually gave, empty it shows what it WILL give and reads crimson,
 	// because an empty origin is the most common reason a draft can't be saved.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build, rowName } from '../build-view-model.svelte';
 	import { skillLabel } from '../rows';
-	import { splitList } from '$lib/content/schemas';
-	import { abilityShortLabel, titleCase } from '$lib/util/format';
-	import { metres } from '$lib/combat/constants';
+	import { splitList } from '#lib/content/schemas.ts';
+	import { abilityShortLabel, titleCase } from '#lib/util/format.ts';
+	import { metres } from '#lib/combat/constants.ts';
 	import type { InspectorTarget } from '../inspector.svelte';
 	const b = build;
 

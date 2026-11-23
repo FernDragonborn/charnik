@@ -13,8 +13,8 @@
  * One run's copies share a folder under `content-backups/`, outside `content/`, where every folder
  * is a pack.
  */
-import { logger } from '$lib/diag/logger';
-import type { Storage } from '$lib/storage/types';
+import { logger } from '#lib/diag/logger.ts';
+import type { Storage } from '#lib/storage/types.ts';
 import { CONTENT_DIR } from './disk';
 import { gitBlobSha } from './hash';
 import {

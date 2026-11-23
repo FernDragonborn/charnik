@@ -1,14 +1,13 @@
 <script lang="ts">
 	// Dev toolbox index (dev-server only — gated by the /dev layout). Small maintenance actions that
 	// don't belong in the shipped UI. Links to the design-preview pages live here too.
-	import Icon from '$lib/components/Icon.svelte';
-	import { toast } from '$lib/toast/toast';
-	import { base } from '$app/paths';
-	import { recreateDemoCharacter } from '$lib/character/store.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import { toast } from '#lib/toast/toast.ts';
+	import { resolve } from '$app/paths';
+	import { recreateDemoCharacter } from '#lib/character/store.svelte.ts';
 
 	// `/dev` has no trailing slash, so a RELATIVE href resolved to `/<page>` and 404'd — these are
-	// absolute, through `base` like every other internal link.
-	const dev = (page: string) => `${base}/dev/${page}`;
+	// absolute, through `resolve` like every other internal link.
 
 	let busy = $state(false);
 	async function recreateDemo() {
@@ -27,9 +26,12 @@
 
 	<section>
 		<h2>Character</h2>
-		<button class="action" onclick={recreateDemo} disabled={busy}
-			><Icon name="recycle" size={13} /> Recreate demo character</button
-		>
+
+		<button class="action" onclick={recreateDemo} disabled={busy}>
+			<Icon name="recycle" size={13} />
+			Recreate demo character
+		</button>
+
 		<p class="hint">
 			Overwrites the persisted demo save with a fresh build and makes it active — wipes accumulated
 			demo edits (hidden spells, HP, layout).
@@ -39,18 +41,20 @@
 	<section>
 		<h2>Design previews</h2>
 		<ul>
-			<li><a href={dev('meta')}>Content-metadata modal</a></li>
-			<li><a href={dev('drift')}>Hash-drift review</a></li>
-			<li><a href={dev('health')}>Content health — the problem states</a></li>
-			<li><a href={dev('firstrun')}>First-run flow</a></li>
-			<li><a href={dev('deathsaves')}>Death saves</a></li>
-			<li><a href={dev('rolltoast')}>Roll toast</a></li>
-			<li><a href={dev('roller')}>Dice tray</a></li>
-			<li><a href={dev('table-question')}>The table's question window — every question</a></li>
-			<li><a href={dev('plugins')}>Plugins</a></li>
-			<li><a href={dev('storage')}>Storage</a></li>
-			<li><a href={dev('packs')}>Content packs (fixture)</a></li>
-			<li><a href={dev('inspector')}>Builder inspector — every target at once</a></li>
+			<li><a href={resolve('dev/meta')}>Content-metadata modal</a></li>
+			<li><a href={resolve('dev/drift')}>Hash-drift review</a></li>
+			<li><a href={resolve('dev/health')}>Content health — the problem states</a></li>
+			<li><a href={resolve('dev/firstrun')}>First-run flow</a></li>
+			<li><a href={resolve('dev/deathsaves')}>Death saves</a></li>
+			<li><a href={resolve('dev/rolltoast')}>Roll toast</a></li>
+			<li><a href={resolve('dev/roller')}>Dice tray</a></li>
+			<li>
+				<a href={resolve('dev/table-question')}>The table's question window — every question</a>
+			</li>
+			<li><a href={resolve('dev/plugins')}>Plugins</a></li>
+			<li><a href={resolve('dev/storage')}>Storage</a></li>
+			<li><a href={resolve('dev/packs')}>Content packs (fixture)</a></li>
+			<li><a href={resolve('dev/inspector')}>Builder inspector — every target at once</a></li>
 		</ul>
 	</section>
 
@@ -60,15 +64,21 @@
 	<section>
 		<h2>Live probes — desktop only</h2>
 		<ul>
-			<li><a href={dev('packs-live')}>Pack update · network (read-only)</a></li>
-			<li><a href={dev('packs-write')}>Pack update · apply on the real filesystem</a></li>
+			<li><a href={resolve('dev/packs-live')}>Pack update · network (read-only)</a></li>
+			<li><a href={resolve('dev/packs-write')}>Pack update · apply on the real filesystem</a></li>
 			<li>
-				<a href={dev('characters-write')}>Characters · portraits, backups and drafts on the disk</a>
+				<a href={resolve('dev/characters-write')}
+					>Characters · portraits, backups and drafts on the disk</a
+				>
 			</li>
 			<li>
-				<a href={dev('storage-edges')}>Storage edges · junctions, held files, the move, plugins</a>
+				<a href={resolve('dev/storage-edges')}
+					>Storage edges · junctions, held files, the move, plugins</a
+				>
 			</li>
-			<li><a href={dev('self-update')}>Self-update · what the page may ask of the updater</a></li>
+			<li>
+				<a href={resolve('dev/self-update')}>Self-update · what the page may ask of the updater</a>
+			</li>
 		</ul>
 		<p class="hint">
 			The first only reads and reaches GitHub. The others write, inside throwaway folders they

@@ -12,14 +12,14 @@
 	// native questions it raises — open the table, let the player in — are answered by whoever is
 	// driving it (`docs/internals/table-link.md` ▸ Driving a live table).
 	import { onMount } from 'svelte';
-	import { deriveSheet } from '$lib/character/derive';
-	import { getContentGraph } from '$lib/content/provider';
-	import { demoCharacter } from '$lib/demo/sheet';
-	import { app } from '$lib/stores/app.svelte';
-	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
-	import { rehydrateLogEntry } from '$lib/combat/roll';
-	import { AUDIENCE, REQUESTED_ROLL, RELAY_MODE, TABLE_REQUEST } from '$lib/table-link/types';
-	import { tableViewOf } from '$lib/table-link/view';
+	import { deriveSheet } from '#lib/character/derive.ts';
+	import { getContentGraph } from '#lib/content/provider.ts';
+	import { demoCharacter } from '#lib/demo/sheet.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import { detectPlatform, getUserStorage, Platform } from '#lib/storage/provider.ts';
+	import { rehydrateLogEntry } from '#lib/combat/roll.ts';
+	import { AUDIENCE, REQUESTED_ROLL, RELAY_MODE, TABLE_REQUEST } from '#lib/table-link/types.ts';
+	import { tableViewOf } from '#lib/table-link/view.ts';
 	import {
 		ASK_STATUS,
 		TABLE_ROLE,

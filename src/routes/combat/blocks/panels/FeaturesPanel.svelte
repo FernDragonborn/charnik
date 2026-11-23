@@ -14,25 +14,25 @@
 	// and do not repeat below — a row in two places is two answers to where it is. Everything else
 	// keeps its section, because a section IS the grouping; what a player may now override is the
 	// order INSIDE one.
-	import { _ } from '$lib/i18n';
-	import { app } from '$lib/stores/app.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
 	import { combat } from '../../combat-view-model.svelte';
-	import { localizedName } from '$lib/content/detail';
-	import { describedProse } from '$lib/content/overrides.svelte';
-	import { localizedProse } from '$lib/content/prose';
-	import ArticleProse from '$lib/components/ArticleProse.svelte';
-	import OwnWords from '$lib/components/OwnWords.svelte';
-	import Icon from '$lib/components/Icon.svelte';
+	import { localizedName } from '#lib/content/detail.ts';
+	import { describedProse } from '#lib/content/overrides.svelte.ts';
+	import { localizedProse } from '#lib/content/prose.ts';
+	import ArticleProse from '#lib/components/ArticleProse.svelte';
+	import OwnWords from '#lib/components/OwnWords.svelte';
+	import Icon from '#lib/components/Icon.svelte';
 	import RowGrip from '../RowGrip.svelte';
 	import { dndzone } from 'svelte-dnd-action';
-	import { dragMotion, TOUCH_HOLD_MS } from '$lib/actions/dragMotion';
-	import { ROW_PANEL } from '$lib/combat/row-order';
+	import { dragMotion, TOUCH_HOLD_MS } from '#lib/actions/dragMotion.ts';
+	import { ROW_PANEL } from '#lib/combat/row-order.ts';
 	import {
 		FEATURE_SECTION,
 		featureKey,
 		type CharacterFeature,
 		type FeatureSection,
-	} from '$lib/character/features';
+	} from '#lib/character/features.ts';
 
 	/** The pinned group's key — not a FeatureSection, because it is not a source, it is a choice. */
 	const PINNED = 'pinned';

@@ -589,7 +589,7 @@ resolve stage, no split-brain scans.
 
 **Maintenance traps (learned the hard way):**
 - **`deriveSheet` is PURE — it NEVER mutates the `character`.** Clamps live in the
-  play actions (`settleHitPoints` in `$lib/play`) and persistence in the view-model, not inside derive. (CLAUDE.md "core is pure"
+  play actions (`settleHitPoints` in `#lib/play`) and persistence in the view-model, not inside derive. (CLAUDE.md "core is pure"
   made concrete: derive reads state and returns `{value, trace, notes}`; it does not write it back.)
 - **A new kind/target must be added in THREE places or the token folds into nowhere / renders raw:**
   (1) the derive `isTargetSupported` closed-vocab set (`character/derive-targets.ts`), (2) `effectTag`

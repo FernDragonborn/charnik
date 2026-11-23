@@ -3,19 +3,19 @@
 	// transient and RNG-driven, so every shape (bare check → attack → crit → miss → a flurry of
 	// three) is rendered here from fixed rolls as a static ladder, plus buttons that fire the real
 	// thing through toastRoll. Not linked from the app; gated to dev builds by /dev/+layout.
-	import RollToast from '$lib/components/RollToast.svelte';
-	import { _ } from '$lib/i18n';
-	import RollRow from '$lib/components/RollRow.svelte';
-	import { rollToastModel, toastRoll, ROLL_LAYOUT } from '$lib/dice/roll-toast';
-	import { cycleAdvantage } from '$lib/rules/dice';
-	import { toast } from '$lib/toast/toast';
-	import type { RollLogEntry } from '$lib/combat/helpers';
+	import RollToast from '#lib/components/RollToast.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import RollRow from '#lib/components/RollRow.svelte';
+	import { rollToastModel, toastRoll, ROLL_LAYOUT } from '#lib/dice/roll-toast.ts';
+	import { cycleAdvantage } from '#lib/rules/dice.ts';
+	import { toast } from '#lib/toast/toast.ts';
+	import type { RollLogEntry } from '#lib/combat/helpers.ts';
 	import {
 		amendedAdvantage,
 		rehydrateLogEntry,
 		AUTO_OUTCOME,
 		type StoredRollLogEntry,
-	} from '$lib/combat/roll';
+	} from '#lib/combat/roll.ts';
 
 	// a live entry the controls actually act on, so the preview exercises the real amend path
 	let live = $state<RollLogEntry>(

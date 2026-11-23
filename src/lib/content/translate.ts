@@ -10,7 +10,7 @@
  * Tauri fs + web IndexedDB); no Svelte/Tauri.
  */
 import Papa from 'papaparse';
-import type { Storage } from '$lib/storage/types';
+import type { Storage } from '#lib/storage/types.ts';
 import type { LoadedRow } from './loader';
 import {
 	PROSE_BASES,

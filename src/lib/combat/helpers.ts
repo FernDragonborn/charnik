@@ -1,7 +1,7 @@
 /*
  * Barrel for the Combat-view pure helpers. This was one ~900-line junk-drawer of ~40 unrelated
  * exports; it's now split BY CONCERN into the sibling modules below, and this file just re-exports
- * them so the existing `$lib/combat/helpers` import path keeps working.
+ * them so the existing `#lib/combat/helpers.ts` import path keeps working.
  *
  * ADD NEW HELPERS TO THE MATCHING CONCERN FILE, never here:
  *   roll.ts         — roll effects, pips, advantage, tray intent, dice list, roll-log type
@@ -21,5 +21,5 @@ export * from './attack-names';
 export * from './spells';
 export * from './actions';
 export * from './constants';
-// re-exported so existing importers (`$lib/combat/helpers`) keep working after the F1/F2 dedup
-export { titleCase, signed } from '$lib/util/format';
+// re-exported so existing importers (`#lib/combat/helpers.ts`) keep working after the F1/F2 dedup
+export { titleCase, signed } from '#lib/util/format.ts';

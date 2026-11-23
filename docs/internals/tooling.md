@@ -149,7 +149,7 @@ is fine, while a 550-line one carrying 221 lines of script is not.
   instead of a hand-written twin of it) reads as five cycles that do not exist. Prove any change to
   this config both ways: a real value cycle must still fail, a type-only one must not.
 
-  The `$lib` and `$app` aliases live there too; without them madge silently **skips** every aliased
+  The `#lib` and `$app` aliases live there too; without them madge silently **skips** every aliased
   import and reports "no cycles" for a repo full of them, so check the skipped-file count if you
   touch that config. It is the one linter config still in the repo root, because madge has no
   `--config` flag and only reads `.madgerc` from the cwd. Do not try to move it again.

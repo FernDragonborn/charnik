@@ -5,12 +5,12 @@
 	// the REAL loader (not hand-made issue objects), so what you see is what a user would see.
 	// shot.mjs pixel-diffs the first viewport only — `body` never scrolls, so the groups below the
 	// fold are eyeballed here rather than diffed, the same as on every long route.
-	import { ISSUE_KEY } from '$lib/effects/token-parser';
-	import ContentHealth from '$lib/components/settings/ContentHealth.svelte';
-	import { MemoryStorage } from '$lib/storage/memory';
-	import { loadContent } from '$lib/content/loader';
-	import { content, loadContentStore } from '$lib/content/store.svelte';
-	import { deriveHealth } from '$lib/character/health.svelte';
+	import { ISSUE_KEY } from '#lib/effects/token-parser.ts';
+	import ContentHealth from '#lib/components/settings/ContentHealth.svelte';
+	import { MemoryStorage } from '#lib/storage/memory.ts';
+	import { loadContent } from '#lib/content/loader.ts';
+	import { content, loadContentStore } from '#lib/content/store.svelte.ts';
+	import { deriveHealth } from '#lib/character/health.svelte.ts';
 
 	const NL = '\n';
 	const SPELL_HEAD =

@@ -9,20 +9,20 @@ import {
 	castablePactLevel,
 	castableSlotLevels,
 	slotToSpend,
-} from '$lib/rules/spellcasting';
-import { rollFormula } from '$lib/rules/dice';
+} from '#lib/rules/spellcasting.ts';
+import { rollFormula } from '#lib/rules/dice.ts';
 import {
 	isResolvedFormula,
 	resolveActionFormula,
 	ROLL_TO_CONFIRM_SPEND,
 	ROLL_WITH_SLOT,
-} from '$lib/effects/action-token';
-import { withCastSlot } from '$lib/effects/context';
-import { sheetAttacks } from '$lib/combat/form-attacks';
-import { UNARMED_STRIKE_ID } from '$lib/combat/attacks';
-import { OPTION_CADENCE } from '$lib/content/schemas';
-import type { Character } from '$lib/character/schema';
-import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
+} from '#lib/effects/action-token.ts';
+import { withCastSlot } from '#lib/effects/context.ts';
+import { sheetAttacks } from '#lib/combat/form-attacks.ts';
+import { UNARMED_STRIKE_ID } from '#lib/combat/attacks.ts';
+import { OPTION_CADENCE } from '#lib/content/schemas.ts';
+import type { Character } from '#lib/character/schema.ts';
+import type { CharacterSheet, ResourceOption } from '#lib/character/derive.ts';
 import { assumeForm } from './form-shift';
 import {
 	PLAY_REQUEST,

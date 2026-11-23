@@ -2,12 +2,12 @@
 	// Action-economy bar (only shown while Combat is ON): round counter, the action/bonus/reaction
 	// pip slots, the movement tracker, and Next turn. Reads the `combat` view-model; the non-null
 	// character comes in as a prop (for the per-slot spent counts in `play.turn`).
-	import Icon from '$lib/components/Icon.svelte';
-	import { provenance } from '$lib/actions/provenance';
-	import type { Character } from '$lib/character/schema';
+	import Icon from '#lib/components/Icon.svelte';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import type { Character } from '#lib/character/schema.ts';
 	import { combat } from '../combat-view-model.svelte';
-	import { range } from '$lib/combat/helpers';
-	import { _ } from '$lib/i18n';
+	import { range } from '#lib/combat/helpers.ts';
+	import { _ } from '#lib/i18n/index.ts';
 
 	let { c }: { c: Character } = $props();
 	// the round of THIS fight, counted from 1, on a clock that keeps running under it

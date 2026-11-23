@@ -3,7 +3,7 @@
  * times and without the hidden ones — and the rolls this app's sheet makes, written into it
  * (`docs/internals/table-link.md` ▸ The table's log).
  */
-import type { RollLogEntry } from '$lib/combat/roll';
+import type { RollLogEntry } from '#lib/combat/roll.ts';
 import {
 	AUDIENCE,
 	LOG_BODY,
@@ -15,8 +15,8 @@ import {
 	type LogRollLine,
 	type RecordEvent,
 	type TableRole,
-} from '$lib/table-link/types';
-import { LINES_PER_RECORD, ROLL_NAME_MAX } from '$lib/table-link/wire-schema';
+} from '#lib/table-link/types.ts';
+import { LINES_PER_RECORD, ROLL_NAME_MAX } from '#lib/table-link/wire-schema.ts';
 import { tableRollOf } from './requested-roll';
 
 type RollBody = Extract<LogBody, { kind: typeof LOG_BODY.roll }>;

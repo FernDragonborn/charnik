@@ -9,11 +9,12 @@ import { fileURLToPath } from 'node:url';
 //  - `browser`: `*.browser.test.ts` mount real Svelte COMPONENTS in headless Chromium (Playwright)
 //    to assert rendered DOM + interactions — node can't do that.
 // The SvelteKit `$app/*` virtual modules don't exist outside a Kit build, so stub them.
+// `#lib/*` resolves through package.json `imports`, as in the app; only `$app/*` needs a stand-in.
 const alias = {
-	$lib: fileURLToPath(new URL('./src/lib', import.meta.url)),
-	'$app/environment': fileURLToPath(
-		new URL('./src/test-support/app-environment.ts', import.meta.url),
+	'$app/env/public': fileURLToPath(
+		new URL('./src/test-support/app-env-public.ts', import.meta.url),
 	),
+	'$app/env': fileURLToPath(new URL('./src/test-support/app-env.ts', import.meta.url)),
 	'$app/paths': fileURLToPath(new URL('./src/test-support/app-paths.ts', import.meta.url)),
 	'$app/navigation': fileURLToPath(
 		new URL('./src/test-support/app-navigation.ts', import.meta.url),

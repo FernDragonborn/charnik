@@ -6,9 +6,9 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
 import { rngSequence } from '../../test-support/rng';
-import { newCharacter, type Character, classRow } from '$lib/character/schema';
-import { deriveSheet } from '$lib/character/derive';
-import type { ContentGraph } from '$lib/content/loader';
+import { newCharacter, type Character, classRow } from '#lib/character/schema.ts';
+import { deriveSheet } from '#lib/character/derive.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
 import { enterOrLeaveCombat, startNextTurn } from './events';
 import { runAction } from './options';
 import { activateOption, activateOptionById } from './option-activation';
@@ -19,7 +19,7 @@ import { diceShortRest, rest } from './rests';
 import { shortRestSlotGroups } from './rest-slot-recovery';
 import { consumeAttackEffects, removeEffects } from './effects';
 import { settlePlay } from './settle';
-import { rollEffectsFor } from '$lib/combat/roll';
+import { rollEffectsFor } from '#lib/combat/roll.ts';
 
 const EDITIONS = {
 	'5e': { pack: 'srd-2014', source: 'SRD 5.1' },

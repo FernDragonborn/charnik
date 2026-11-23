@@ -5,7 +5,7 @@
 	// files, the move is handed to the conflict dialog instead of touching anything (Stage 3).
 	// Desktop-only: on the web build the browser owns storage, so this just explains that.
 	import { onMount } from 'svelte';
-	import { detectPlatform, Platform } from '$lib/storage/provider';
+	import { detectPlatform, Platform } from '#lib/storage/provider.ts';
 	import {
 		currentDataDir,
 		openDataDir,
@@ -19,27 +19,27 @@
 		revealFolder,
 		type LeftFolder,
 		type MigrateOutcome,
-	} from '$lib/storage/tauri';
-	import { conflictRows, isSameOrInside, type ConflictRow } from '$lib/storage/migrate';
-	import { configWritesSettled } from '$lib/storage/json-config';
-	import { errText } from '$lib/util/format';
-	import { startContentWatcher, stopContentWatcher } from '$lib/content/watcher';
-	import { flushPendingWrites, reloadApp } from '$lib/content/reload';
-	import { flashAfterReload } from '$lib/stores/flash';
-	import { sayIfFails, toast } from '$lib/toast/toast';
-	import { _ } from '$lib/i18n';
+	} from '#lib/storage/tauri.ts';
+	import { conflictRows, isSameOrInside, type ConflictRow } from '#lib/storage/migrate.ts';
+	import { configWritesSettled } from '#lib/storage/json-config.ts';
+	import { errText } from '#lib/util/format.ts';
+	import { startContentWatcher, stopContentWatcher } from '#lib/content/watcher.ts';
+	import { flushPendingWrites, reloadApp } from '#lib/content/reload.ts';
+	import { flashAfterReload } from '#lib/stores/flash.ts';
+	import { sayIfFails, toast } from '#lib/toast/toast.ts';
+	import { _ } from '#lib/i18n/index.ts';
 	import {
 		characters,
 		loadRoster,
 		recreateDemoCharacter,
 		restoreBackup,
-	} from '$lib/character/store.svelte';
+	} from '#lib/character/store.svelte.ts';
 	import {
 		characterWritesSettled,
 		listCharacterBackups,
 		type CharacterBackup,
-	} from '$lib/character/repository';
-	import { getUserStorage } from '$lib/storage/provider';
+	} from '#lib/character/repository.ts';
+	import { getUserStorage } from '#lib/storage/provider.ts';
 	import DataMigrationDialog from './DataMigrationDialog.svelte';
 	import DataConflictDialog from './DataConflictDialog.svelte';
 	import ConfirmDialog from '../ConfirmDialog.svelte';

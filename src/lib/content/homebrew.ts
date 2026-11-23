@@ -11,13 +11,13 @@
  */
 import { asText } from '../util/format';
 import Papa from 'papaparse';
-import type { Storage } from '$lib/storage/types';
+import type { Storage } from '#lib/storage/types.ts';
 import type { LoadedRow } from './loader';
 import { parseContentDirectives, type MetaKey } from './meta';
 import { stampWithHash } from './hash';
-import { slugify } from '$lib/util/slug';
-import { titleCase } from '$lib/util/format';
-import { CONTENT_SCHEMA_VERSION } from '$lib/schema/version';
+import { slugify } from '#lib/util/slug.ts';
+import { titleCase } from '#lib/util/format.ts';
+import { CONTENT_SCHEMA_VERSION } from '#lib/schema/version.ts';
 import {
 	CONTENT_TYPES,
 	parseRow,

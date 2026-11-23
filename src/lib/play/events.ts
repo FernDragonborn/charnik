@@ -6,9 +6,9 @@
  * fire it. RAW these happen TO the character, so they are applied and said rather than offered; with
  * effects-auto off the player manages by hand and nothing fires.
  */
-import { LOG_KIND } from '$lib/character/log-kind';
-import { PLAY_EVENT, type PlayEvent } from '$lib/effects/token-parser';
-import type { Character } from '$lib/character/schema';
+import { LOG_KIND } from '#lib/character/log-kind.ts';
+import { PLAY_EVENT, type PlayEvent } from '#lib/effects/token-parser.ts';
+import type { Character } from '#lib/character/schema.ts';
 import { runAction } from './options';
 import { chain, quietly, type PlayContext, type PlayOutcome } from './outcome';
 import { resourceLeft, resourceName, restoreResourceUpTo } from './resources';

@@ -2,9 +2,9 @@
  * The standard combat actions list (Dash, Hide, Grapple…), system-aware (2014/2024). Pure.
  * Split out of the old combat/helpers.ts junk-drawer.
  */
-import { signed } from '$lib/util/format';
-import type { System } from '$lib/rules/pipeline';
-import type { CharacterSheet, SkillId } from '$lib/character/derive';
+import { signed } from '#lib/util/format.ts';
+import type { System } from '#lib/rules/pipeline.ts';
+import type { CharacterSheet, SkillId } from '#lib/character/derive.ts';
 
 /** A standard combat action row (Dash, Hide, Grapple…). `roll` is present for the ones that make a
  *  check; `hint` shows its live modifier.

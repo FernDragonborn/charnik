@@ -7,12 +7,12 @@
 	// No `onDismiss`: no backdrop click, no Escape. Not to trap anyone — both answers are one click,
 	// and one of them is "I meant it, stop asking" — but because a stray click dismissing the only
 	// offer to put your rules back is the exact outcome this exists to prevent.
-	import { _ } from '$lib/i18n';
-	import { toastFailure } from '$lib/toast/toast';
+	import { _ } from '#lib/i18n/index.ts';
+	import { toastFailure } from '#lib/toast/toast.ts';
 	import DialogShell from './DialogShell.svelte';
-	import { keepMissingPacks, missingBundled } from '$lib/content/packs.svelte';
-	import { restoreBundledPacks } from '$lib/content/provider';
-	import { reloadContent } from '$lib/content/store.svelte';
+	import { keepMissingPacks, missingBundled } from '#lib/content/packs.svelte.ts';
+	import { restoreBundledPacks } from '#lib/content/provider.ts';
+	import { reloadContent } from '#lib/content/store.svelte.ts';
 
 	let busy = $state(false);
 

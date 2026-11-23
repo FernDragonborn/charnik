@@ -2,18 +2,18 @@
 	// One player at the GM's table: the sheet their app shows, as a GM reads one across a table.
 	// Every number is the player's own app's, trace included, so it explains itself on hover or
 	// focus the way the player's sheet does — this app derives nothing of it.
-	import Icon from '$lib/components/Icon.svelte';
-	import { provenance } from '$lib/actions/provenance';
-	import { _ } from '$lib/i18n';
-	import { app } from '$lib/stores/app.svelte';
-	import { content } from '$lib/content/store.svelte';
-	import { localizedName } from '$lib/content/detail';
-	import { stateLabel } from '$lib/content/states';
-	import { SKILL_IDS } from '$lib/character/skills';
-	import { ABIL, metres, signed, titleCase, why } from '$lib/combat/helpers';
-	import { DEATH_SAVE_TRACK } from '$lib/play/hit-points';
-	import { systemShortLabel } from '$lib/rules/pipeline';
-	import { abilityShortLabel } from '$lib/util/format';
+	import Icon from '#lib/components/Icon.svelte';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { _ } from '#lib/i18n/index.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import { content } from '#lib/content/store.svelte.ts';
+	import { localizedName } from '#lib/content/detail.ts';
+	import { stateLabel } from '#lib/content/states.ts';
+	import { SKILL_IDS } from '#lib/character/skills.ts';
+	import { ABIL, metres, signed, titleCase, why } from '#lib/combat/helpers.ts';
+	import { DEATH_SAVE_TRACK } from '#lib/play/hit-points.ts';
+	import { systemShortLabel } from '#lib/rules/pipeline.ts';
+	import { abilityShortLabel } from '#lib/util/format.ts';
 	import type { SeatedPlayer } from './table-view-model.svelte';
 
 	let { player, ondismiss }: { player: SeatedPlayer; ondismiss: () => void } = $props();

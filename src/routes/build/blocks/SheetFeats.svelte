@@ -3,12 +3,12 @@
 	// origin feat, then one slot per ASI/feat level. A character built straight to level 12 owes four
 	// of these, so each is its own row — an unfilled one reads crimson and is a click into the
 	// inspector, never a silent gap.
-	import { _ } from '$lib/i18n';
-	import { abilityShortLabel } from '$lib/util/format';
+	import { _ } from '#lib/i18n/index.ts';
+	import { abilityShortLabel } from '#lib/util/format.ts';
 	import { build, rowName, ASI } from '../build-view-model.svelte';
 	import { rowText } from '../rows';
 	import { SPECIES_SLOT_KEY } from '../draft';
-	import { ABILITIES } from '$lib/character/schema';
+	import { ABILITIES } from '#lib/character/schema.ts';
 	const b = build;
 
 	/** What a filled slot did, in one line — an ASI names the abilities it raised. */

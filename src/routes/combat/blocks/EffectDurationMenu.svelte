@@ -4,12 +4,12 @@
 	// remaining-rounds control, clamped to the viewport, follows that control when the page scrolls,
 	// closes on a pointer outside it or on Escape (it is a dialog, and the way in is a keyboard path).
 	// Writes through the combat view-model.
-	import Icon from '$lib/components/Icon.svelte';
-	import { _ } from '$lib/i18n';
+	import Icon from '#lib/components/Icon.svelte';
+	import { _ } from '#lib/i18n/index.ts';
 	import { combat } from '../combat-view-model.svelte';
-	import { EFFECT_DURATION_PRESETS } from '$lib/combat/helpers';
-	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
-	import { anchored } from '$lib/actions/anchored';
+	import { EFFECT_DURATION_PRESETS } from '#lib/combat/helpers.ts';
+	import { dismissOnEscape } from '#lib/actions/dismissOnEscape.ts';
+	import { anchored } from '#lib/actions/anchored.ts';
 
 	let {
 		iid,

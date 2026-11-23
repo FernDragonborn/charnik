@@ -6,16 +6,16 @@
  * Two verbs cannot finish here, and say so in `asks`: a strike is a roll the host makes through its
  * own dice path, and assuming a form needs to know WHICH stat block before anything is paid.
  */
-import { LOG_KIND } from '$lib/character/log-kind';
-import { rollFormula } from '$lib/rules/dice';
-import { effectiveHpMax } from '$lib/rules/core';
-import { MAX_SLOT_LEVEL, PACT_SLOT_KEY } from '$lib/rules/spellcasting';
-import { isResolvedFormula, ROLL_TO_CONFIRM_SPEND } from '$lib/effects/action-token';
-import type { ActionSlot } from '$lib/combat/roll';
-import { addableStateRows, isConditionRow, isHarmful } from '$lib/content/states';
-import { localizedName } from '$lib/content/detail';
-import type { Character } from '$lib/character/schema';
-import type { ResourceOption } from '$lib/character/derive';
+import { LOG_KIND } from '#lib/character/log-kind.ts';
+import { rollFormula } from '#lib/rules/dice.ts';
+import { effectiveHpMax } from '#lib/rules/core.ts';
+import { MAX_SLOT_LEVEL, PACT_SLOT_KEY } from '#lib/rules/spellcasting.ts';
+import { isResolvedFormula, ROLL_TO_CONFIRM_SPEND } from '#lib/effects/action-token.ts';
+import type { ActionSlot } from '#lib/combat/roll.ts';
+import { addableStateRows, isConditionRow, isHarmful } from '#lib/content/states.ts';
+import { localizedName } from '#lib/content/detail.ts';
+import type { Character } from '#lib/character/schema.ts';
+import type { ResourceOption } from '#lib/character/derive.ts';
 import { addEffect, endEffects } from './effects';
 import { PLAY_REQUEST, chain, quietly, type PlayContext, type PlayOutcome } from './outcome';
 import {

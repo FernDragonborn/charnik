@@ -3,7 +3,7 @@ import { render } from 'vitest-browser-svelte';
 import { page } from 'vitest/browser';
 import { createRawSnippet } from 'svelte';
 import DialogShell from './DialogShell.svelte';
-import { startI18n, locale, waitLocale } from '$lib/i18n';
+import { startI18n, locale, waitLocale } from '#lib/i18n/index.ts';
 
 // The shell owns the way OUT of every attention dialog — Escape and the backdrop — for six
 // components. It used to be tested through whichever consumer happened to have a test

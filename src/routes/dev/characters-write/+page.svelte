@@ -15,7 +15,7 @@
 	// It WRITES, so it writes only under a throwaway character id and a throwaway draft, and deletes
 	// both at the end. The network is never used.
 	import { onMount } from 'svelte';
-	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
+	import { detectPlatform, getUserStorage, Platform } from '#lib/storage/provider.ts';
 	import {
 		backupCharacter,
 		CharacterConflictError,
@@ -25,13 +25,13 @@
 		readCharacterFiles,
 		restoreCharacterBackup,
 		saveCharacter,
-	} from '$lib/character/repository';
+	} from '#lib/character/repository.ts';
 	import {
 		readCharacterPhoto,
 		writeCharacterPhoto,
 		removeCharacterPhotos,
-	} from '$lib/character/portrait-files';
-	import { newCharacter } from '$lib/character/schema';
+	} from '#lib/character/portrait-files.ts';
+	import { newCharacter } from '#lib/character/schema.ts';
 	import {
 		characters,
 		CONFLICT_CHOICE,
@@ -39,7 +39,7 @@
 		resolveConflict,
 		saveCharacterToStore,
 		startCharacterWatcher,
-	} from '$lib/character/store.svelte';
+	} from '#lib/character/store.svelte.ts';
 	import {
 		deleteDraft,
 		findUnreadableDrafts,
@@ -47,7 +47,7 @@
 		readDraft,
 		writeDraft,
 		type DraftTarget,
-	} from '$lib/drafts/store';
+	} from '#lib/drafts/store.ts';
 
 	/** A valid slug — `newCharacter` refuses anything else, a leading dot included — named so no roster
 	 *  of the user's is likely to hold it, and deleted at the end either way. */

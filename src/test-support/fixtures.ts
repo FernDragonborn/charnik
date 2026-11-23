@@ -5,10 +5,10 @@
  * per case is the largest source of duplication this suite is capable of growing — it reached ~1 000
  * lines once. Reach for these instead (docs/internals/testing.md ▸ Fixtures = contract).
  */
-import { MemoryStorage } from '$lib/storage/memory';
-import { loadContent, type ContentGraph } from '$lib/content/loader';
-import { characterSchema, newCharacter, type Character } from '$lib/character/schema';
-import type { SYSTEMS } from '$lib/rules/pipeline';
+import { MemoryStorage } from '#lib/storage/memory.ts';
+import { loadContent, type ContentGraph } from '#lib/content/loader.ts';
+import { characterSchema, newCharacter, type Character } from '#lib/character/schema.ts';
+import type { SYSTEMS } from '#lib/rules/pipeline.ts';
 
 /** The one content root these fixtures write into. */
 const TEST_CONTENT_ROOT = 'c';

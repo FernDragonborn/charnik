@@ -4,8 +4,8 @@
  * reaches a listener unless it is the shape it claims.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { deriveSheet } from '$lib/character/derive';
-import { demoCharacter } from '$lib/demo/sheet';
+import { deriveSheet } from '#lib/character/derive.ts';
+import { demoCharacter } from '#lib/demo/sheet.ts';
 import { loadPacks } from '../../test-support/real-content';
 import {
 	CLOSE_REASON,

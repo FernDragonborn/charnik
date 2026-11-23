@@ -3,14 +3,19 @@
 	// column (opened from the "Edit compendium" → Drafts entry). Lists EVERY unsaved draft (translate /
 	// add / editor), grouped, each resumable or deletable. Orphans (a draft whose target row is gone) sit
 	// up top with a Resolve action that opens the reassign dialog. Presentation + local list state only;
-	// the draft IO lives in $lib/drafts/store (thin-component rule).
-	import { _ } from '$lib/i18n';
-	import { asText, contentTypeLabel } from '$lib/util/format';
+	// the draft IO lives in #lib/drafts/store (thin-component rule).
+	import { _ } from '#lib/i18n/index.ts';
+	import { asText, contentTypeLabel } from '#lib/util/format.ts';
 	import { onMount } from 'svelte';
 	import Icon, { type IconName } from './Icon.svelte';
-	import { getUserStorage } from '$lib/storage/provider';
-	import { listDrafts, deleteDraft, draftEffectiveId, type DraftEnvelope } from '$lib/drafts/store';
-	import { rowName, type ContentGraph } from '$lib/content/loader';
+	import { getUserStorage } from '#lib/storage/provider.ts';
+	import {
+		listDrafts,
+		deleteDraft,
+		draftEffectiveId,
+		type DraftEnvelope,
+	} from '#lib/drafts/store.ts';
+	import { rowName, type ContentGraph } from '#lib/content/loader.ts';
 
 	let {
 		graph,

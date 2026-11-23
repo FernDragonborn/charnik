@@ -6,9 +6,9 @@
  * amount is the part that needs L2, so it lives here: an amount is an expression, and an expression
  * is the effects module's language.
  */
-import { RECHARGE_ALL, type RechargeAmount } from '$lib/rules/recharge';
+import { RECHARGE_ALL, type RechargeAmount } from '#lib/rules/recharge.ts';
 import { evalExpression, type ExprContext } from './expression-evaluator';
-import { rollPool } from '$lib/rules/dice';
+import { rollPool } from '#lib/rules/dice.ts';
 
 /**
  * The number of uses an amount gives back, or `null` when there is no number to give: the amount is

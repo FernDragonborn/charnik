@@ -1,6 +1,6 @@
 /*
  * The single diagnostics logging seam. Every part of the app logs through `logger.*`; nobody calls
- * raw `console` (enforced by the `no-console` eslint rule, allowlisted only here + `$lib/diag/**`).
+ * raw `console` (enforced by the `no-console` eslint rule, allowlisted only here + `#lib/diag/**`).
  *
  * Two impls behind one signature — the same platform split as `Storage` (provider.ts):
  *   - Desktop (Tauri): forward to the official `tauri-plugin-log`, which writes a rotating file in
@@ -15,8 +15,8 @@
  * be handed character names / notes / free-text or raw file contents — only ids, types, levels,
  * counts, error messages + stacks. `ctx` is for those structured breadcrumbs; callers keep PII out.
  */
-import { detectPlatform, Platform } from '$lib/storage/platform';
-import { errText } from '$lib/util/format';
+import { detectPlatform, Platform } from '#lib/storage/platform.ts';
+import { errText } from '#lib/util/format.ts';
 
 /**
  * A dataDir-relative path as the log is allowed to carry it.
@@ -70,7 +70,7 @@ function record(level: LogLevel, msg: string, ctx?: Record<string, unknown>): vo
 }
 
 // The dev/web mirror sink — the ONE deliberate console site (the `no-console` rule exempts
-// `$lib/diag/**` for exactly this).
+// `#lib/diag/**` for exactly this).
 function mirrorToConsole(entry: LogEntry): void {
 	const line: [string, unknown] = [`[${entry.level}] ${entry.msg}`, entry.ctx ?? ''];
 	if (entry.level === LogLevel.Error) console.error(...line);

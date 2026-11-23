@@ -17,20 +17,20 @@
 		type RollToastModel,
 		type RollToastAttack,
 		type RollToastDamage,
-	} from '$lib/dice/roll-toast';
+	} from '#lib/dice/roll-toast.ts';
 	import {
 		ADVANTAGE_CUE,
 		ADVANTAGE_MODE,
 		type AdvantageMode,
 		type FlatPart,
 		type RolledDie,
-	} from '$lib/rules/dice';
+	} from '#lib/rules/dice.ts';
 	import DamageIcon from './DamageIcon.svelte';
-	import { signed } from '$lib/util/format';
-	import { CRIT_THRESHOLD_MAX } from '$lib/rules/core';
-	import { _ } from '$lib/i18n';
-	import { damageTypeLabel } from '$lib/combat/attacks';
-	import { AUTO_OUTCOME, rollNameOf, sayRollName } from '$lib/combat/roll';
+	import { signed } from '#lib/util/format.ts';
+	import { CRIT_THRESHOLD_MAX } from '#lib/rules/core.ts';
+	import { _ } from '#lib/i18n/index.ts';
+	import { damageTypeLabel } from '#lib/combat/attacks.ts';
+	import { AUTO_OUTCOME, rollNameOf, sayRollName } from '#lib/combat/roll.ts';
 
 	let {
 		model,

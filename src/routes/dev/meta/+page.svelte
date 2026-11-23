@@ -2,8 +2,8 @@
 	// DEV-ONLY preview of the content-metadata review modal (DATA-VER-1). Not linked from the app;
 	// open /dev/meta to see it live. Drives the modal with issues derived the same way the loader
 	// will — from underfilled CSV headers. Remove once the modal is wired into the real load flow.
-	import ContentMetaModal from '$lib/components/ContentMetaModal.svelte';
-	import { parseContentDirectives, checkFileMeta } from '$lib/content/meta';
+	import ContentMetaModal from '#lib/components/ContentMetaModal.svelte';
+	import { parseContentDirectives, checkFileMeta } from '#lib/content/meta.ts';
 
 	// mix: a fully-underfilled file (everything empty) + a partially-filled one (license missing, but
 	// source/url/systems already declared → those fields should render PRE-FILLED)

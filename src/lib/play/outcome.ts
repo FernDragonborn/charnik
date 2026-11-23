@@ -6,13 +6,13 @@
  * the roll log, a notice — comes back as data for the caller to carry out, and a caller with no
  * screen (a node test, an input that is not a click) gets the same character the sheet does.
  */
-import type { Character } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
-import type { ContentGraph } from '$lib/content/loader';
-import type { Rng, Rolled } from '$lib/rules/dice';
-import type { RollName } from '$lib/combat/roll';
-import type { Said } from '$lib/util/say';
-import type { LogKind } from '$lib/character/log-kind';
+import type { Character } from '#lib/character/schema.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
+import type { Rng, Rolled } from '#lib/rules/dice.ts';
+import type { RollName } from '#lib/combat/roll.ts';
+import type { Said } from '#lib/util/say.ts';
+import type { LogKind } from '#lib/character/log-kind.ts';
 
 /** What an action reads besides the character. */
 export interface PlayContext {

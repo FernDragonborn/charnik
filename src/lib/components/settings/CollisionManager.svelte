@@ -3,16 +3,16 @@
 	// in several sources (source-namespaced identity). When two overlap an edition — e.g. your homebrew
 	// fork of an SRD spell, both active in 5e — this lets you keep ALL of them (they coexist, homebrew
 	// sorts on top) or keep just ONE source. Live + persisted via sourceConfig; no reload.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import Icon from '../Icon.svelte';
-	import { content } from '$lib/content/store.svelte';
-	import { sourceLabel } from '$lib/content/detail';
+	import { content } from '#lib/content/store.svelte.ts';
+	import { sourceLabel } from '#lib/content/detail.ts';
 	import {
 		detectCollisions,
 		sourceConfig,
 		setCollision,
 		KEEP_ALL,
-	} from '$lib/content/sources.svelte';
+	} from '#lib/content/sources.svelte.ts';
 
 	const graph = $derived(content.graph);
 	const collisions = $derived(graph ? detectCollisions(graph) : []);

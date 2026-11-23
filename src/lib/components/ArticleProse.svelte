@@ -4,9 +4,9 @@
 	// ABOVE it; the dispatcher (WikiDetail) drops it in once per article. Body may be Markdown and/or
 	// raw HTML (user-owned CSV): parsed with marked, then sanitized with DOMPurify so injected
 	// <script>/on*/javascript: can't run.
-	import { browser } from '$app/environment';
-	import { renderContentMarkdown, renderContentMarkdownInline } from '$lib/content/markdown';
-	import { _ } from '$lib/i18n';
+	import { browser } from '$app/env';
+	import { renderContentMarkdown, renderContentMarkdownInline } from '#lib/content/markdown.ts';
+	import { _ } from '#lib/i18n/index.ts';
 	import type { WikiEditDraft } from './wikiEdit';
 
 	let {
@@ -16,19 +16,20 @@
 		instanceName = '',
 		editable = false,
 		draft,
-	}: {
+
 		/** The source body (raw Markdown/HTML); also the placeholder when editing. */
-		bodyMarkdown: string;
 		/** Source "at higher levels" prose — empty for types that don't have it (monster). */
-		higherLevel?: string;
 		/** Source spell material component — empty for non-spells. */
-		material?: string;
 		/** What one found instance of a `+1/+2/+3` row with no base is called — empty for every other
 		 *  row. Only asked while translating: a reader meets it as the name on their sheet. */
-		instanceName?: string;
-		editable?: boolean;
 		/** Absent in read mode; present (bound in place) only when translating. The `| undefined` is
 		 *  required to thread this optional object down under `exactOptionalPropertyTypes`. */
+	}: {
+		bodyMarkdown: string;
+		higherLevel?: string;
+		material?: string;
+		instanceName?: string;
+		editable?: boolean;
 		draft?: WikiEditDraft | undefined;
 	} = $props();
 

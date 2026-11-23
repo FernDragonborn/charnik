@@ -2,10 +2,10 @@
  *  a rest passes its hours on it (R7). */
 import { beforeAll, describe, expect, it } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
-import { newCharacter, type Character } from '$lib/character/schema';
-import { remainingRounds } from '$lib/combat/effects-view';
-import type { ContentGraph } from '$lib/content/loader';
-import { deriveSheet } from '$lib/character/derive';
+import { newCharacter, type Character } from '#lib/character/schema.ts';
+import { remainingRounds } from '#lib/combat/effects-view.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
+import { deriveSheet } from '#lib/character/derive.ts';
 import { toggleCombat } from './turn';
 import { rest } from './rests';
 import type { PlayContext } from './outcome';

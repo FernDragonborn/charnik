@@ -2,9 +2,9 @@
  * A roll the GM asks for, on this side of the table: what the sheet rolls for it, the roll read back
  * off the log entry it left, and whether it met a DC. Pure — the view-model rolls, these read.
  */
-import type { CharacterSheet } from '$lib/character/derive';
-import { naturalOf } from '$lib/rules/dice';
-import { AUTO_OUTCOME, type RollLogEntry, type RollName } from '$lib/combat/roll';
+import type { CharacterSheet } from '#lib/character/derive.ts';
+import { naturalOf } from '#lib/rules/dice.ts';
+import { AUTO_OUTCOME, type RollLogEntry, type RollName } from '#lib/combat/roll.ts';
 import {
 	abilityCheckRoll,
 	abilityOf,
@@ -12,9 +12,9 @@ import {
 	skillOf,
 	skillRoll,
 	type SheetRollSpec,
-} from '$lib/combat/sheet-roll-specs';
-import { REQUESTED_ROLL, TABLE_REQUEST, type TableRequest } from '$lib/table-link/types';
-import type { TableRoll } from '$lib/table-link/wire-schema';
+} from '#lib/combat/sheet-roll-specs.ts';
+import { REQUESTED_ROLL, TABLE_REQUEST, type TableRequest } from '#lib/table-link/types.ts';
+import type { TableRoll } from '#lib/table-link/wire-schema.ts';
 
 export type RollRequest = Extract<TableRequest, { kind: typeof TABLE_REQUEST.roll }>;
 

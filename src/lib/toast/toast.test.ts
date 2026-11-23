@@ -29,10 +29,10 @@ const sonner = vi.hoisted(() => {
 vi.mock('svelte-sonner', () => ({
 	toast: Object.assign(sonner.toast, { dismiss: (id: unknown) => sonner.dismissed.push(id) }),
 }));
-vi.mock('$lib/components/RollToast.svelte', () => ({ default: {} }));
+vi.mock('#lib/components/RollToast.svelte', () => ({ default: {} }));
 
 import { toast, toastRollCard } from './toast';
-import type { RollToastModel } from '$lib/dice/roll-toast';
+import type { RollToastModel } from '#lib/dice/roll-toast.ts';
 
 const roll = { label: 'Hex damage', total: 1, attacks: [] } as unknown as RollToastModel;
 

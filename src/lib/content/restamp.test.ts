@@ -3,7 +3,7 @@ import { fileHashState } from './hash';
 import { HASH_STATE, parseContentDirectives } from './meta';
 import { restampFiles, restampText, RESTAMP_FOR } from './restamp';
 import { stampWithHash } from './hash';
-import { MemoryStorage } from '$lib/storage/memory';
+import { MemoryStorage } from '#lib/storage/memory.ts';
 import { loadContent } from './loader';
 
 const LF_BODY = 'id,name_en\nfireball,Fireball\nshield,Shield';

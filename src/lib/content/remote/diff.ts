@@ -12,9 +12,9 @@
  * Comparison is by GIT BLOB SHA, because that is what a repo tree listing gives us — so "did this
  * file change?" is answered without downloading a single byte.
  */
-import type { Storage } from '$lib/storage/types';
+import type { Storage } from '#lib/storage/types.ts';
 import { parseCsvTable } from '../csv-table';
-import { listFilesRecursive } from '$lib/storage/walk';
+import { listFilesRecursive } from '#lib/storage/walk.ts';
 import type { ContentGraph } from '../loader';
 import { isProtectedText } from '../disk';
 import { gitBlobSha } from '../hash';

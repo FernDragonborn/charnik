@@ -5,11 +5,11 @@
 	// here is what only a toast has: the card is the dismiss target and sonner needs its own sizing.
 	// It mounts RollRow with NO action props, so every pill is inert: a toast announces, the Playbar
 	// and the log control (UX-3) — which is also why it no longer has to stay open indefinitely.
-	import { rollNameOf, sayRollName } from '$lib/combat/roll';
-	import type { RollToastModel } from '$lib/dice/roll-toast';
-	import { _ } from '$lib/i18n';
-	import { ADVANTAGE_MODE } from '$lib/rules/dice';
-	import { TOAST_TONE, type ToastNote } from '$lib/toast/toast';
+	import { rollNameOf, sayRollName } from '#lib/combat/roll.ts';
+	import type { RollToastModel } from '#lib/dice/roll-toast.ts';
+	import { _ } from '#lib/i18n/index.ts';
+	import { ADVANTAGE_MODE } from '#lib/rules/dice.ts';
+	import { TOAST_TONE, type ToastNote } from '#lib/toast/toast.ts';
 	import Icon from './Icon.svelte';
 	import RollRow from './RollRow.svelte';
 

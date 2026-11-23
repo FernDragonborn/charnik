@@ -5,7 +5,7 @@
  * silently applied.
  */
 import { describe, it, expect } from 'vitest';
-import { MemoryStorage } from '$lib/storage/memory';
+import { MemoryStorage } from '#lib/storage/memory.ts';
 import { gitBlobSha, stampWithHash } from '../hash';
 import {
 	diffPack,

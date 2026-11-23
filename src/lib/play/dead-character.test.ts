@@ -1,9 +1,9 @@
 /** A dead character neither rests nor heals, so a mistaken death stays one `takeBackLastSave` away. */
 import { beforeAll, describe, expect, it } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
-import { classRow, newCharacter, type Character } from '$lib/character/schema';
-import { deriveSheet } from '$lib/character/derive';
-import type { ContentGraph } from '$lib/content/loader';
+import { classRow, newCharacter, type Character } from '#lib/character/schema.ts';
+import { deriveSheet } from '#lib/character/derive.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
 import { heal, takeBackLastSave } from './hit-points';
 import { halfShortRest, rest, spendHitDie } from './rests';
 import type { PlayContext } from './outcome';

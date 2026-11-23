@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { rollerCandidates, type NamedRollSource } from '$lib/dice/roller-vocabulary';
+import { rollerCandidates, type NamedRollSource } from '#lib/dice/roller-vocabulary.ts';
 import { completionOf, readTypedHit, typeRows } from './hit-line';
 
 const type = (key: string, uk: string): NamedRollSource => ({

@@ -3,7 +3,7 @@
  * `$derived`. Kept out of build/rules.ts (which stays "just numbers, no graph") and out of the VM
  * (which keeps only reactive wiring), so these are plain, unit-testable functions. No Svelte runes.
  */
-import { countAtLevel, splitLadderQualifier } from '$lib/content/level-gate';
+import { countAtLevel, splitLadderQualifier } from '#lib/content/level-gate.ts';
 import type { Ability } from '../rules/core';
 import { ABILITIES } from '../character/schema';
 import type { ContentGraph, LoadedRow, LoadedRowByType } from '../content/loader';

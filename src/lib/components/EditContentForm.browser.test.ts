@@ -5,12 +5,12 @@
 import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import EditContentFormHost from './EditContentFormHost.test-host.svelte';
-import { startI18n } from '$lib/i18n';
-import { getUserStorage } from '$lib/storage/provider';
-import { listDrafts } from '$lib/drafts/store';
+import { startI18n } from '#lib/i18n/index.ts';
+import { getUserStorage } from '#lib/storage/provider.ts';
+import { listDrafts } from '#lib/drafts/store.ts';
 
 // the demo flag reads SvelteKit's env, which the browser project does not serve; content is writable here
-vi.mock('$lib/config/demo', () => ({ isDemo: () => false, isReadOnlyContent: () => false }));
+vi.mock('#lib/config/demo.ts', () => ({ isDemo: () => false, isReadOnlyContent: () => false }));
 
 beforeAll(() => startI18n('en'));
 afterEach(() => vi.useRealTimers());

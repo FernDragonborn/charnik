@@ -6,8 +6,8 @@
  * Split from `derive.ts` for size: the orchestrator there is now gather → prepare → resolve →
  * assemble, and this file is the last step.
  */
-import type { SaidText } from '$lib/util/say';
-import { ISSUE_KEY } from '$lib/effects/token-parser';
+import type { SaidText } from '#lib/util/say.ts';
+import { ISSUE_KEY } from '#lib/effects/token-parser.ts';
 import type { ContentGraph, LoadedRow } from '../content/loader';
 import type { Character } from './schema';
 import { resolveResourceOptions } from './derive-resource-options';

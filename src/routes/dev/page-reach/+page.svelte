@@ -11,7 +11,7 @@
 	// window request is `about:blank`, which the Rust handler refuses without opening anything.
 	import { onMount } from 'svelte';
 	import { invokeRaw } from '../invoke-raw';
-	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
+	import { detectPlatform, getUserStorage, Platform } from '#lib/storage/provider.ts';
 
 	const REPORT = 'page-reach-probe.txt';
 	/** Cross-origin, so the layout cancels it; not http(s), so it is never handed to the OS. */

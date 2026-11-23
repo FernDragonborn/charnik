@@ -3,10 +3,10 @@
 	// Three ways out: pick another folder, only repoint (the data was already copied there), or merge
 	// the two. The files are laid side by side as a two-panel file manager shows them — the same name
 	// facing itself, the arrow at the copy a merge keeps — with the clashes shown first.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import DialogShell from '../DialogShell.svelte';
 	import FileCompare, { type FileCompareGroup } from '../FileCompare.svelte';
-	import type { ConflictRow } from '$lib/storage/migrate';
+	import type { ConflictRow } from '#lib/storage/migrate.ts';
 
 	let {
 		rows,

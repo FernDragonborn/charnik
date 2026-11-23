@@ -6,9 +6,9 @@
  * that ends Concentration and the ✕ on its chip. An action that already SAID a change (a notice of
  * that kind, or a line of its own) is not repeated here: the log says each thing once.
  */
-import type { CharacterPlay } from '$lib/character/schema';
-import { LOG_KIND, type LogKind } from '$lib/character/log-kind';
-import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
+import type { CharacterPlay } from '#lib/character/schema.ts';
+import { LOG_KIND, type LogKind } from '#lib/character/log-kind.ts';
+import { PACT_SLOT_KEY } from '#lib/rules/spellcasting.ts';
 import type { PlayLogLine } from './outcome';
 
 /** The words a change needs that play-state holds only as ids. */

@@ -8,7 +8,7 @@
  * imports it, so `provider → remote/install → remote/diff → provider` was a cycle and the remote
  * module could not be lifted out or tested on its own.
  */
-import type { Storage } from '$lib/storage/types';
+import type { Storage } from '#lib/storage/types.ts';
 import { HASH_STATE, parseContentDirectives } from './meta';
 import { fileHashState } from './hash';
 import { isReservedPackName } from './packs.svelte';

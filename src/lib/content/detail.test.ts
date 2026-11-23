@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { say, type Said } from '$lib/util/say';
+import { say, type Said } from '#lib/util/say.ts';
 import { sourceLabel, editionLabel, buildDetail } from './detail';
 import { entryMeta } from './entry-list';
 import { row } from './test-utils';

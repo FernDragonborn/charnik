@@ -1,24 +1,26 @@
 <script lang="ts">
 	// Ctrl/Cmd+K command + global content search. Pages navigate via the router; content is
 	// fuzzy-searched (name + article text) over the reactive content store and opens the entry
-	// in the compendium (deep-link route). Search core lives in $lib/content/search.
-	import { foldForSearch } from '$lib/util/search-fold';
+	// in the compendium (deep-link route). Search core lives in #lib/content/search.
+	import { foldForSearch } from '#lib/util/search-fold.ts';
 	import { goto } from '$app/navigation';
-	import { base } from '$app/paths';
-	import { compendiumEntryPath } from '$lib/content/detail';
-	import { titleCase } from '$lib/util/format';
-	import { _ } from '$lib/i18n';
-	import { app } from '$lib/stores/app.svelte';
-	import { ui } from '$lib/stores/ui.svelte';
-	import { content, loadContentStore } from '$lib/content/store.svelte';
-	import { overrides } from '$lib/content/overrides.svelte';
-	import { makeNameIndex, makeTextIndex, searchContent } from '$lib/content/search';
-	import { isRowActive } from '$lib/content/sources.svelte';
+	import { resolve } from '$app/paths';
+	import { BASE_PATH } from '#lib/config/base-path.ts';
+	import { compendiumEntryPath } from '#lib/content/detail.ts';
+	import { titleCase } from '#lib/util/format.ts';
+	import { _ } from '#lib/i18n/index.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import { ui } from '#lib/stores/ui.svelte.ts';
+	import { content, loadContentStore } from '#lib/content/store.svelte.ts';
+	import { overrides } from '#lib/content/overrides.svelte.ts';
+	import { makeNameIndex, makeTextIndex, searchContent } from '#lib/content/search.ts';
+	import { isRowActive } from '#lib/content/sources.svelte.ts';
 
 	interface PageItem {
 		kind: 'page';
 		key: string;
 		label: string;
+		/** Already resolved: `resolve` checks each route where it is named. */
 		href: string;
 	}
 	interface ContentItem {
@@ -34,10 +36,10 @@
 	type Item = PageItem | ContentItem;
 
 	const COMMANDS = [
-		{ key: 'roster', labelKey: 'nav.roster', href: '/' },
-		{ key: 'combat', labelKey: 'nav.combat', href: '/combat' },
-		{ key: 'compendium', labelKey: 'nav.compendium', href: '/compendium' },
-		{ key: 'settings', labelKey: 'nav.settings', href: '/settings' },
+		{ key: 'roster', labelKey: 'nav.roster', href: resolve('') },
+		{ key: 'combat', labelKey: 'nav.combat', href: resolve('combat') },
+		{ key: 'compendium', labelKey: 'nav.compendium', href: resolve('compendium') },
+		{ key: 'settings', labelKey: 'nav.settings', href: resolve('settings') },
 	];
 
 	// Visibility lives in the shared ui store so the header search chip can open the same palette.
@@ -62,16 +64,21 @@
 
 	const pages = $derived<PageItem[]>(
 		COMMANDS.filter((c) => foldForSearch($_(c.labelKey)).includes(foldForSearch(query.trim()))).map(
-			(c) => ({ kind: 'page', key: c.key, label: $_(c.labelKey), href: c.href }),
+			(c) => ({
+				kind: 'page',
+				key: c.key,
+				label: $_(c.labelKey),
+				href: c.href,
+			}),
 		),
 	);
+
 	const contentItems = $derived<ContentItem[]>(
 		nameIndex && textIndex
 			? searchContent(nameIndex, textIndex, query, {
 					editions: app.activeEditions,
 					locale: app.activeLocale,
-				})
-					// B5: two-dimensional source filter — hide rows from a disabled file/source or the
+				}) // B5: two-dimensional source filter — hide rows from a disabled file/source or the
 					// losing side of a resolved collision, same as the compendium/builders. Results are
 					// ≤ limit, so resolving each back to its row via the graph is cheap.
 					.filter((r) => {
@@ -90,8 +97,8 @@
 					}))
 			: [],
 	);
-	const items = $derived<Item[]>([...pages, ...contentItems]);
 
+	const items = $derived<Item[]>([...pages, ...contentItems]);
 	const typeName = (t: string) => titleCase(t);
 	// header shown before the first item of each group (Pages, then each content type)
 	const groupOf = (it: Item) => (it.kind === 'page' ? 'Pages' : typeName(it.type));
@@ -102,8 +109,9 @@
 	function run(it: Item | undefined) {
 		if (!it) return;
 		closePalette();
-		if (it.kind === 'page') void goto(`${base}${it.href}`);
-		else void goto(compendiumEntryPath(base, it.type, it.source, it.slug));
+
+		if (it.kind === 'page') void goto(it.href);
+		else void goto(compendiumEntryPath(BASE_PATH, it.type, it.source, it.slug));
 	}
 
 	function onWindowKeydown(e: KeyboardEvent) {

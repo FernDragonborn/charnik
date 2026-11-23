@@ -2,9 +2,9 @@
  * A weapon's or a spell's damage as typed parts — "1d6 slashing; 1d4 radiant" — read once and
  * printed back, and the words a damage type and a sense are called by.
  */
-import type { Translate } from '$lib/i18n';
-import { formatDicePool, parseFormula } from '$lib/rules/dice';
-import { signed } from '$lib/util/format';
+import type { Translate } from '#lib/i18n/index.ts';
+import { formatDicePool, parseFormula } from '#lib/rules/dice.ts';
+import { signed } from '#lib/util/format.ts';
 
 /** One typed slice of a weapon's damage: its dice pool, flat mod, and damage type. A plain weapon is
  *  one part ("1d8 slashing"); a multi-type weapon is several ("1d6 slashing" + "1d4 radiant"). */

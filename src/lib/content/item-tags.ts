@@ -18,7 +18,7 @@
  * `resolved-item.ts` on top of this.
  */
 import { splitList } from './schemas';
-import type { Translate } from '$lib/i18n';
+import type { Translate } from '#lib/i18n/index.ts';
 
 /** Tag name → its value (`''` for a bare tag like `finesse`). */
 export type ItemTags = ReadonlyMap<string, string>;

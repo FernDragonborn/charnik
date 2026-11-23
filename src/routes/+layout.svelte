@@ -1,42 +1,42 @@
 <script lang="ts">
-	import '$lib/styles/app.css';
-	import { anchored } from '$lib/actions/anchored';
-	import { provenance } from '$lib/actions/provenance';
-	import favicon from '$lib/assets/favicon.svg';
-	import { browser } from '$app/environment';
-	import { base } from '$app/paths';
+	import '#lib/styles/app.css';
+	import { anchored } from '#lib/actions/anchored.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import favicon from '#lib/assets/favicon.svg';
+	import { browser } from '$app/env';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { app } from '$lib/stores/app.svelte';
-	import { motion } from '$lib/stores/motion.svelte';
-	import { MOTION } from '$lib/util/motion';
-	import { registerCustomThemes } from '$lib/styles/customThemes';
-	import { BUNDLED_THEMES } from '$lib/styles/presetThemes';
-	import { initThemes } from '$lib/styles/themeFiles';
-	import { ui } from '$lib/stores/ui.svelte';
-	import { dirFor, locale as i18nLocale, _ } from '$lib/i18n';
-	import CommandPalette from '$lib/components/CommandPalette.svelte';
-	import Icon from '$lib/components/Icon.svelte';
-	import LangSwitcher from '$lib/components/LangSwitcher.svelte';
-	import ContentMetaModal from '$lib/components/ContentMetaModal.svelte';
-	import HashDriftModal from '$lib/components/HashDriftModal.svelte';
-	import { content, loadContentStore } from '$lib/content/store.svelte';
-	import { bindOpenCharacter, overrides } from '$lib/content/overrides.svelte';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import { motion } from '#lib/stores/motion.svelte.ts';
+	import { MOTION } from '#lib/util/motion.ts';
+	import { registerCustomThemes } from '#lib/styles/customThemes.ts';
+	import { BUNDLED_THEMES } from '#lib/styles/presetThemes.ts';
+	import { initThemes } from '#lib/styles/themeFiles.ts';
+	import { ui } from '#lib/stores/ui.svelte.ts';
+	import { dirFor, locale as i18nLocale, _ } from '#lib/i18n/index.ts';
+	import CommandPalette from '#lib/components/CommandPalette.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import LangSwitcher from '#lib/components/LangSwitcher.svelte';
+	import ContentMetaModal from '#lib/components/ContentMetaModal.svelte';
+	import HashDriftModal from '#lib/components/HashDriftModal.svelte';
+	import { content, loadContentStore } from '#lib/content/store.svelte.ts';
+	import { bindOpenCharacter, overrides } from '#lib/content/overrides.svelte.ts';
 	import {
 		characters,
 		saveCharacterGuarded,
 		startCharacterWatcher,
 		stopCharacterWatcher,
-	} from '$lib/character/store.svelte';
-	import CharacterConflictDialog from '$lib/components/CharacterConflictDialog.svelte';
+	} from '#lib/character/store.svelte.ts';
+	import CharacterConflictDialog from '#lib/components/CharacterConflictDialog.svelte';
 	import {
 		autoCheckAllowed,
 		checkNow,
 		restorePendingUpdates,
 		updates,
-	} from '$lib/content/remote/updates.svelte';
-	import { missingUnanswered, orphanedTranslations } from '$lib/content/packs.svelte';
-	import MissingContentModal from '$lib/components/MissingContentModal.svelte';
-	import { loadPlugins } from '$lib/effects/plugin-store.svelte';
+	} from '#lib/content/remote/updates.svelte.ts';
+	import { missingUnanswered, orphanedTranslations } from '#lib/content/packs.svelte.ts';
+	import MissingContentModal from '#lib/components/MissingContentModal.svelte';
+	import { loadPlugins } from '#lib/effects/plugin-store.svelte.ts';
 	import {
 		adoptDriftedFiles,
 		autoAdoptDrift,
@@ -44,20 +44,21 @@
 		review,
 		pendingMetaIssues,
 		pendingDriftItems,
-	} from '$lib/content/review.svelte';
-	import type { FilledMeta } from '$lib/content/meta';
-	import type { RestampFailure } from '$lib/content/restamp';
+	} from '#lib/content/review.svelte.ts';
+	import type { FilledMeta } from '#lib/content/meta.ts';
+	import type { RestampFailure } from '#lib/content/restamp.ts';
 	import { Toaster } from 'svelte-sonner';
-	import { toast, toastFailure } from '$lib/toast/toast';
-	import { takeFlash, takeReloadMark } from '$lib/stores/flash';
-	import { externalLinkToOpen, shouldCancelNavigation } from '$lib/util/links';
+	import { toast, toastFailure } from '#lib/toast/toast.ts';
+	import { takeFlash, takeReloadMark } from '#lib/stores/flash.ts';
+	import { externalLinkToOpen, shouldCancelNavigation } from '#lib/util/links.ts';
 	import { onMount, onDestroy } from 'svelte';
 	import {
 		detectPlatform,
 		Platform,
 		getUserStorage,
 		resetUserStorage,
-	} from '$lib/storage/provider';
+	} from '#lib/storage/provider.ts';
+
 	import {
 		applySavedDataDir,
 		defaultDataDir,
@@ -65,27 +66,27 @@
 		pickDataDir,
 		openExternalUrl,
 		onWindowCloseRequested,
-	} from '$lib/storage/tauri';
-	import FirstRunModal from '$lib/components/FirstRunModal.svelte';
-	import MobileWarning from '$lib/components/MobileWarning.svelte';
+	} from '#lib/storage/tauri.ts';
+	import FirstRunModal from '#lib/components/FirstRunModal.svelte';
+	import MobileWarning from '#lib/components/MobileWarning.svelte';
 	import {
 		RELOAD_INTENT,
 		flushPendingWrites,
 		holdCloseForPendingWrites,
 		reloadApp,
 		reloadIntentOf,
-	} from '$lib/content/reload';
-	import { reloadContent } from '$lib/content/store.svelte';
-	import { startContentWatcher, stopContentWatcher } from '$lib/content/watcher';
-	import { loadRoster } from '$lib/character/store.svelte';
+	} from '#lib/content/reload.ts';
+	import { reloadContent } from '#lib/content/store.svelte.ts';
+	import { startContentWatcher, stopContentWatcher } from '#lib/content/watcher.ts';
+	import { loadRoster } from '#lib/character/store.svelte.ts';
 	import {
 		updater,
 		checkForUpdate,
 		installUpdate,
 		simulateUpdateAvailable,
-	} from '$lib/update/updater.svelte';
-	import { initDiag, captureGlobalErrors, logger } from '$lib/diag/logger';
-	import DiagnosticsModal from '$lib/components/DiagnosticsModal.svelte';
+	} from '#lib/update/updater.svelte.ts';
+	import { initDiag, captureGlobalErrors, logger } from '#lib/diag/logger.ts';
+	import DiagnosticsModal from '#lib/components/DiagnosticsModal.svelte';
 	import { table } from './table/table-view-model.svelte';
 	import TableRequestDialog from './table/TableRequestDialog.svelte';
 
@@ -139,19 +140,18 @@
 	}
 
 	// the table is in the navigation only in a build that has one to sit at
+	// every internal link goes through `resolve`, which carries the base path the web demo is served
+	// under (GitHub Pages serves it at /<repo>) and is empty on the desktop
 	const nav = $derived([
-		{ href: '/', key: 'nav.roster' },
-		{ href: '/combat', key: 'nav.combat' },
-		{ href: '/compendium', key: 'nav.compendium' },
-		...(table.available ? [{ href: '/table', key: 'nav.table' }] : []),
-		{ href: '/settings', key: 'nav.settings' },
+		{ href: resolve(''), key: 'nav.roster' },
+		{ href: resolve('combat'), key: 'nav.combat' },
+		{ href: resolve('compendium'), key: 'nav.compendium' },
+		...(table.available ? [{ href: resolve('table'), key: 'nav.table' }] : []),
+		{ href: resolve('settings'), key: 'nav.settings' },
 	]);
 
-	// Links must include the base path so navigation works under a subpath (GitHub Pages
-	// serves the app at /<repo>). base is '' for the desktop build (served at root).
-	const link = (href: string) => `${base}${href}`;
 	const norm = (p: string) => p.replace(/\/$/, '') || '/';
-	const isCurrent = (href: string) => norm(page.url.pathname) === norm(link(href));
+	const isCurrent = (href: string) => norm(page.url.pathname) === norm(href);
 
 	// Single source of truth for live switches: mirror the store onto <html>. No reload.
 	$effect(() => {
@@ -263,6 +263,7 @@
 		void onWindowCloseRequested(holdCloseForPendingWrites).then(
 			(stop) => (stopHoldingClose = stop),
 		);
+
 		const saved = await applySavedDataDir(); // Rust re-grants the custom folder from its own pointer
 		if (saved) {
 			await loadContentStore();
@@ -402,15 +403,16 @@
 </svelte:head>
 
 <!-- a closing tab cannot wait for a write, but one started here may still land -->
+
 <svelte:window onkeydown={onGlobalKey} onpagehide={() => void flushPendingWrites()} />
 
 <a class="skip-link" href="#main">{$_('nav.skipToContent')}</a>
 
 <header class="topbar">
-	<a class="wordmark" href={link('/')}>Char<span>nik</span></a>
+	<a class="wordmark" href={resolve('')}>Char<span>nik</span></a>
 	<nav class="nav" aria-label={$_('nav.primary')}>
 		{#each nav as item (item.href)}
-			<a href={link(item.href)} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+			<a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
 				{$_(item.key)}
 			</a>
 		{/each}
@@ -449,11 +451,13 @@
 		{#if pendingPacks > 0}
 			<a
 				class="chip chip-packs"
-				href="{base}/settings?tab=sources"
+				href={resolve('settings?tab=sources')}
 				title={$_('settings.packs.chipTitle', { values: { count: pendingPacks } })}
 				aria-label={$_('settings.packs.chipTitle', { values: { count: pendingPacks } })}
-				><Icon name="download" size={13} /> {$_('settings.packs.chip')}</a
 			>
+				<Icon name="download" size={13} />
+				{$_('settings.packs.chip')}
+			</a>
 		{/if}
 		{#if updater.status !== 'idle'}
 			<button
@@ -484,7 +488,7 @@
 <main
 	id="main"
 	tabindex="-1"
-	class:full-bleed={page.url.pathname.startsWith(`${base}/translate`) || ui.fullBleed}
+	class:full-bleed={page.url.pathname.startsWith(resolve(`translate`)) || ui.fullBleed}
 >
 	{@render children()}
 </main>
@@ -727,6 +731,7 @@
 	   stays, the content goes. `data-expanded='false'` keeps hover-expand — the one state where a
 	   background toast is MEANT to be seen at its own size — and pointer-events follow the pixels, so
 	   an invisible card is not a click target. */
+
 	:global([data-sonner-toast][data-expanded='false'][data-front='false'][data-styled='false'])
 		> :global(*) {
 		opacity: 0;

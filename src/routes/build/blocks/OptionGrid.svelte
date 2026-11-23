@@ -10,11 +10,11 @@
 	//
 	// Keyboard-first (ui.md §5): ↑/↓ move the highlight, Home/End jump, Enter is a left click. Walking
 	// only ever highlights — an open card follows the highlight, but nothing commits on the way past.
-	import { _ } from '$lib/i18n';
-	import { provenance } from '$lib/actions/provenance';
+	import { _ } from '#lib/i18n/index.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
 	import type { Snippet } from 'svelte';
-	import type { LoadedRow } from '$lib/content/loader';
-	import type { DetailModel } from '$lib/content/detail';
+	import type { LoadedRow } from '#lib/content/loader.ts';
+	import type { DetailModel } from '#lib/content/detail.ts';
 	import { pickerMeta, rowName } from '../rows';
 	import { PickerReading } from '../picker-reading.svelte';
 	import PickerSearch from './PickerSearch.svelte';

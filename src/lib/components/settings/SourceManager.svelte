@@ -3,10 +3,10 @@
 	// SOURCE tag is enabled. Lists every loaded source with its files + row counts; each has an
 	// independent toggle. Config is persisted + live (isRowActive re-filters the compendium with no
 	// reload). Disabling never drops data — re-enabling brings rows straight back.
-	import { _ } from '$lib/i18n';
-	import { content } from '$lib/content/store.svelte';
-	import { sourceLabel } from '$lib/content/detail';
-	import Icon from '$lib/components/Icon.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import { content } from '#lib/content/store.svelte.ts';
+	import { sourceLabel } from '#lib/content/detail.ts';
+	import Icon from '#lib/components/Icon.svelte';
 	import PackUpdatesSettings from './PackUpdatesSettings.svelte';
 	import {
 		sourceConfig,
@@ -14,7 +14,7 @@
 		toggleFile,
 		toggleSource,
 		filePath as filePathOf,
-	} from '$lib/content/sources.svelte';
+	} from '#lib/content/sources.svelte.ts';
 
 	const graph = $derived(content.graph);
 

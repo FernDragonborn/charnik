@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CONTENT_SCHEMA_VERSION } from '$lib/schema/version';
+import { CONTENT_SCHEMA_VERSION } from '#lib/schema/version.ts';
 import { CONTENT_MIGRATIONS, declaredSchema, migrateRows, type VersionedRows } from './migrations';
 
 const rows = () => [{ id: 'fireball', name_en: 'Fireball' }];

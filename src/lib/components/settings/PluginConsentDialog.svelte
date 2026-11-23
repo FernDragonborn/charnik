@@ -6,10 +6,14 @@
 	// plugin is and what leaving it off costs. The technical record waits under Details. Every
 	// manifest field renders as PLAIN TEXT (PLG-SEC 15) and the url is display-only — never a
 	// clickable in-app link (PLG-SEC 7).
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import DialogShell from '../DialogShell.svelte';
-	import { app } from '$lib/stores/app.svelte';
-	import { LOCAL_ORIGIN, pluginDescription, type DiscoveredPlugin } from '$lib/effects/plugin-host';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import {
+		LOCAL_ORIGIN,
+		pluginDescription,
+		type DiscoveredPlugin,
+	} from '#lib/effects/plugin-host.ts';
 
 	/** How many rows "needed for" names before it says how many more. */
 	const NEEDED_SHOWN = 6;

@@ -5,7 +5,7 @@
 	// The sheet card and the inspector pane both show them, and both are on screen at once — so the
 	// conditions and the catalog keys live here and only the dressing differs. The sheet says them as
 	// trailing notes in a card head; the pane says them as tags.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build } from '../build-view-model.svelte';
 	const b = build;
 

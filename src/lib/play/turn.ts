@@ -4,11 +4,11 @@
  *
  * Out of combat there is no economy: nothing is charged and nothing is refused.
  */
-import { LOG_KIND } from '$lib/character/log-kind';
-import { pipClick, type ActionSlot } from '$lib/combat/roll';
-import { isEffectExpired } from '$lib/combat/effects-view';
-import type { Character, CharacterPlay } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
+import { LOG_KIND } from '#lib/character/log-kind.ts';
+import { pipClick, type ActionSlot } from '#lib/combat/roll.ts';
+import { isEffectExpired } from '#lib/combat/effects-view.ts';
+import type { Character, CharacterPlay } from '#lib/character/schema.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
 import { endEffects } from './effects';
 import { isIncapacitated } from './conditions';
 import { quietly, type PlayContext, type PlayNotice, type PlayOutcome } from './outcome';

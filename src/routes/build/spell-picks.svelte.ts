@@ -4,10 +4,10 @@
  * Strict shows only legally-pickable spells (the class's access map, cantrips always + leveled up to
  * its max spell level); Free lifts every gate, mirroring the skills toggle.
  */
-import { toast } from '$lib/toast/toast';
-import { t } from '$lib/i18n';
-import { buildSpellPicker } from '$lib/build/derive';
-import { casterForSpell, classCasts } from '$lib/character/spellcasting';
+import { toast } from '#lib/toast/toast.ts';
+import { t } from '#lib/i18n/index.ts';
+import { buildSpellPicker } from '#lib/build/derive.ts';
+import { casterForSpell, classCasts } from '#lib/character/spellcasting.ts';
 import { rowOfType } from './rows';
 import type { BuildVM } from './build-view-model.svelte';
 

@@ -2,27 +2,27 @@
 	// Anchored dropdown menus dispatcher (temp HP, level-up, add-state, custom-effect, show/hide,
 	// pin-skills, spellbook). The heavier dice-tray + roll-log bodies are their own
 	// components under menus/. Reads the shared `combat` view-model.
-	import { foldForSearch } from '$lib/util/search-fold';
-	import Icon from '$lib/components/Icon.svelte';
-	import { _ } from '$lib/i18n';
-	import { takeFocus } from '$lib/actions/takeFocus';
-	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
-	import { provenance } from '$lib/actions/provenance';
-	import { submitOnEnter } from '$lib/actions/submitOnEnter';
+	import { foldForSearch } from '#lib/util/search-fold.ts';
+	import Icon from '#lib/components/Icon.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import { takeFocus } from '#lib/actions/takeFocus.ts';
+	import { dismissOnEscape } from '#lib/actions/dismissOnEscape.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { submitOnEnter } from '#lib/actions/submitOnEnter.ts';
 	import { combat } from './combat-view-model.svelte';
-	import EyeIcon from '$lib/components/EyeIcon.svelte';
+	import EyeIcon from '#lib/components/EyeIcon.svelte';
 	import DiceTray from './menus/DiceTray.svelte';
 	import RollLog from './menus/RollLog.svelte';
-	import { SKILL_ABILITY, type SkillId } from '$lib/character/derive';
-	import { titleCase, ABIL, MOD_TARGETS, modTargetKey, attackName } from '$lib/combat/helpers';
-	import { sanitizeHtml } from '$lib/content/markdown';
-	import Switch from '$lib/components/Switch.svelte';
-	import { COINS } from '$lib/rules/currency';
-	import { FEATURE_PRESET } from '$lib/character/features';
-	import { ACTION_PRESET } from '$lib/combat/actions';
-	import { localizedName } from '$lib/content/detail';
-	import { poolCastLevel } from '$lib/play/cast';
-	import { app } from '$lib/stores/app.svelte';
+	import { SKILL_ABILITY, type SkillId } from '#lib/character/derive.ts';
+	import { titleCase, ABIL, MOD_TARGETS, modTargetKey, attackName } from '#lib/combat/helpers.ts';
+	import { sanitizeHtml } from '#lib/content/markdown.ts';
+	import Switch from '#lib/components/Switch.svelte';
+	import { COINS } from '#lib/rules/currency.ts';
+	import { FEATURE_PRESET } from '#lib/character/features.ts';
+	import { ACTION_PRESET } from '#lib/combat/actions.ts';
+	import { localizedName } from '#lib/content/detail.ts';
+	import { poolCastLevel } from '#lib/play/cast.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
 
 	const overlay = $derived(combat.overlay);
 	const actions = $derived(combat.actions);

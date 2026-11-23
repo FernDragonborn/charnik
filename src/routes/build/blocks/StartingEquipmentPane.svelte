@@ -4,10 +4,10 @@
 	// Equipment card at once — and a press on another swaps that line and nothing else. Every card
 	// shows what it holds, so nothing is picked blind; an item the player chooses ("a martial weapon")
 	// is asked on the card itself, with the same "which one" popover an item from the list uses.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build } from '../build-view-model.svelte';
 	import { rowName } from '../rows';
-	import { KIT_PART, type KitPart } from '$lib/content/starting-equipment';
+	import { KIT_PART, type KitPart } from '#lib/content/starting-equipment.ts';
 	import { askKey } from '../starting-kit';
 	import { purseSaid, type KitView } from '../starting-kit-picks.svelte';
 	import type { InstanceAsk } from '../item-instance-picking.svelte';

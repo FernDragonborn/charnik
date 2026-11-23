@@ -2,7 +2,7 @@
  * What the builder does to the character's kit.
  *
  * Every method has the same shape: take the draft's inventory, hand it to the shared list semantics
- * in `$lib/character/inventory` — the combat sheet's panel uses the same ones — and put the result
+ * in `#lib/character/inventory` — the combat sheet's panel uses the same ones — and put the result
  * back. What differs between the two places is only which list they act on, so the rules stay in one
  * module and this one is the seam onto the draft.
  *
@@ -19,17 +19,17 @@ import {
 	removeItemsOf,
 	toggleEquipped,
 	wornSlotIn,
-} from '$lib/character/inventory';
-import { resolveItem, type ResolvedItem } from '$lib/content/resolved-item';
+} from '#lib/character/inventory.ts';
+import { resolveItem, type ResolvedItem } from '#lib/content/resolved-item.ts';
 import {
 	instanceQuestions,
 	type InstanceAnswers,
 	type InstanceQuestions,
-} from '$lib/content/item-instance';
-import { carriedName } from '$lib/combat/carried-name';
-import { isRowActive } from '$lib/content/sources.svelte';
-import { translator } from '$lib/i18n';
-import { app } from '$lib/stores/app.svelte';
+} from '#lib/content/item-instance.ts';
+import { carriedName } from '#lib/combat/carried-name.ts';
+import { isRowActive } from '#lib/content/sources.svelte.ts';
+import { translator } from '#lib/i18n/index.ts';
+import { app } from '#lib/stores/app.svelte.ts';
 import type { BuildVM } from './build-view-model.svelte';
 import { rowOfType } from './rows';
 import type { DraftState } from './draft';

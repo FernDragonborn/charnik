@@ -9,10 +9,10 @@
 	//    "this is a test" and "this line is active" can't be read as the same signal.
 	//  · the menu is a CONTINUATION of the line, not a dropdown over it: same width, joined borders,
 	//    so the pills appear to grow downward.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { tick } from 'svelte';
 	import DamageIcon from './DamageIcon.svelte';
-	import { isDamageType } from '$lib/dice/roller-vocabulary';
+	import { isDamageType } from '#lib/dice/roller-vocabulary.ts';
 	import Icon from './Icon.svelte';
 	import { damageGlyph } from './damage-glyphs';
 	import {
@@ -23,11 +23,11 @@
 		type DicePill,
 		type RollerLine,
 		type RollerPill,
-	} from '$lib/dice/roller';
-	import type { DiceTray } from '$lib/dice/dice-tray.svelte';
-	import type { RollerCandidate } from '$lib/dice/roller-vocabulary';
-	import { ADVANTAGE_CUE, ADVANTAGE_MODE } from '$lib/rules/dice';
-	import { signed } from '$lib/util/format';
+	} from '#lib/dice/roller.ts';
+	import type { DiceTray } from '#lib/dice/dice-tray.svelte.ts';
+	import type { RollerCandidate } from '#lib/dice/roller-vocabulary.ts';
+	import { ADVANTAGE_CUE, ADVANTAGE_MODE } from '#lib/rules/dice.ts';
+	import { signed } from '#lib/util/format.ts';
 
 	let {
 		diceTray,

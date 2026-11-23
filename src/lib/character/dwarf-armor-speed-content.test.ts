@@ -4,7 +4,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
 import { classRow, inventoryRow, newCharacter, type Character } from './schema';
 import { deriveSheet } from './derive';
-import type { ContentGraph } from '$lib/content/loader';
+import type { ContentGraph } from '#lib/content/loader.ts';
 
 const S = 'SRD 5.1';
 

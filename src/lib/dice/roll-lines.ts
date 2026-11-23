@@ -3,10 +3,10 @@
  * store, no caret. The tray keeps the editing; this keeps the arithmetic, so the roll a surface
  * fires can be reproduced (and tested) without standing a tray up around it.
  */
-import { rollDamageParts, type DamagePartSpec, type RollLogEntry } from '$lib/combat/roll';
-import { rollPool, type Rng, type RollPoolOptions } from '$lib/rules/dice';
-import type { CritMethod } from '$lib/rules/dice';
-import type { SaidValue } from '$lib/util/say';
+import { rollDamageParts, type DamagePartSpec, type RollLogEntry } from '#lib/combat/roll.ts';
+import { rollPool, type Rng, type RollPoolOptions } from '#lib/rules/dice.ts';
+import type { CritMethod } from '#lib/rules/dice.ts';
+import type { SaidValue } from '#lib/util/say.ts';
 import {
 	ROLLER_ROLE,
 	damageParts,

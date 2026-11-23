@@ -2,9 +2,9 @@
 	// The table's log on the Table screen, for both seats: the rolls this app holds, newest first,
 	// who each one is from, and who this app's own rolls go to. Every roll is peer text, rendered as
 	// text (`docs/internals/table-link.md` ▸ The table's log).
-	import { _ } from '$lib/i18n';
-	import { app } from '$lib/stores/app.svelte';
-	import { AUDIENCE, type LogRollLine } from '$lib/table-link/types';
+	import { _ } from '#lib/i18n/index.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import { AUDIENCE, type LogRollLine } from '#lib/table-link/types.ts';
 	import { TABLE_ROLE, table } from './table-view-model.svelte';
 	import type { LogLine } from './table-log.svelte';
 	import TableRollResult from './TableRollResult.svelte';

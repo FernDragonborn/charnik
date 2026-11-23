@@ -4,9 +4,9 @@
 	// click on the backdrop or Escape does not close it. When the move worked but the old folder
 	// stayed, it says what is in that folder, why it most likely stayed, and offers to try again or
 	// to show the folder; the raw reason waits under "Details".
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import DialogShell from '../DialogShell.svelte';
-	import type { LeftFolder } from '$lib/storage/tauri';
+	import type { LeftFolder } from '#lib/storage/tauri.ts';
 
 	let {
 		title,

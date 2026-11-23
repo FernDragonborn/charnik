@@ -5,10 +5,10 @@
 	// (max_level ≤ 6), a smooth rectangular scale when it's larger (a homebrew 20-rung ladder). Both
 	// clamp to the row's max_level and carry a −/+ stepper; pips are also click-to-set. Hidden when no
 	// exhaustion content is loaded (exhaustionMax === 0). Reads the shared `combat` view-model.
-	import Icon from '$lib/components/Icon.svelte';
-	import type { Character } from '$lib/character/schema';
+	import Icon from '#lib/components/Icon.svelte';
+	import type { Character } from '#lib/character/schema.ts';
 	import { combat } from '../combat-view-model.svelte';
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 
 	let { c }: { c: Character } = $props();
 	const max = $derived(combat.effects.exhaustionMax);

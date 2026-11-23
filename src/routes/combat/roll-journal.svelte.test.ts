@@ -7,13 +7,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
  * The toast is mocked because recording a roll must not need a DOM.
  */
 const toastRoll = vi.fn();
-vi.mock('$lib/dice/roll-toast', () => ({ toastRoll }));
+vi.mock('#lib/dice/roll-toast.ts', () => ({ toastRoll }));
 
 const { RollJournal } = await import('./roll-journal.svelte');
 const { MenuOverlay } = await import('./menu-overlay.svelte');
-const { ROLLER_ROLE, damageParts, testRoll, volleyOf } = await import('$lib/dice/roller');
-const { ADVANTAGE_MODE, DIE_ROLE, rollPool } = await import('$lib/rules/dice');
-type TypedRoll = import('$lib/combat/roll').TypedRoll;
+const { ROLLER_ROLE, damageParts, testRoll, volleyOf } = await import('#lib/dice/roller.ts');
+const { ADVANTAGE_MODE, DIE_ROLE, rollPool } = await import('#lib/rules/dice.ts');
+type TypedRoll = import('#lib/combat/roll.ts').TypedRoll;
 
 let journal: InstanceType<typeof RollJournal>;
 beforeEach(() => {

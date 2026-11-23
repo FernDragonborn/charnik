@@ -261,9 +261,8 @@ position and are given per wave, because most of them were learned the hard way.
     the base engine supports the SRD through level 20 (the 5–10 and 11–20 waves below), which is
     TABLE-LINK-PHONE. The web demo at a table does not wait for it: after TABLE-LINK-MVP, the
     order is TABLE-LINK-LOG with TABLE-LINK-REMEMBER, then TABLE-LINK-WEB, then DEMO-FULL.
-  0. **SVELTEKIT-3** — `release.md` ▸ DEP-4. Before the UI items below, so they are built on 3.x
-     rather than migrated after: the maintainer's call. Every new surface follows KEYBOARD-NAV's
-     standard (`ui.md`) from its first line; the play screen's own repair is that item's.
+  Every new surface follows KEYBOARD-NAV's standard (`ui.md`) from its first line; the play
+  screen's own repair is that item's.
   1. **DEFENCE-STRIP** — `ui.md`. The strip is one component on both screens, groups named for what
      MOVES and the qualifier in the chip; the `Saves` group has not found its formatting. The
      maintainer redraws the mock, and nothing is built until it exists.

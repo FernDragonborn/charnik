@@ -1,8 +1,8 @@
 /*
  * What the conditions on a character mean for play, where more than one rule asks.
  */
-import type { Character } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
+import type { Character } from '#lib/character/schema.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
 
 /** The condition that zeroes the action economy (no Action, Bonus Action, or Reaction). A named seam
  *  (not a bare string compare) — paralyzed/stunned/petrified/unconscious reach it by chaining

@@ -2,8 +2,8 @@
 	// "What changes on the sheet" — the diff between the sheet as it stands and the sheet the
 	// highlighted option would produce. Silent when nothing moves, because an empty list here means
 	// "this choice touches no number", which is itself the answer.
-	import { _ } from '$lib/i18n';
-	import type { DiffText, SheetChange } from '$lib/build/sheet-diff';
+	import { _ } from '#lib/i18n/index.ts';
+	import type { DiffText, SheetChange } from '#lib/build/sheet-diff.ts';
 
 	let { changes, taken = false }: { changes: SheetChange[]; taken?: boolean } = $props();
 

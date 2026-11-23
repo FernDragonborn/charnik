@@ -28,8 +28,8 @@ import {
 	clearPluginMemo,
 	type PluginEvaluator,
 } from './plugin-registry';
-import { logger } from '$lib/diag/logger';
-import { errText } from '$lib/util/format';
+import { logger } from '#lib/diag/logger.ts';
+import { errText } from '#lib/util/format.ts';
 
 interface PluginsState {
 	/** Plugins exist on the desktop build only. */

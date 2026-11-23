@@ -11,10 +11,10 @@
  * Everything reading the host is a getter, never `$derived`: a field initialiser runs before the
  * constructor assigns `host`.
  */
-import { toast } from '$lib/toast/toast';
-import { t } from '$lib/i18n';
-import { ABILITIES } from '$lib/character/schema';
-import type { Ability } from '$lib/rules/core';
+import { toast } from '#lib/toast/toast.ts';
+import { t } from '#lib/i18n/index.ts';
+import { ABILITIES } from '#lib/character/schema.ts';
+import type { Ability } from '#lib/rules/core.ts';
 import {
 	allocateBackgroundBoost,
 	baseAbilities,
@@ -30,15 +30,15 @@ import {
 	pointBuyCost,
 	STANDARD_ARRAY,
 	type StatMethod,
-} from '$lib/build/rules';
-import { asiBoost, parseSpeciesBoostChoice, speciesFixedAbilities } from '$lib/build/derive';
-import { splitList } from '$lib/content/schemas';
-import { signed } from '$lib/util/format';
+} from '#lib/build/rules.ts';
+import { asiBoost, parseSpeciesBoostChoice, speciesFixedAbilities } from '#lib/build/derive.ts';
+import { splitList } from '#lib/content/schemas.ts';
+import { signed } from '#lib/util/format.ts';
 import { toggleCapped, ORIGIN_SLOT_KEY } from './draft';
 import { ASI } from './rows';
 import type { DraftState, EditContext } from './draft';
 import type { FeatSlots } from './feat-slots.svelte';
-import type { LoadedRowByType } from '$lib/content/loader';
+import type { LoadedRowByType } from '#lib/content/loader.ts';
 
 /** Where a single point in an ability came from — the parts of the provenance line an ability row
  *  shows. Numbers, not a sentence: the component translates it (the module stays locale-free). */

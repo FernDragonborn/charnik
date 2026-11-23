@@ -1,9 +1,9 @@
 <script lang="ts">
 	// "Undo this update" asks what becomes of what the player changed in the pack since the update
 	// (audit-oct-27 D8): a plain rollback drops every translation, edit and note made after it.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import DialogShell from '../DialogShell.svelte';
-	import { ROLLBACK_MODE, type RollbackMode } from '$lib/content/remote/rollback';
+	import { ROLLBACK_MODE, type RollbackMode } from '#lib/content/remote/rollback.ts';
 
 	let {
 		pack,

@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Story notes: one bullet per line, plain text, saved onto the character. No parsing, no schema,
 	// no mechanics — the sheet renders the lines as bullets and nothing else ever reads them.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build } from '../build-view-model.svelte';
 	const b = build;
 

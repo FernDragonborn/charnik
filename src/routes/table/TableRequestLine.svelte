@@ -2,12 +2,12 @@
 	// What a GM's request says, as one line: the same words on the player's prompt and in the GM's
 	// own list of what was asked. A request is ids and numbers, so the words are this app's — the
 	// roll's name from the catalogs, the state's from the reader's own content.
-	import { _ } from '$lib/i18n';
-	import { app } from '$lib/stores/app.svelte';
-	import { content } from '$lib/content/store.svelte';
-	import { localizedName } from '$lib/content/detail';
-	import { titleCase } from '$lib/util/format';
-	import { REQUESTED_ROLL, TABLE_REQUEST, type TableRequest } from '$lib/table-link/types';
+	import { _ } from '#lib/i18n/index.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import { content } from '#lib/content/store.svelte.ts';
+	import { localizedName } from '#lib/content/detail.ts';
+	import { titleCase } from '#lib/util/format.ts';
+	import { REQUESTED_ROLL, TABLE_REQUEST, type TableRequest } from '#lib/table-link/types.ts';
 
 	let {
 		request,

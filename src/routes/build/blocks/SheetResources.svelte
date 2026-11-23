@@ -6,9 +6,9 @@
 	// Hit dice are NOT a pool here. Every character has them, so a card per die type said nothing
 	// about THIS character while taking a card's worth of room — and under the default ½-HP short
 	// rest they are not even spent. They read as one tile in the vitals strip instead.
-	import { _ } from '$lib/i18n';
-	import { rechargeLabel } from '$lib/combat/helpers';
-	import { sayText } from '$lib/util/say';
+	import { _ } from '#lib/i18n/index.ts';
+	import { rechargeLabel } from '#lib/combat/helpers.ts';
+	import { sayText } from '#lib/util/say.ts';
 	import { build } from '../build-view-model.svelte';
 	const b = build;
 

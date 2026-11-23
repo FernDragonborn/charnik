@@ -12,9 +12,9 @@
  *   - Versioning FOLLOWS the content schema (no separate draft schema). Drafts are ephemeral WIP, so a
  *     version mismatch = DISCARD, never migrate.
  */
-import type { Storage } from '$lib/storage/types';
-import type { ContentType } from '$lib/content/schemas';
-import { CONTENT_SCHEMA_VERSION } from '$lib/schema/version';
+import type { Storage } from '#lib/storage/types.ts';
+import type { ContentType } from '#lib/content/schemas.ts';
+import { CONTENT_SCHEMA_VERSION } from '#lib/schema/version.ts';
 
 const DRAFTS_DIR = 'drafts';
 

@@ -10,8 +10,8 @@ import {
 	parseInstanceRowId,
 	type InstanceScope,
 } from './item-instance';
-import { addItemInstance } from '$lib/character/inventory';
-import type { System } from '$lib/rules/pipeline';
+import { addItemInstance } from '#lib/character/inventory.ts';
+import type { System } from '#lib/rules/pipeline.ts';
 
 describe.each([
 	['srd-2014', '5e'],

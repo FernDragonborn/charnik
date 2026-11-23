@@ -3,11 +3,11 @@
  * builder's alike, so one item is not "Longsword +2" on one screen and the book's heading on the
  * other.
  */
-import type { LoadedRowOf } from '$lib/content/loader';
-import { localizedName } from '$lib/content/detail';
-import { instanceName, type InstanceNaming } from '$lib/content/item-instance';
-import { splitList } from '$lib/content/schemas';
-import type { Translate } from '$lib/i18n';
+import type { LoadedRowOf } from '#lib/content/loader.ts';
+import { localizedName } from '#lib/content/detail.ts';
+import { instanceName, type InstanceNaming } from '#lib/content/item-instance.ts';
+import { splitList } from '#lib/content/schemas.ts';
+import type { Translate } from '#lib/i18n/index.ts';
 import { damageTypeLabel } from './attacks';
 
 /** The instance's own name ("Longsword +2", "Belt of Hill Giant Strength"), else the row's — and a

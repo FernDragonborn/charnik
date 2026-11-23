@@ -4,9 +4,9 @@
 	// Every dice roll in the app routes through here, so the modifier convention + the tray hook live in one
 	// place. Content (the label/emoji) is the caller's; `variant` picks the look.
 	import type { Snippet } from 'svelte';
-	import { rollFormulaEntry, wantsTray } from '$lib/combat/roll';
-	import { toastRoll } from '$lib/dice/roll-toast';
-	import { openDiceTray } from '$lib/dice/tray.svelte';
+	import { rollFormulaEntry, wantsTray } from '#lib/combat/roll.ts';
+	import { toastRoll } from '#lib/dice/roll-toast.ts';
+	import { openDiceTray } from '#lib/dice/tray.svelte.ts';
 
 	let {
 		formula,

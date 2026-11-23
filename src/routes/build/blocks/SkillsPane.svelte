@@ -2,10 +2,10 @@
 	// Skills, with the part the sheet can't show: which ones your class actually offers, how many
 	// picks are left, and where the ones you already have came from. The rows themselves are the same
 	// shared `SkillRows` the sheet uses — a skill is trained in exactly one control.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build, rowName } from '../build-view-model.svelte';
 	import { skillLabel } from '../rows';
-	import { SKILL_ABILITY } from '$lib/character/skills';
+	import { SKILL_ABILITY } from '#lib/character/skills.ts';
 	import SkillRows from './SkillRows.svelte';
 	import SkillCounts from './SkillCounts.svelte';
 	const b = build;

@@ -6,9 +6,9 @@
  * `svelte-sonner` anywhere else are refused by the linter, so the rule cannot be walked around.
  */
 import { toast as sonner } from 'svelte-sonner';
-import RollToast from '$lib/components/RollToast.svelte';
-import type { RollToastModel } from '$lib/dice/roll-toast';
-import { errText } from '$lib/util/format';
+import RollToast from '#lib/components/RollToast.svelte';
+import type { RollToastModel } from '#lib/dice/roll-toast.ts';
+import { errText } from '#lib/util/format.ts';
 
 export const TOAST_TONE = {
 	plain: 'plain',

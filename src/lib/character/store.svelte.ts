@@ -4,9 +4,9 @@
  * charnik-guid-not-counter). Persistence goes through the repository over the runtime writable
  * Storage (`getUserStorage()`), so the same code works on web (IndexedDB) and Tauri (fs).
  */
-import { sayIfFails, toast } from '$lib/toast/toast';
-import { t } from '$lib/i18n';
-import { detectPlatform, Platform, getUserStorage } from '$lib/storage/provider';
+import { sayIfFails, toast } from '#lib/toast/toast.ts';
+import { t } from '#lib/i18n/index.ts';
+import { detectPlatform, Platform, getUserStorage } from '#lib/storage/provider.ts';
 import {
 	saveCharacter,
 	loadCharacter,
@@ -28,14 +28,14 @@ import {
 } from './repository';
 import { copyCharacterPhoto } from './portrait-files';
 import type { Character } from './schema';
-import type { Storage } from '$lib/storage/types';
-import { demoCharacter, DEMO_ID } from '$lib/demo/sheet';
-import { slugify } from '$lib/util/slug';
-import { errText } from '$lib/util/format';
-import { logger } from '$lib/diag/logger';
-import { content } from '$lib/content/store.svelte';
-import { localizedName } from '$lib/content/detail';
-import { app } from '$lib/stores/app.svelte';
+import type { Storage } from '#lib/storage/types.ts';
+import { demoCharacter, DEMO_ID } from '#lib/demo/sheet.ts';
+import { slugify } from '#lib/util/slug.ts';
+import { errText } from '#lib/util/format.ts';
+import { logger } from '#lib/diag/logger.ts';
+import { content } from '#lib/content/store.svelte.ts';
+import { localizedName } from '#lib/content/detail.ts';
+import { app } from '#lib/stores/app.svelte.ts';
 import { logLevelGains } from './level-log';
 
 /** A save the repository refused because `character.json` is not the file this app last held: the

@@ -15,18 +15,18 @@ import {
 	matchesAny,
 	type KitLine,
 	type KitSource,
-} from '$lib/content/starting-equipment';
-import type { LoadedRow, LoadedRowOf } from '$lib/content/loader';
-import { localizedName } from '$lib/content/detail';
-import { resolveItem, armorCategoryOf } from '$lib/content/resolved-item';
-import { parseItemTags, weaponCategoryOf } from '$lib/content/item-tags';
-import { isRowActive } from '$lib/content/sources.svelte';
-import { weaponProfGrants } from '$lib/combat/attacks';
-import { armorProfGrants } from '$lib/character/granted-proficiency';
-import { isArmorProficient, isWeaponProficient } from '$lib/rules/proficiency';
-import { app } from '$lib/stores/app.svelte';
-import { COINS, type Purse } from '$lib/rules/currency';
-import type { Translate } from '$lib/i18n';
+} from '#lib/content/starting-equipment.ts';
+import type { LoadedRow, LoadedRowOf } from '#lib/content/loader.ts';
+import { localizedName } from '#lib/content/detail.ts';
+import { resolveItem, armorCategoryOf } from '#lib/content/resolved-item.ts';
+import { parseItemTags, weaponCategoryOf } from '#lib/content/item-tags.ts';
+import { isRowActive } from '#lib/content/sources.svelte.ts';
+import { weaponProfGrants } from '#lib/combat/attacks.ts';
+import { armorProfGrants } from '#lib/character/granted-proficiency.ts';
+import { isArmorProficient, isWeaponProficient } from '#lib/rules/proficiency.ts';
+import { app } from '#lib/stores/app.svelte.ts';
+import { COINS, type Purse } from '#lib/rules/currency.ts';
+import type { Translate } from '#lib/i18n/index.ts';
 import {
 	answerPick,
 	dropKit,

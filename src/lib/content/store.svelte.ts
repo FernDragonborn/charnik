@@ -7,7 +7,7 @@
  * call `reloadContent()`; that's the whole rebuild mechanism.
  */
 import { getContentGraph, resetContentGraph } from './provider';
-import { resetUserStorage } from '$lib/storage/provider';
+import { resetUserStorage } from '#lib/storage/provider.ts';
 import { initSourceConfig } from './sources.svelte';
 import { initPackConfig } from './packs.svelte';
 import type { ContentGraph } from './loader';

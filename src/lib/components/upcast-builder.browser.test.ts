@@ -8,8 +8,8 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import UpcastBuilder from './UpcastBuilder.svelte';
-import { startI18n } from '$lib/i18n';
-import { parseUpcast } from '$lib/effects/upcast';
+import { startI18n } from '#lib/i18n/index.ts';
+import { parseUpcast } from '#lib/effects/upcast.ts';
 
 beforeAll(() => startI18n('en'));
 

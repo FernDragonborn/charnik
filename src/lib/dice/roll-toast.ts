@@ -2,7 +2,7 @@
  * The roll-toast view model + the ONE way to toast a completed roll. Every roll site (combat's
  * pushRoll, the RollButton, the no-tray fallback) went through its own `toast(string)` template, so
  * the same roll rendered three different ways. They now all call `toastRoll`, which hands the model
- * built here to the toast gate (`$lib/toast/toast`) — the roll's card, joined by whatever else the
+ * built here to the toast gate (`#lib/toast/toast`) — the roll's card, joined by whatever else the
  * same action says.
  *
  * The shape is the final toast design (design-preview/toast-update): the card shrinks to its
@@ -17,7 +17,7 @@ import {
 	type FlatPart,
 	type RolledDie,
 	type Rolled,
-} from '$lib/rules/dice';
+} from '#lib/rules/dice.ts';
 import {
 	AMENDMENT_KIND,
 	damageTotal,
@@ -25,11 +25,11 @@ import {
 	type RollAmendment,
 	type RollLogEntry,
 	type TypedRoll,
-} from '$lib/combat/roll';
-import { toastRollCard } from '$lib/toast/toast';
-import { say, type SaidValue } from '$lib/util/say';
-import type { LogKind } from '$lib/character/log-kind';
-import { translator, type Translate } from '$lib/i18n';
+} from '#lib/combat/roll.ts';
+import { toastRollCard } from '#lib/toast/toast.ts';
+import { say, type SaidValue } from '#lib/util/say.ts';
+import type { LogKind } from '#lib/character/log-kind.ts';
+import { translator, type Translate } from '#lib/i18n/index.ts';
 
 /** One damage type inside an attack: its glyph key, the dice it rolled (a crit's doubled dice ride
  *  ONE pill, divided), the flat mod folded in, and what the part came to. */

@@ -1,23 +1,23 @@
 /*
  * The N2 action executor on the sheet: the names the panels call to use a feature's spend-option,
- * enter combat and end a turn. What each DOES is a pure action in `$lib/play/options` and
- * `$lib/play/events` (docs/internals/actions.md §2); what stays here is what an action can only ASK
+ * enter combat and end a turn. What each DOES is a pure action in `#lib/play/options.ts` and
+ * `#lib/play/events.ts` (docs/internals/actions.md §2); what stays here is what an action can only ASK
  * for — the strikes an `attack:` verb makes, rolled through the sheet's own attack path, and the
  * question an `assume_form:` verb puts before anything is paid.
  */
-import type { Character } from '$lib/character/schema';
-import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
-import { type Attack } from '$lib/combat/attacks';
-import { attackRollName, numberedAttackRollName } from '$lib/combat/attack-names';
-import { enterOrLeaveCombat, startNextTurn } from '$lib/play/events';
-import { activateOption, activateOptionById, type OptionUse } from '$lib/play/option-activation';
-import { t } from '$lib/i18n';
+import type { Character } from '#lib/character/schema.ts';
+import type { CharacterSheet, ResourceOption } from '#lib/character/derive.ts';
+import { type Attack } from '#lib/combat/attacks.ts';
+import { attackRollName, numberedAttackRollName } from '#lib/combat/attack-names.ts';
+import { enterOrLeaveCombat, startNextTurn } from '#lib/play/events.ts';
+import { activateOption, activateOptionById, type OptionUse } from '#lib/play/option-activation.ts';
+import { t } from '#lib/i18n/index.ts';
 import {
 	PLAY_REQUEST,
 	type PlayContext,
 	type PlayNotice,
 	type PlayOutcome,
-} from '$lib/play/outcome';
+} from '#lib/play/outcome.ts';
 import type { SheetRolls } from './sheet-rolls.svelte';
 import type { ResourceTracker } from './resource-tracker.svelte';
 import type { EffectsEditor } from './effects-editor.svelte';

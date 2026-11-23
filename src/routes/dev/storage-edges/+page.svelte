@@ -19,15 +19,15 @@
 	// child of the folder granted at startup. So part 3 runs only once it has proved its source file
 	// unreadable, and puts the pointer back if it moved anyway.
 	import { onMount } from 'svelte';
-	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
+	import { detectPlatform, getUserStorage, Platform } from '#lib/storage/provider.ts';
 	import {
 		currentDataDir,
 		listDataDirFiles,
 		migrateDataDir,
 		setDataDirOverride,
-	} from '$lib/storage/tauri';
-	import { deleteCharacter } from '$lib/character/repository';
-	import { discoverPlugins } from '$lib/effects/plugin-host';
+	} from '#lib/storage/tauri.ts';
+	import { deleteCharacter } from '#lib/character/repository.ts';
+	import { discoverPlugins } from '#lib/effects/plugin-host.ts';
 
 	const REPORT = 'storage-edges-probe.txt';
 	const WALK = '.probe-walk';

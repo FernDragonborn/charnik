@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import LangSwitcher from './LangSwitcher.svelte';
-	import { trapFocus } from '$lib/actions/trapFocus';
+	import { trapFocus } from '#lib/actions/trapFocus.ts';
 
 	// The narrow layout is alpha, not absent: nothing overflows any more (`tools/visual/narrow.mjs`
 	// holds that line), but the dense views are cramped and most controls are still mouse-sized. A

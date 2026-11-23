@@ -8,8 +8,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { contentRepoDir, packDir, requireContentRepo } from '../../tools/content-repo.mjs';
-import { NodeStorage } from '$lib/storage/node';
-import { loadContent, type ContentGraph } from '$lib/content/loader';
+import { NodeStorage } from '#lib/storage/node.ts';
+import { loadContent, type ContentGraph } from '#lib/content/loader.ts';
 
 /** Is the content repo cloned? For the few tests that are optional without it. */
 export const hasContentRepo = existsSync(contentRepoDir());

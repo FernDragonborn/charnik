@@ -5,7 +5,7 @@
  * on the shared row. This module asks them: what a row leaves open, what an answered instance is
  * called ("Longsword +2"), and which instances a search like "sword +1" means.
  */
-import { foldForSearch } from '$lib/util/search-fold';
+import { foldForSearch } from '#lib/util/search-fold.ts';
 import type { ContentGraph, LoadedRow, LoadedRowOf } from './loader';
 import { parseBonusChoices, type BonusRung } from './item-tags';
 import { baseRowOf, needsBaseItem, resolveItem } from './resolved-item';
@@ -13,7 +13,7 @@ import { localizedName } from './detail';
 import { localizedCell } from './prose';
 import { optionNamed, optionsOf } from './options';
 import { splitList } from './schemas';
-import type { System } from '$lib/rules/pipeline';
+import type { System } from '#lib/rules/pipeline.ts';
 
 interface BaseItemOption {
 	ref: string;

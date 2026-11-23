@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MemoryStorage } from '$lib/storage/memory';
+import { MemoryStorage } from '#lib/storage/memory.ts';
 import { stampWithHash } from './hash';
 import { hasRollback, rollbackPack } from './remote/rollback';
 import { saveTranslation } from './translate';

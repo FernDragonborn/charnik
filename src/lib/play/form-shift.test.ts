@@ -8,12 +8,12 @@
  * SRD 5.2.1 — "you gain a number of Temporary Hit Points equal to your Druid level"; "you retain your
  * … Hit Points"; "until you … have the Incapacitated condition, or die."
  */
-import { LOG_KIND } from '$lib/character/log-kind';
+import { LOG_KIND } from '#lib/character/log-kind.ts';
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
-import { newCharacter, type Character, classRow } from '$lib/character/schema';
-import { deriveSheet } from '$lib/character/derive';
-import type { ContentGraph } from '$lib/content/loader';
+import { newCharacter, type Character, classRow } from '#lib/character/schema.ts';
+import { deriveSheet } from '#lib/character/derive.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
 import { addEffect, removeEffects } from './effects';
 import { assumeForm, revertForm } from './form-shift';
 import { die } from './hit-points';

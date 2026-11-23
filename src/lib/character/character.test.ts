@@ -24,7 +24,7 @@ import {
 import { writeCharacterPhoto, readCharacterPhoto, removeCharacterPhotos } from './portrait-files';
 import { appendLog, reviseLog, logLineFor, readLog } from './log-repository';
 import { LOG_KIND } from './log-kind';
-import { charactersReferencing } from '$lib/content/remote/diff';
+import { charactersReferencing } from '#lib/content/remote/diff.ts';
 import { addItem, attunedCount, bumpQty, carriedWeight, toggleAttuned, useOne } from './inventory';
 
 function sample(): Character {

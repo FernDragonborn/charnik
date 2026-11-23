@@ -6,21 +6,21 @@
  * ref — carries the stat block's numbers and the form's clock. So the form shows in the Effects panel
  * with its timer, passing time expires it, and its ✕ ends it, all on paths that already exist.
  *
- * Whose hit points are counted, and putting them back, is `$lib/play/form-shift` and
- * `$lib/play/settle`; what this module owns is the question the picker asks and what it offers.
+ * Whose hit points are counted, and putting them back, is `#lib/play/form-shift.ts` and
+ * `#lib/play/settle.ts`; what this module owns is the question the picker asks and what it offers.
  */
-import type { Character } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
-import type { ContentGraph } from '$lib/content/loader';
-import { localizedName } from '$lib/content/detail';
-import { isRowActive } from '$lib/content/sources.svelte';
-import { app } from '$lib/stores/app.svelte';
-import type { FormRules } from '$lib/effects/facts';
-import { activeForm, isEligibleForm, type MonsterRow } from '$lib/character/forms';
-import { assumeForm, leaveFormNow, revertForm, setFormWorn } from '$lib/play/form-shift';
-import { FORM_SHEDS } from '$lib/effects/token-words';
-import { FORM_SPECIES } from '$lib/character/schema';
-import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
+import type { Character } from '#lib/character/schema.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
+import { localizedName } from '#lib/content/detail.ts';
+import { isRowActive } from '#lib/content/sources.svelte.ts';
+import { app } from '#lib/stores/app.svelte.ts';
+import type { FormRules } from '#lib/effects/facts.ts';
+import { activeForm, isEligibleForm, type MonsterRow } from '#lib/character/forms.ts';
+import { assumeForm, leaveFormNow, revertForm, setFormWorn } from '#lib/play/form-shift.ts';
+import { FORM_SHEDS } from '#lib/effects/token-words.ts';
+import { FORM_SPECIES } from '#lib/character/schema.ts';
+import type { PlayContext, PlayOutcome } from '#lib/play/outcome.ts';
 /** What the form bookkeeping needs from the sheet around it. */
 export interface FormHost {
 	character: Character | null;
@@ -93,7 +93,7 @@ export class FormShift {
 		};
 	};
 
-	/** Assume a form (`$lib/play/form-shift`). The effect that carries it is labelled with the stat
+	/** Assume a form (`#lib/play/form-shift.ts`). The effect that carries it is labelled with the stat
 	 *  block's name as the reader has it. */
 	assume = (formId: string, monster: string): void => {
 		const label = this.nameOf(monster);
@@ -144,7 +144,7 @@ export class FormShift {
 	/** The form ends, however it ended. */
 	leave = (): void => void this.host().act(leaveFormNow);
 
-	/** What ends a form without being asked is `$lib/play/settle`; this is that, under the name the
+	/** What ends a form without being asked is `#lib/play/settle.ts`; this is that, under the name the
 	 *  behavioural tests call after writing play-state by hand. */
 	sync = (): void => this.host().outcomes.settle();
 }

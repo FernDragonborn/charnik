@@ -7,9 +7,9 @@
  * The calls stand on a SEAT rather than on the service: `host` answers a GM's seat and `join` a
  * player's, so a player's seat has no way to ask and a GM's none to publish. The role is the type.
  */
-import type { CharacterSheet } from '$lib/character/derive';
-import type { Character } from '$lib/character/schema';
-import type { DamagePart } from '$lib/play/hit-points';
+import type { CharacterSheet } from '#lib/character/derive.ts';
+import type { Character } from '#lib/character/schema.ts';
+import type { DamagePart } from '#lib/play/hit-points.ts';
 import type { TableRoll, TableView } from './wire-schema';
 
 export type TableId = string;

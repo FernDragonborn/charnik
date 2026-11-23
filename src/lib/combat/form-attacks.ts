@@ -7,10 +7,10 @@
  * `<name>:<to hit>:<reach or range>:<dice> <type>[, <dice> <type>]`, joined by `; `. So the row is
  * read, never recomputed from the form's scores.
  */
-import { activeForm, type MonsterRow } from '$lib/character/forms';
-import type { Character } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
-import type { ContentGraph } from '$lib/content/loader';
+import { activeForm, type MonsterRow } from '#lib/character/forms.ts';
+import type { Character } from '#lib/character/schema.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
 import { computeAttacks, parseDamageParts, type Attack } from './attacks';
 
 /** The prefix a form attack's id carries, so it can never collide with a weapon's content id. */

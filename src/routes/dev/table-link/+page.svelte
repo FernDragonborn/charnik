@@ -11,10 +11,10 @@
 	import { onMount } from 'svelte';
 	import { invokeRaw } from '../invoke-raw';
 	import { page } from '$app/state';
-	import { deriveSheet } from '$lib/character/derive';
-	import { getContentGraph } from '$lib/content/provider';
-	import { demoCharacter } from '$lib/demo/sheet';
-	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
+	import { deriveSheet } from '#lib/character/derive.ts';
+	import { getContentGraph } from '#lib/content/provider.ts';
+	import { demoCharacter } from '#lib/demo/sheet.ts';
+	import { detectPlatform, getUserStorage, Platform } from '#lib/storage/provider.ts';
 	import {
 		DELIVERY,
 		RELAY_MODE,
@@ -25,8 +25,8 @@
 		UNAVAILABLE,
 		type TableAnswer,
 		type TableRequest,
-	} from '$lib/table-link/types';
-	import { tableViewOf } from '$lib/table-link/view';
+	} from '#lib/table-link/types.ts';
+	import { tableViewOf } from '#lib/table-link/view.ts';
 
 	const REPORT = 'table-link-probe.txt';
 	const EXPECT_ON = 'on';

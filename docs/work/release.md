@@ -332,23 +332,6 @@
   `aes-crypto`) and inconsistent local-header names in stream extraction (the updater uses
   `ZipArchive`, not `ZipStreamReader`). Its ZIP extraction is Windows-only and follows minisign
   verification, so an unsigned archive cannot reach it. Moves with the updater's dependency bump.
-- **DEP-4 · SvelteKit 2 has four advisories fixed only in 3.x.** Two low (GHSA-pfhg-q3qv-9q6r,
-  GHSA-27mw-82g8-phjj, fixed in 3.0.0) concern enhanced form redirects and an untrusted
-  cache-control header at prerender time; a high and a moderate (GHSA-3r8g-jcqq-3p5j,
-  GHSA-6cf5-gc4q-fm3x, fixed in 3.1.1) concern remote functions' `form` and `query.batch`. Charnik
-  uses no enhanced forms, no remote functions and no untrusted prerender response; the shipped app
-  is static. Move with the SvelteKit 3 migration, not a hotfix. The advisories with a 2.x patch are
-  taken as they land (`^2.70.4`, adapter-static `^3.0.11`).
-  **The migration (SVELTEKIT-3) comes before the 0.9.0 UI items** — the maintainer's call, so new
-  UI is built on 3.x. Sized against the official guide (<https://svelte.dev/docs/kit/migrating-to-sveltekit-3>):
-  `$lib` is gone for `#lib` in `package.json` `imports` with explicit extensions — 1926 import lines
-  in 414 files; `base` and `assets` leave `$app/paths` for `resolve()` / `asset()` — 18 files, about
-  40 uses, every internal link; `$app/environment` becomes `$app/env` (5 files) and
-  `$env/dynamic/public` `$app/env/public` (1); `invalidateAll` / `replaceState` (2); `tsconfig.json`
-  extends `$app/tsconfig`. Already met: Node 22.17+, TypeScript 6, Svelte 5.57, Vite 8,
-  vite-plugin-svelte 7, the config inside `vite.config.ts`. `npx sv migrate sveltekit-3` does part
-  of it, the guide does not say which. Not yet checked: adapter-static's major, and CSP and the
-  prerendered shell under 3.x on the real desktop app.
 - **DEP-6 · `minimatch 10.2.6` glob amplification** (GHSA-g3hv-75wg-m249, moderate) — build/lint
   tooling only. The patch is 11.0.1; ESLint and TypeScript ESLint still require 10.x, including their
   available updates. The patterns are repository-owned and no minimatch ships in the app. Move with
@@ -358,7 +341,7 @@
   readable by any other site under the same `github.io` host of that owner. A host of its own (a
   custom domain on the Pages site, or a dedicated `<name>.github.io` repository) gives it an origin
   nobody else writes to. A deployment change, no code.
-- **AUDIT-DRIFT · re-run both audits before every release.** `pnpm audit` reports DEP-4 and DEP-6; `cargo audit` reports DEP-3 and the platform-specific warnings below. The standing rules:
+- **AUDIT-DRIFT · re-run both audits before every release.** `pnpm audit` reports DEP-6; `cargo audit` reports DEP-3 and the platform-specific warnings below. The standing rules:
   - **`cargo audit` is the other half**, run from `src-tauri/`: the Rust crates are not in
     `pnpm audit`, and the tool is a separate install (`cargo install cargo-audit`). Its warnings
     include unmaintained `chrono`, `paste`, `zbus_names`/`zvariant` and `proc-macro-error`;

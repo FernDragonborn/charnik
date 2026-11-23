@@ -6,12 +6,12 @@
 	// <html> by the root layout — so a choice here is live AND survives a reload. (The system a NEW
 	// character is built under is chosen on the Build page, not here.)
 	import Icon, { type IconName } from '../Icon.svelte';
-	import { provenance } from '$lib/actions/provenance';
-	import { app, type SystemId, type ThemeId } from '$lib/stores/app.svelte';
-	import { SYSTEMS, SYSTEM_LABELS } from '$lib/rules/pipeline';
-	import { LOCALES, _ } from '$lib/i18n';
-	import { CRIT_METHOD, type CritMethod } from '$lib/rules/dice';
-	import { REDUCE_MOTION_CHOICES } from '$lib/util/motion';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { app, type SystemId, type ThemeId } from '#lib/stores/app.svelte.ts';
+	import { SYSTEMS, SYSTEM_LABELS } from '#lib/rules/pipeline.ts';
+	import { LOCALES, _ } from '#lib/i18n/index.ts';
+	import { CRIT_METHOD, type CritMethod } from '#lib/rules/dice.ts';
+	import { REDUCE_MOTION_CHOICES } from '#lib/util/motion.ts';
 
 	// a closed vocabulary: the id is the fact, and its name and hint are catalog entries derived from
 	// it, so a method is spelled in exactly one place (docs/internals/ui.md ▸ Strings live in the catalogs)

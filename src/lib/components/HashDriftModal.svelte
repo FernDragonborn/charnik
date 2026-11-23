@@ -5,11 +5,11 @@
 	// "record" keeps — grouped by whose they are; pressing a file's arrow leaves it out. Presentation
 	// only — the detection and the atomic write-back live in the loader/provider (thin-component rule).
 	import { untrack } from 'svelte';
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import DialogShell from './DialogShell.svelte';
 	import FileCompare, { type FileCompareGroup } from './FileCompare.svelte';
-	import { HOMEBREW_ROOT } from '$lib/content/homebrew';
-	import type { DriftItem } from '$lib/content/meta';
+	import { HOMEBREW_ROOT } from '#lib/content/homebrew.ts';
+	import type { DriftItem } from '#lib/content/meta.ts';
 
 	let {
 		items,

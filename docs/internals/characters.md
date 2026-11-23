@@ -16,11 +16,11 @@ reference. The file being replaced goes only after the save naming the new one h
 character on disk never names a portrait that is gone. An optional append-only `log.jsonl` sits beside it, deliberately
 **out** of `character.json` so a long campaign cannot bloat the save.
 
-**Every act that changes play state leaves its delta on its own log line** (`$lib/play/delta`):
+**Every act that changes play state leaves its delta on its own log line** (`#lib/play/delta.ts`):
 only the fields that moved, from and to, read off the character before and after the act — the
 play state and the inventory, a row of a list named by its `iid`. The log says it under the line
 (`HP 38 → 73 · d10 spent 2 → 0`), and what followed from the act folds away beneath it. **Undo
-applies a delta in reverse** (`$lib/play/undo`), all or nothing, and refuses when anything the act
+applies a delta in reverse** (`#lib/play/undo.ts`), all or nothing, and refuses when anything the act
 changed has moved since. A rest, dawn, dusk and a dropped inventory row offer it on their toast;
 reversing a level-up is a build change and not part of it.
 
@@ -109,7 +109,7 @@ putting on a second takes the first off, in the builder and in play alike, becau
 counts one of each and a second shield's magic bonus would otherwise still reach it.
 
 **An inventory row is spoken of by its `iid` in every action** — equip, attune, count, use, drop,
-reorder, and the three answers a row can be asked for (`$lib/play/inventory`). Two rows may hold
+reorder, and the three answers a row can be asked for (`#lib/play/inventory.ts`). Two rows may hold
 the same item: a file edited by hand, or two rings that resist different things. Only a picker
 speaks of the ITEM, because "do you carry this" is a question about every row at once
 (`ownItem`, `disownItem`). An attack is named for its weapon, so the same weapon on two rows gives
@@ -297,7 +297,7 @@ timer at all. Giving concentration its own clock needs a display proxy and a sec
 **A form is a REF too, for the same reason.** `play.form` names a stat block and the form whose
 rules granted it; the numbers and the clock live on a carrier effect in `play.effects` whose `source`
 is that same monster ref. So a form shows in the Effects panel with its timer, passing time expires
-it and its ✕ ends it on the paths that already exist, and `settlePlay` (`$lib/play/settle`) finishes
+it and its ✕ ends it on the paths that already exist, and `settlePlay` (`#lib/play/settle.ts`) finishes
 the leaving for all of them. `hpBefore` is present exactly when the form has hit points of its own (2014 Wild
 Shape): the character's own current HP, waiting, while `hp.current` counts the form's — which is
 why damage, healing and the bar need no second pool. Damage the form cannot hold ends it and lands
@@ -387,7 +387,7 @@ ends or is replaced.
 
 **Stable is the death-save track itself.** Three successes with no failures at 0 hit points IS the
 record: RAW resets "the number of both" on becoming stable, and what is kept is the three successes
-that say so. `isStable` (`$lib/play/hit-points`) reads it, so there is no second field to disagree
+that say so. `isStable` (`#lib/play/hit-points.ts`) reads it, so there is no second field to disagree
 with the track. A stable character rolls no death save; any damage — a hit, or a failure pressed by
 hand — clears the successes and starts the dying again; any hit point regained clears the track.
 

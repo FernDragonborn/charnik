@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (122)
+## Duplicate suspects (121)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -91,7 +91,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `isTaken` ×2 — src/routes/build/blocks/OptionGrid.svelte · src/routes/build/blocks/StartingEquipmentPane.svelte
 - `KEY` ×2 — src/lib/actions/focusHalo.ts · src/routes/table/asked-log.ts
 - `KINDS` ×2 — src/routes/dev/table-question/+page.svelte · src/routes/table/AskComposer.svelte
-- `link` ×2 — src/lib/content/spellAccess.ts · src/routes/+layout.svelte
 - `listDrafts` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
 - `load` ×2 — src/lib/stores/app.svelte.ts · src/routes/+layout.ts
 - `localizedName` ×2 — src/lib/content/detail.ts · src/lib/content/names.ts
@@ -296,7 +295,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 | Component | Props | Purpose |
 | --- | --- | --- |
-| **ArticleProse** | `bodyMarkdown`, `higherLevel`, `material`, `instanceName`, `editable`, `draft` | The shared PROSE of a wiki article: body text (+ optional "at higher levels" and spell material), |
+| **ArticleProse** | `bodyMarkdown`, `higherLevel`, `material`, `instanceName`, `editable`, `draft`, `/** The source body (raw Markdown/HTML); also the placeholder when editing. */
+		/** Source "at higher levels" prose — empty for types that don't have it (monster). */
+		/** Source spell material component — empty for non-spells. */
+		/** What one found instance of a `+1/+2/+3` row with no base is called — empty for every other
+		 *  row. Only asked while translating` | The shared PROSE of a wiki article: body text (+ optional "at higher levels" and spell material), |
 | **CharacterConflictDialog** | — | "Something outside Charnik changed this character" — asked when a save was refused because |
 | **Chip** | `active`, `onclick`, `children` | A filter / tag chip. |
 | **ClassPicker** | `value`, `options`, `onChange` |  |
@@ -564,7 +567,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (214 modules)
+## Library functions & types (215 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -1080,8 +1083,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/combat/helpers.ts`
 
-- `re-export titleCase` — re-exported so existing importers (`$lib/combat/helpers`) keep working after the F1/F2 dedup
-- `re-export signed` — re-exported so existing importers (`$lib/combat/helpers`) keep working after the F1/F2 dedup
+- `re-export titleCase` — re-exported so existing importers (`#lib/combat/helpers.ts`) keep working after the F1/F2 dedup
+- `re-export signed` — re-exported so existing importers (`#lib/combat/helpers.ts`) keep working after the F1/F2 dedup
 
 ### `src/lib/combat/roll.ts`
 
@@ -1144,7 +1147,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/combat/spells.ts`
 
-- `re-export casterForSpell` — re-exported so `$lib/combat/helpers` (barrel) + existing importers keep the same import site
+- `re-export casterForSpell` — re-exported so `#lib/combat/helpers.ts` (barrel) + existing importers keep the same import site
 - `const GROUP_MODES`
 - `type GroupMode`
 - `function enhancementTokens` — The effect tokens a magic-weapon buff (Magic Weapon) spawns for a `+n` enhancement bonus: `+n` to * attack AND damage…
@@ -1178,6 +1181,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/components/wikiEdit.ts`
 
 - `interface WikiEditDraft` — In edit (translate) mode, the raw TARGET-locale prose being edited — bound in place; the parent owns * the `$state` o…
+
+### `src/lib/config/base-path.ts`
+
+- `const BASE_PATH` — The prefix the app is served under: '' on the desktop, the repository's path on GitHub Pages.
 
 ### `src/lib/config/demo.ts`
 
@@ -1834,7 +1841,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/effects/apply.ts`
 
-- `re-export matchesTarget` — re-export the public facts contract so `$lib/effects/apply` import sites are unchanged
+- `re-export matchesTarget` — re-export the public facts contract so `#lib/effects/apply.ts` import sites are unchanged
 - `re-export EffectFacts`
 - `re-export NumericFact`
 - `re-export TargetValidator`
@@ -2744,4 +2751,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_51 tokens · 105 global classes · 63 components · 1686 exports across 231 modules · 122 duplicate suspects._
+_51 tokens · 105 global classes · 63 components · 1687 exports across 232 modules · 121 duplicate suspects._

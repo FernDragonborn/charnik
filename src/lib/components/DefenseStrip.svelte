@@ -1,5 +1,5 @@
 <script module lang="ts">
-	import type { CharacterSheet } from '$lib/character/derive';
+	import type { CharacterSheet } from '#lib/character/derive.ts';
 
 	/** Whether the strip would draw anything — a host that puts a box and a heading around it must
 	 *  not draw them around nothing. */
@@ -26,15 +26,15 @@
 	//
 	// It renders the groups and nothing around them. Whoever mounts it owns the box, the heading, and
 	// the `container-type` the one-group-per-line rule below measures against.
-	import { _ } from '$lib/i18n';
-	import type { ContentGraph } from '$lib/content/loader';
-	import type { System } from '$lib/rules/pipeline';
-	import { damageTypeLabel, senseLabel } from '$lib/combat/attacks';
-	import { why } from '$lib/combat/effects-view';
-	import { provenance } from '$lib/actions/provenance';
-	import { signed } from '$lib/util/format';
-	import { stateLabel } from '$lib/content/states';
-	import { app } from '$lib/stores/app.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import type { ContentGraph } from '#lib/content/loader.ts';
+	import type { System } from '#lib/rules/pipeline.ts';
+	import { damageTypeLabel, senseLabel } from '#lib/combat/attacks.ts';
+	import { why } from '#lib/combat/effects-view.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { signed } from '#lib/util/format.ts';
+	import { stateLabel } from '#lib/content/states.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
 
 	let {
 		sheet,

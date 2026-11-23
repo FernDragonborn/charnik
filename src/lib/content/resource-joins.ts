@@ -13,7 +13,7 @@
  * content-health pass may import it — and does, so the ids come from `parseToken`, not from a second
  * regex that would drift from the grammar.
  */
-import { parseToken, splitGuard } from '$lib/effects/token-parser';
+import { parseToken, splitGuard } from '#lib/effects/token-parser.ts';
 import { issueText, type IssueText } from './issue-text';
 import type { ContentGraph, LoadedRow } from './loader';
 import { tokensOf } from './loader';

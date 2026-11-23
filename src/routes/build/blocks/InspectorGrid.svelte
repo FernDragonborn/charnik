@@ -11,7 +11,7 @@
 	// Every pick target comes through here, feat slots included, so the diff's own rule — what it
 	// WOULD do while you read, what it DID once you clicked — is stated once rather than per pane.
 	import type { Snippet } from 'svelte';
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import type { Inspector } from '../inspector.svelte';
 	import OptionGrid from './OptionGrid.svelte';
 	import ChangeList from './ChangeList.svelte';

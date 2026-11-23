@@ -20,8 +20,8 @@ import {
 } from './store.svelte';
 import { loadCharacter } from './repository';
 import { newCharacter } from './schema';
-import { getUserStorage } from '$lib/storage/provider';
-import { DEMO_ID } from '$lib/demo/sheet';
+import { getUserStorage } from '#lib/storage/provider.ts';
+import { DEMO_ID } from '#lib/demo/sheet.ts';
 
 // mirrors the internal marker path in store.svelte.ts (not exported — the persistent "demo already
 // seeded once" flag). Tests drop it to simulate a pristine first run.

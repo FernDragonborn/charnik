@@ -6,7 +6,7 @@ import {
 	type NamedRollSource,
 } from './roller-vocabulary';
 import { PILL_KIND, TOKEN_KIND } from './roller';
-import { ADVANTAGE_MODE } from '$lib/rules/dice';
+import { ADVANTAGE_MODE } from '#lib/rules/dice.ts';
 
 const SOURCES: NamedRollSource[] = [
 	{

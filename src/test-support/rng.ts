@@ -2,7 +2,7 @@
  * Deterministic randomness for tests. Its own module, not part of `fixtures.ts`, so a rules-core test
  * can take it without dragging the content loader in behind it.
  */
-import type { Rng } from '$lib/rules/dice';
+import type { Rng } from '#lib/rules/dice.ts';
 
 /**
  * An `Rng` that yields exactly the values given, in order, and throws once they run out — an

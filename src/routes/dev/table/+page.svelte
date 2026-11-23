@@ -8,7 +8,7 @@
 	// screen's dice tray, so a roll can be built in it as on that screen. `&log` fills the table's log, and `&remembered` lists two tables to return to.
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { loadContentStore } from '$lib/content/store.svelte';
+	import { loadContentStore } from '#lib/content/store.svelte.ts';
 	import {
 		AUDIENCE,
 		CONNECTION,
@@ -19,9 +19,9 @@
 		type Audience,
 		type ConnectionState,
 		type TableRequest,
-	} from '$lib/table-link/types';
-	import { tableViewOf } from '$lib/table-link/view';
-	import type { TableView } from '$lib/table-link/wire-schema';
+	} from '#lib/table-link/types.ts';
+	import { tableViewOf } from '#lib/table-link/view.ts';
+	import type { TableView } from '#lib/table-link/wire-schema.ts';
 	import { combat } from '../../combat/combat-view-model.svelte';
 	import {
 		ASK_STATUS,

@@ -5,21 +5,21 @@
  * prop-drilling. Split out of the old monolithic combat/+page.svelte — behaviour unchanged.
  *
  * Methods are arrow-function fields so they can be destructured / passed to markup with the
- * correct `this`. Pure helpers live in $lib/combat/helpers.
+ * correct `this`. Pure helpers live in #lib/combat/helpers.
  */
-import { sayIfFails, toast } from '$lib/toast/toast';
-import { t } from '$lib/i18n';
-import { app } from '$lib/stores/app.svelte';
-import { ensureActiveCharacter, saveCharacterGuarded } from '$lib/character/store.svelte';
-import { content, loadContentStore } from '$lib/content/store.svelte';
-import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/derive';
-import { localizedName } from '$lib/content/detail';
-import { plugins } from '$lib/effects/plugin-store.svelte';
-import { DEFAULT_SYSTEM } from '$lib/rules/pipeline';
-import { CRIT_THRESHOLD_MAX } from '$lib/rules/core';
-import { MAX_CHARACTER_LEVEL } from '$lib/build/rules';
-import type { Character, ShortRestMode } from '$lib/character/schema';
-import { characterFeatures } from '$lib/character/features';
+import { sayIfFails, toast } from '#lib/toast/toast.ts';
+import { t } from '#lib/i18n/index.ts';
+import { app } from '#lib/stores/app.svelte.ts';
+import { ensureActiveCharacter, saveCharacterGuarded } from '#lib/character/store.svelte.ts';
+import { content, loadContentStore } from '#lib/content/store.svelte.ts';
+import { deriveSheet, type CharacterSheet, type SkillId } from '#lib/character/derive.ts';
+import { localizedName } from '#lib/content/detail.ts';
+import { plugins } from '#lib/effects/plugin-store.svelte.ts';
+import { DEFAULT_SYSTEM } from '#lib/rules/pipeline.ts';
+import { CRIT_THRESHOLD_MAX } from '#lib/rules/core.ts';
+import { MAX_CHARACTER_LEVEL } from '#lib/build/rules.ts';
+import type { Character, ShortRestMode } from '#lib/character/schema.ts';
+import { characterFeatures } from '#lib/character/features.ts';
 import { FeatureView } from './feature-view.svelte';
 import {
 	ACTION_COST,
@@ -27,7 +27,7 @@ import {
 	actionsHiddenBy,
 	isActionHidden,
 	type ActionPreset,
-} from '$lib/combat/actions';
+} from '#lib/combat/actions.ts';
 import {
 	GROUP_MODES,
 	type GroupMode,
@@ -38,17 +38,17 @@ import {
 	type Attack,
 	type ExtraAttackRow,
 	type StandardAction,
-} from '$lib/combat/helpers';
+} from '#lib/combat/helpers.ts';
 import { RollJournal } from './roll-journal.svelte';
-import { snapshotCharacterOnLaunch } from '$lib/character/repository';
-import { appendLog, reviseLog, readLog, logLineFor } from '$lib/character/log-repository';
-import { getUserStorage } from '$lib/storage/provider';
-import { rehydrateLogEntry, rollEffectsFor } from '$lib/combat/roll';
-import { afterAttackEffects, consumeAttackEffects } from '$lib/play/effects';
-import { ROLL_LIMIT, type RollLimit } from '$lib/effects/token-words';
-import type { RollLogEntry } from '$lib/combat/helpers';
-import { openDiceTray } from '$lib/dice/tray.svelte';
-import { isRowActive } from '$lib/content/sources.svelte';
+import { snapshotCharacterOnLaunch } from '#lib/character/repository.ts';
+import { appendLog, reviseLog, readLog, logLineFor } from '#lib/character/log-repository.ts';
+import { getUserStorage } from '#lib/storage/provider.ts';
+import { rehydrateLogEntry, rollEffectsFor } from '#lib/combat/roll.ts';
+import { afterAttackEffects, consumeAttackEffects } from '#lib/play/effects.ts';
+import { ROLL_LIMIT, type RollLimit } from '#lib/effects/token-words.ts';
+import type { RollLogEntry } from '#lib/combat/helpers.ts';
+import { openDiceTray } from '#lib/dice/tray.svelte.ts';
+import { isRowActive } from '#lib/content/sources.svelte.ts';
 import { EffectsEditor } from './effects-editor.svelte';
 import { SheetRolls } from './sheet-rolls.svelte';
 import { ActionExecutor } from './action-executor.svelte';
@@ -64,7 +64,7 @@ import { Concentration } from './concentration';
 import { FormShift } from './form-shift.svelte';
 import { forgetCharacterState } from './forget-character-state';
 import { Experience } from './experience.svelte';
-import { sheetAttacks } from '$lib/combat/form-attacks';
+import { sheetAttacks } from '#lib/combat/form-attacks.ts';
 import { PlayOutcomes } from './play-outcomes';
 
 /** The passive-senses row's default skills when the character hasn't customized it (ui.passiveSkills). */

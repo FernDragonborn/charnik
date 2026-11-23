@@ -4,12 +4,12 @@
 	// list is how you reach a row to edit or delete it (its own article carries those), and Add is
 	// how you write the next one with the join columns already filled, since a foreign key is an id
 	// nobody can guess.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import Icon from './Icon.svelte';
-	import { localizedName } from '$lib/content/detail';
-	import { linkOf, linkedLevel, linkedPrefill, linkedRowsOf } from '$lib/content/linked-tables';
-	import type { ContentGraph, LoadedRow } from '$lib/content/loader';
-	import type { ContentType } from '$lib/content/schemas';
+	import { localizedName } from '#lib/content/detail.ts';
+	import { linkOf, linkedLevel, linkedPrefill, linkedRowsOf } from '#lib/content/linked-tables.ts';
+	import type { ContentGraph, LoadedRow } from '#lib/content/loader.ts';
+	import type { ContentType } from '#lib/content/schemas.ts';
 
 	let {
 		parent,

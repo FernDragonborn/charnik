@@ -15,8 +15,8 @@
  * whole blob would erase every other section (rule-options, settings) the moment a pack is pinned.
  */
 import { errText } from '../util/format';
-import { readConfigFile, writeConfigSection } from '$lib/storage/json-config';
-import { onConfigWrittenElsewhere } from '$lib/storage/tab-sync';
+import { readConfigFile, writeConfigSection } from '#lib/storage/json-config.ts';
+import { onConfigWrittenElsewhere } from '#lib/storage/tab-sync.ts';
 import { HOMEBREW_ROOT } from './homebrew';
 
 /** The app-config file in the data root. Named by the architecture invariant (CLAUDE.md). */

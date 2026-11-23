@@ -3,11 +3,11 @@
 	// take on the left, read on the right — grouped by Challenge Rating, which is the one fact about a
 	// beast the feature's own limit is written in. Taking a row answers the question; closing the
 	// dialog leaves it unanswered, and nothing was spent.
-	import { _ } from '$lib/i18n';
-	import DialogShell from '$lib/components/DialogShell.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import DialogShell from '#lib/components/DialogShell.svelte';
 	import SectionedPicker from '../../build/blocks/SectionedPicker.svelte';
 	import { rowDetail, rowName } from '../../build/rows';
-	import { challengeRating } from '$lib/character/forms';
+	import { challengeRating } from '#lib/character/forms.ts';
 	import { combat } from '../combat-view-model.svelte';
 
 	const asking = $derived(combat.forms.asking);

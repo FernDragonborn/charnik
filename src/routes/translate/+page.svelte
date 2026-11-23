@@ -5,35 +5,35 @@
 	// locales are chosen freely via two dropdowns above the panes + persisted across re-entries. Saves
 	// write the localized columns into the row's own CSV + re-stamp its hash (see content/translate.ts).
 	// Reuses EntryList + WikiDetail + the shared list helpers — only the shell is new.
-	import { foldForSearch } from '$lib/util/search-fold';
-	import Icon, { type IconName } from '$lib/components/Icon.svelte';
+	import { foldForSearch } from '#lib/util/search-fold.ts';
+	import Icon, { type IconName } from '#lib/components/Icon.svelte';
 	import { onDestroy, onMount, untrack } from 'svelte';
-	import { KeyedDebounce } from '$lib/util/keyed-debounce';
+	import { KeyedDebounce } from '#lib/util/keyed-debounce.ts';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { base } from '$app/paths';
-	import { sayIfFails, toast } from '$lib/toast/toast';
-	import { content, loadContentStore, reloadContent } from '$lib/content/store.svelte';
-	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
-	import { provenance } from '$lib/actions/provenance';
-	import { submitOnEnter } from '$lib/actions/submitOnEnter';
-	import { hasProse, type ContentType } from '$lib/content/schemas';
-	import { buildDetail, editionLabel } from '$lib/content/detail';
-	import { entryMeta, type Entry } from '$lib/content/entry-list';
-	import { groupingsFor, groupRows, byDisplayName } from '$lib/content/grouping';
-	import { saveTranslation, saveLocStatus, locStatus } from '$lib/content/translate';
-	import { LOC_STATUS, LOC_STATUS_ORDER, type LocStatus } from '$lib/content/schemas';
-	import { rowName, type LoadedRow } from '$lib/content/loader';
-	import EntryList from '$lib/components/EntryList.svelte';
-	import WikiDetail from '$lib/components/WikiDetail.svelte';
-	import LanguagePicker from '$lib/components/LanguagePicker.svelte';
-	import Loading from '$lib/components/Loading.svelte';
-	import type { WikiEditDraft } from '$lib/components/wikiEdit';
-	import { writeDraft, readDraft, deleteDraft, type DraftTarget } from '$lib/drafts/store';
-	import { app, inActiveEdition } from '$lib/stores/app.svelte';
-	import { isReadOnlyContent } from '$lib/config/demo';
-	import { errText } from '$lib/util/format';
-	import { _ } from '$lib/i18n';
+	import { resolve } from '$app/paths';
+	import { sayIfFails, toast } from '#lib/toast/toast.ts';
+	import { content, loadContentStore, reloadContent } from '#lib/content/store.svelte.ts';
+	import { detectPlatform, getUserStorage, Platform } from '#lib/storage/provider.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { submitOnEnter } from '#lib/actions/submitOnEnter.ts';
+	import { hasProse, type ContentType } from '#lib/content/schemas.ts';
+	import { buildDetail, editionLabel } from '#lib/content/detail.ts';
+	import { entryMeta, type Entry } from '#lib/content/entry-list.ts';
+	import { groupingsFor, groupRows, byDisplayName } from '#lib/content/grouping.ts';
+	import { saveTranslation, saveLocStatus, locStatus } from '#lib/content/translate.ts';
+	import { LOC_STATUS, LOC_STATUS_ORDER, type LocStatus } from '#lib/content/schemas.ts';
+	import { rowName, type LoadedRow } from '#lib/content/loader.ts';
+	import EntryList from '#lib/components/EntryList.svelte';
+	import WikiDetail from '#lib/components/WikiDetail.svelte';
+	import LanguagePicker from '#lib/components/LanguagePicker.svelte';
+	import Loading from '#lib/components/Loading.svelte';
+	import type { WikiEditDraft } from '#lib/components/wikiEdit.ts';
+	import { writeDraft, readDraft, deleteDraft, type DraftTarget } from '#lib/drafts/store.ts';
+	import { app, inActiveEdition } from '#lib/stores/app.svelte.ts';
+	import { isReadOnlyContent } from '#lib/config/demo.ts';
+	import { errText } from '#lib/util/format.ts';
+	import { _ } from '#lib/i18n/index.ts';
 
 	// A demo build is read-only for content: browse + preview edits, but saving is blocked (the
 	// shipped SRD isn't writable in the hosted demo). Not a bare platform gate — the real web build
@@ -138,6 +138,7 @@
 	const sourceDetail = $derived(
 		selected ? buildDetail(selected, selectedType, { locale: sourceLocale, graph }) : null,
 	);
+
 	const targetDetail = $derived(
 		selected ? buildDetail(selected, selectedType, { locale: targetLocale, graph }) : null,
 	);
@@ -278,7 +279,7 @@
 {:else}
 	<div class="page">
 		<div class="subbar">
-			<button class="pill-btn accent" onclick={() => goto(`${base}/compendium`)}>
+			<button class="pill-btn accent" onclick={() => goto(resolve(`compendium`))}>
 				<Icon name="arrow-left" size={13} />
 				{$_('compendium.backToBrowse')}
 			</button>
@@ -312,9 +313,10 @@
 			>
 				{#snippet leading(e)}
 					{@const st = locStatus(e.row.data, e.row.sourceLang, targetLocale)}
-					<span class="loc-mark {st}" title={$_(`translate.status.${st}`)}
-						><Icon name={LOC_MARK[st]} size={12} label={$_(`translate.status.${st}`)} /></span
-					>
+
+					<span class="loc-mark {st}" title={$_(`translate.status.${st}`)}>
+						<Icon name={LOC_MARK[st]} size={12} label={$_(`translate.status.${st}`)} />
+					</span>
 				{/snippet}
 			</EntryList>
 
@@ -329,6 +331,7 @@
 			<div class="pane target">
 				<div class="pane-head">
 					<span class="panelabel eyebrow target-label">{$_('translate.into')}</span>
+
 					<LanguagePicker bind:value={targetLocale} {locales} allowAdd accent />
 				</div>
 				{#if targetLocale === sourceLocale}

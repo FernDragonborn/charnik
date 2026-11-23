@@ -6,7 +6,7 @@
  * travels is the catalog KEY and the values in it, never a finished sentence. This is the leaf both
  * sides share: the shape, and the one function that turns it into words.
  */
-import type { Translate } from '$lib/i18n';
+import type { Translate } from '#lib/i18n/index.ts';
 
 /** One value inside a said sentence: a literal (an id, a column, a count), another catalog word, a
  *  list of candidates, which needs the reader's own "or" between them, or a plain `list` of quoted

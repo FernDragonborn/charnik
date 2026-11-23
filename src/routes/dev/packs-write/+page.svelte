@@ -14,24 +14,24 @@
 	// and the network is never used — the fetcher here is local bytes, because what is under test is
 	// the disk.
 	import { onMount } from 'svelte';
-	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
-	import { listFilesRecursive } from '$lib/storage/walk';
-	import { FILE_CHANGE, type PackDiff } from '$lib/content/remote/diff';
-	import { gitBlobSha } from '$lib/content/hash';
+	import { detectPlatform, getUserStorage, Platform } from '#lib/storage/provider.ts';
+	import { listFilesRecursive } from '#lib/storage/walk.ts';
+	import { FILE_CHANGE, type PackDiff } from '#lib/content/remote/diff.ts';
+	import { gitBlobSha } from '#lib/content/hash.ts';
 	import {
 		applyPackUpdate,
 		recoverInterruptedApply,
 		removeStaging,
-	} from '$lib/content/remote/install';
-	import { hasRollback, rollbackPack } from '$lib/content/remote/rollback';
-	import { stampWithHash } from '$lib/content/hash';
-	import type { RemoteFetcher } from '$lib/content/remote/types';
-	import { discoverContentRoots } from '$lib/content/disk';
-	import { saveTranslation } from '$lib/content/translate';
+	} from '#lib/content/remote/install.ts';
+	import { hasRollback, rollbackPack } from '#lib/content/remote/rollback.ts';
+	import { stampWithHash } from '#lib/content/hash.ts';
+	import type { RemoteFetcher } from '#lib/content/remote/types.ts';
+	import { discoverContentRoots } from '#lib/content/disk.ts';
+	import { saveTranslation } from '#lib/content/translate.ts';
 	import {
 		listTranslationBackups,
 		restoreTranslationBackup,
-	} from '$lib/content/translation-backups';
+	} from '#lib/content/translation-backups.ts';
 
 	/** Ignored by pack discovery (leading dot), so a crashed run can never load as content. */
 	const PACK = '.probe-pack';

@@ -6,13 +6,13 @@
 	// thirty-five rows is a list, and a list the keyboard cannot reach is one ui.md §5 does not
 	// allow. Enter takes or drops the highlighted language, because here reading and taking are the
 	// same act — a language has nothing to read.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build, rowName } from '../build-view-model.svelte';
 	import { filterByName } from '../rows';
 	import { PickerReading } from '../picker-reading.svelte';
 	import PickerSearch from './PickerSearch.svelte';
 	import OwnEntries from './OwnEntries.svelte';
-	import { provenance } from '$lib/actions/provenance';
+	import { provenance } from '#lib/actions/provenance.ts';
 	const b = build;
 
 	let query = $state('');

@@ -6,11 +6,11 @@ import {
 	newCharacter,
 	characterSchema,
 	type Character,
-} from '$lib/character/schema';
-import { buildSpellPicker } from '$lib/build/derive';
-import { deriveSheet } from '$lib/character/derive';
-import { spellEntries } from '$lib/character/spellcasting';
-import type { ContentGraph } from '$lib/content/loader';
+} from '#lib/character/schema.ts';
+import { buildSpellPicker } from '#lib/build/derive.ts';
+import { deriveSheet } from '#lib/character/derive.ts';
+import { spellEntries } from '#lib/character/spellcasting.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
 import { castSpell, poolAllowsSpell, spellcastingBlock } from './cast';
 import { addEffect, removeEffects } from './effects';
 import { rest } from './rests';

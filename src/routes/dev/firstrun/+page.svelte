@@ -2,7 +2,7 @@
 	// DEV-ONLY preview of the first-run "where to store data" modal. Not linked from the app;
 	// open /dev/firstrun to see it live. The folder picker is stubbed (returns a fake parent dir)
 	// so it previews in a plain browser; the real app injects the Tauri plugin-dialog picker.
-	import FirstRunModal from '$lib/components/FirstRunModal.svelte';
+	import FirstRunModal from '#lib/components/FirstRunModal.svelte';
 
 	let shown = $state(true);
 	let last = $state('');

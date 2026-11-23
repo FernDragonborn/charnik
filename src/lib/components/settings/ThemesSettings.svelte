@@ -7,23 +7,23 @@
 	// Dracula/Catppuccin presets are worked examples you can add.
 	import Icon, { type IconName } from '../Icon.svelte';
 	import ConfirmDialog from '../ConfirmDialog.svelte';
-	import { sayIfFails, toast } from '$lib/toast/toast';
-	import { _ } from '$lib/i18n';
-	import { app } from '$lib/stores/app.svelte';
+	import { sayIfFails, toast } from '#lib/toast/toast.ts';
+	import { _ } from '#lib/i18n/index.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
 	import {
 		THEMEABLE_TOKENS,
 		snapshotBaseTokens,
 		type CustomTheme,
 		type ThemeableToken,
-	} from '$lib/styles/customThemes';
+	} from '#lib/styles/customThemes.ts';
 	import {
 		writeThemeFile,
 		removeThemeFile,
 		serializeTheme,
 		themeFromJson,
 		uniqueThemeId,
-	} from '$lib/styles/themeFiles';
-	import { getUserStorage } from '$lib/storage/provider';
+	} from '#lib/styles/themeFiles.ts';
+	import { getUserStorage } from '#lib/storage/provider.ts';
 
 	type Mode = { view: 'list' } | { view: 'edit'; id: string };
 	let mode = $state<Mode>({ view: 'list' });

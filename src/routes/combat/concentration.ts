@@ -1,21 +1,21 @@
 /*
  * Concentration on the sheet — which spell is held, and the player ending it. Ending is two writes,
- * the ref cleared and the spell's carrier effect taken down, and both are `$lib/play/concentration`;
+ * the ref cleared and the spell's carrier effect taken down, and both are `#lib/play/concentration.ts`;
  * what ends it without being asked (0 HP, incapacitation, a state that forbids it) is
- * `$lib/play/settle`.
+ * `#lib/play/settle.ts`.
  *
  * The SAVE a hit asks for is not here — `HitPoints` owns the banner — and ESTABLISHING
- * concentration is the cast's own step (`$lib/play/cast`).
+ * concentration is the cast's own step (`#lib/play/cast.ts`).
  */
-import { toast } from '$lib/toast/toast';
-import { t } from '$lib/i18n';
-import { app } from '$lib/stores/app.svelte';
-import { localizedName } from '$lib/content/detail';
-import type { ContentGraph } from '$lib/content/loader';
-import type { Character } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
-import { stopConcentrating } from '$lib/play/effects';
-import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
+import { toast } from '#lib/toast/toast.ts';
+import { t } from '#lib/i18n/index.ts';
+import { app } from '#lib/stores/app.svelte.ts';
+import { localizedName } from '#lib/content/detail.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
+import type { Character } from '#lib/character/schema.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
+import { stopConcentrating } from '#lib/play/effects.ts';
+import type { PlayContext, PlayOutcome } from '#lib/play/outcome.ts';
 
 /** What concentration needs from the sheet around it. */
 export interface ConcentrationHost {

@@ -3,11 +3,11 @@
 	// mechanical tags, a duration dropdown + remove), then read-only sections for item/feature-derived
 	// contributions, unrecognized tokens, and L3 plugin notes. Owns the duration-menu local state
 	// and the per-effect row snippet.
-	import Icon from '$lib/components/Icon.svelte';
-	import { _ } from '$lib/i18n';
-	import { provenance } from '$lib/actions/provenance';
-	import type { Character } from '$lib/character/schema';
-	import type { CharacterSheet } from '$lib/character/derive';
+	import Icon from '#lib/components/Icon.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import type { Character } from '#lib/character/schema.ts';
+	import type { CharacterSheet } from '#lib/character/derive.ts';
 	import { combat } from '../../combat-view-model.svelte';
 	import {
 		effectTagResolved,
@@ -20,8 +20,8 @@
 		sayRounds,
 		range,
 		type EffectInstance,
-	} from '$lib/combat/helpers';
-	import { sayText } from '$lib/util/say';
+	} from '#lib/combat/helpers.ts';
+	import { sayText } from '#lib/util/say.ts';
 	import EffectDurationMenu from '../EffectDurationMenu.svelte';
 
 	let { c, s }: { c: Character; s: CharacterSheet } = $props();

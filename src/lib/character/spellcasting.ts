@@ -9,8 +9,8 @@
  * highest spell level a class can LEARN is its own single-class table's max (a Wizard 1 can't
  * prepare 3rd-level spells even if a Cleric multiclass grants 3rd-level slots).
  */
-import type { ArmorCategory } from '$lib/content/item-tags';
-import { ISSUE_KEY } from '$lib/effects/token-parser';
+import type { ArmorCategory } from '#lib/content/item-tags.ts';
+import { ISSUE_KEY } from '#lib/effects/token-parser.ts';
 import type { ContentGraph, LoadedRowOf } from '../content/loader';
 import { RITUAL_SOURCE, type RitualSource } from '../content/schemas';
 import { featureSpellsFor, type FeatureSpells } from './feature-spells';

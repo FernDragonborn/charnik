@@ -5,8 +5,8 @@
  * the affordance already works. Rewriting/expanding the tray means implementing this contract, not
  * touching callers.
  */
-import type { DieMods } from '$lib/rules/dice';
-import { rollFormulaEntry } from '$lib/combat/roll';
+import type { DieMods } from '#lib/rules/dice.ts';
+import { rollFormulaEntry } from '#lib/combat/roll.ts';
 import { toastRoll } from './roll-toast';
 
 /** The damage half of an attack request — the second line the tray builds beside the to-hit. It

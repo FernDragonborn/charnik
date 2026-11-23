@@ -17,9 +17,9 @@
  *
  * Nothing here computes D&D math. It selects, previews, and commits.
  */
-import type { LoadedRow } from '$lib/content/loader';
-import type { DetailModel } from '$lib/content/detail';
-import { diffSheets, type SheetChange } from '$lib/build/sheet-diff';
+import type { LoadedRow } from '#lib/content/loader.ts';
+import type { DetailModel } from '#lib/content/detail.ts';
+import { diffSheets, type SheetChange } from '#lib/build/sheet-diff.ts';
 import { filterByName, rowDetail, ASI } from './rows';
 import {
 	editSpecFor,

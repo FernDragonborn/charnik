@@ -3,9 +3,9 @@
 	// only; APPLYING is always the button, never automatic (docs/internals/security.md §7). The manual check
 	// deliberately bypasses the once-a-day throttle, because "I want to test this one" is the real
 	// use. Desktop-only: the web build serves the content of its own deploy.
-	import { _ } from '$lib/i18n';
-	import { toast, toastFailure, sayIfFails } from '$lib/toast/toast';
-	import { submitOnEnter } from '$lib/actions/submitOnEnter';
+	import { _ } from '#lib/i18n/index.ts';
+	import { toast, toastFailure, sayIfFails } from '#lib/toast/toast.ts';
+	import { submitOnEnter } from '#lib/actions/submitOnEnter.ts';
 	import {
 		bundledPacks,
 		missingBundled,
@@ -15,9 +15,9 @@
 		setUpdateMode,
 		SHIPPED_PACK_REPO,
 		UPDATE_MODE,
-	} from '$lib/content/packs.svelte';
-	import { restoreBundledPacks } from '$lib/content/provider';
-	import { refreshPlugins } from '$lib/effects/plugin-store.svelte';
+	} from '#lib/content/packs.svelte.ts';
+	import { restoreBundledPacks } from '#lib/content/provider.ts';
+	import { refreshPlugins } from '#lib/effects/plugin-store.svelte.ts';
 	import {
 		updates,
 		checkNow,
@@ -25,19 +25,19 @@
 		rollbackablePacks,
 		translationBackups,
 		undoUpdate,
-	} from '$lib/content/remote/updates.svelte';
-	import type { TranslationBackup } from '$lib/content/translation-backups';
+	} from '#lib/content/remote/updates.svelte.ts';
+	import type { TranslationBackup } from '#lib/content/translation-backups.ts';
 	import PackTranslationBackups from './PackTranslationBackups.svelte';
 	import PackUndoDialog from './PackUndoDialog.svelte';
-	import type { RollbackMode } from '$lib/content/remote/rollback';
+	import type { RollbackMode } from '#lib/content/remote/rollback.ts';
 	import {
 		discoverPacks,
 		installPack,
 		renamePack,
 		uninstallPack,
-	} from '$lib/content/remote/pack-lifecycle';
-	import { content, reloadContent } from '$lib/content/store.svelte';
-	import { FILE_CHANGE } from '$lib/content/remote/diff';
+	} from '#lib/content/remote/pack-lifecycle.ts';
+	import { content, reloadContent } from '#lib/content/store.svelte.ts';
+	import { FILE_CHANGE } from '#lib/content/remote/diff.ts';
 
 	const packs = $derived(Object.entries(packConfig.packs).sort(([a], [b]) => a.localeCompare(b)));
 	const modes = [UPDATE_MODE.off, UPDATE_MODE.notify, UPDATE_MODE.download];

@@ -7,13 +7,13 @@
 	// There is no amount and no minus here: a hit taken while down is a failure the player presses,
 	// two for a critical. The healing control stays as the way back up.
 	import { untrack, type Snippet } from 'svelte';
-	import Icon from '$lib/components/Icon.svelte';
-	import DiceIcon from '$lib/components/DiceIcon.svelte';
-	import { _ } from '$lib/i18n';
-	import { provenance } from '$lib/actions/provenance';
-	import { DEATH_CAUSE_LABEL } from '$lib/combat/helpers';
-	import type { Character, DownMotion } from '$lib/character/schema';
-	import { DEATH_SAVE_TRACK, isStable } from '$lib/play/hit-points';
+	import Icon from '#lib/components/Icon.svelte';
+	import DiceIcon from '#lib/components/DiceIcon.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { DEATH_CAUSE_LABEL } from '#lib/combat/helpers.ts';
+	import type { Character, DownMotion } from '#lib/character/schema.ts';
+	import { DEATH_SAVE_TRACK, isStable } from '#lib/play/hit-points.ts';
 	import { combat } from '../../combat-view-model.svelte';
 	import DownSide from './DownSide.svelte';
 	import { SKULL_GLYPH, WINGS_GLYPH } from './save-glyphs';

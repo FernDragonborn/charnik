@@ -7,7 +7,7 @@ import {
 	standardActions,
 	type ActionPreset,
 } from './actions';
-import { SYSTEMS } from '$lib/rules/pipeline';
+import { SYSTEMS } from '#lib/rules/pipeline.ts';
 
 describe.each(SYSTEMS)('action presets (%s)', (system) => {
 	const actions = standardActions(null, system);

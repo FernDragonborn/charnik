@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
 import { classRow, inventoryRow, newCharacter } from './schema';
 import { deriveSheet } from './derive';
-import { ISSUE_KEY } from '$lib/effects/token-parser';
+import { ISSUE_KEY } from '#lib/effects/token-parser.ts';
 
 const EDITIONS = [
 	{ pack: 'srd-2014', source: 'SRD 5.1', system: '5e', plate: 'plate' },

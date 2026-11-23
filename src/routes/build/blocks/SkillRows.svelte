@@ -3,14 +3,14 @@
 	// columns) and in the inspector's skills pane (one column, with the counters above it). A row is
 	// the toggle: click it to train the skill, click its dot to double proficiency. Background-granted
 	// skills are locked on, because a background does not ask.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build } from '../build-view-model.svelte';
 	import { skillLabel } from '../rows';
-	import { SKILL_ABILITY, type SkillId } from '$lib/character/skills';
-	import { ABILITIES } from '$lib/character/schema';
-	import { signed } from '$lib/util/format';
-	import { why, whyPassive } from '$lib/combat/effects-view';
-	import { provenance } from '$lib/actions/provenance';
+	import { SKILL_ABILITY, type SkillId } from '#lib/character/skills.ts';
+	import { ABILITIES } from '#lib/character/schema.ts';
+	import { signed } from '#lib/util/format.ts';
+	import { why, whyPassive } from '#lib/combat/effects-view.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
 	const b = build;
 
 	let { columns = 2 }: { columns?: number } = $props();

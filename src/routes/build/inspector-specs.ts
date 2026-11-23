@@ -6,9 +6,9 @@
  * `(target, host) → Spec`, which is the half worth unit-testing and the half the class kept it from
  * being. What is left next door needs runes; this does not.
  */
-import type { ContentType } from '$lib/content/schemas';
-import type { LoadedRow } from '$lib/content/loader';
-import type { BuildTodo } from '$lib/build/derive';
+import type { ContentType } from '#lib/content/schemas.ts';
+import type { LoadedRow } from '#lib/content/loader.ts';
+import type { BuildTodo } from '#lib/build/derive.ts';
 import { rowName } from './rows';
 import type { BuildVM } from './build-view-model.svelte';
 

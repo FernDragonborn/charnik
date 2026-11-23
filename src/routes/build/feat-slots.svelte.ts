@@ -7,29 +7,29 @@
  * is what a flattened boost list could not express (UBUG-13: a restored slot re-derived its own
  * boost a second time), and the row half of it is the row's own id, never its place in the list.
  */
-import type { LoadedRow } from '$lib/content/loader';
+import type { LoadedRow } from '#lib/content/loader.ts';
 import type { BuildVM } from './build-view-model.svelte';
-import type { Ability } from '$lib/rules/core';
-import { asiBoost, halfFeatAbilities } from '$lib/build/derive';
-import { featSpellGrants, type FeatSpellGrant } from '$lib/character/spellcasting';
-import { asiFeatLevels, EPIC_BOON_MIN_LEVEL } from '$lib/build/rules';
+import type { Ability } from '#lib/rules/core.ts';
+import { asiBoost, halfFeatAbilities } from '#lib/build/derive.ts';
+import { featSpellGrants, type FeatSpellGrant } from '#lib/character/spellcasting.ts';
+import { asiFeatLevels, EPIC_BOON_MIN_LEVEL } from '#lib/build/rules.ts';
 import {
 	ANY_OPTION,
 	FEAT_CATEGORY,
 	PROFICIENCY_CHOICE_KIND,
 	splitList,
-} from '$lib/content/schemas';
-import { TOOL_PREFIX } from '$lib/character/granted-proficiency';
-import { OPTION_ANSWER, optionsOf, writePick } from '$lib/content/options';
+} from '#lib/content/schemas.ts';
+import { TOOL_PREFIX } from '#lib/character/granted-proficiency.ts';
+import { OPTION_ANSWER, optionsOf, writePick } from '#lib/content/options.ts';
 import {
 	activeClassFeatures,
 	heldOptions,
 	type ActiveClassFeature,
 	type ClassEntryLike,
-} from '$lib/character/features';
+} from '#lib/character/features.ts';
 import { optionFeatSlotKey } from './option-picks.svelte';
-import type { ContentGraph } from '$lib/content/loader';
-import { isRowActive } from '$lib/content/sources.svelte';
+import type { ContentGraph } from '#lib/content/loader.ts';
+import { isRowActive } from '#lib/content/sources.svelte.ts';
 import {
 	asiPickCount,
 	toggleCapped,

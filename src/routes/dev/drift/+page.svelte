@@ -1,8 +1,8 @@
 <script lang="ts">
 	// DEV-ONLY preview of the hash-drift pop-up (DATA-VER-1). Open /dev/drift to see it live.
 	// Remove once the drift detection is wired into the real load flow.
-	import HashDriftModal from '$lib/components/HashDriftModal.svelte';
-	import type { DriftItem } from '$lib/content/meta';
+	import HashDriftModal from '#lib/components/HashDriftModal.svelte';
+	import type { DriftItem } from '#lib/content/meta.ts';
 
 	const items: DriftItem[] = [
 		{ file: 'content/srd-2024/spells.csv', declaredDate: '2026-06-20', changedAt: '2026-07-06' },

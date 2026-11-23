@@ -6,8 +6,8 @@
  * pack it replaces is kept as `<pack>.prev` and "undo this update" reverses it. The copy itself stays
  * where it is: it leaves with its run, when ten newer ones have been taken.
  */
-import type { Storage } from '$lib/storage/types';
-import { listFilesRecursive } from '$lib/storage/walk';
+import type { Storage } from '#lib/storage/types.ts';
+import { listFilesRecursive } from '#lib/storage/walk.ts';
 import { localPath } from './remote/diff';
 import { swapInNewTree } from './remote/install';
 import { TRANSLATION_BACKUP_DIR, backupRunTime } from './translation-carry';

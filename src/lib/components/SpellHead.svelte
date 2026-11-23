@@ -2,10 +2,10 @@
 	// The "shapka" of a spell article: eyebrow (level · school · edition), title (+ ritual/concentration
 	// chips), and the effect/casting strip. Structural stats are read-only; only the title is editable
 	// (translate). Prose lives BELOW in ArticleProse; the dispatcher (WikiDetail) stacks them.
-	import { _ } from '$lib/i18n';
-	import { provenance } from '$lib/actions/provenance';
-	import { say, sayText } from '$lib/util/say';
-	import type { DetailModel, SpellModel } from '$lib/content/detail';
+	import { _ } from '#lib/i18n/index.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { say, sayText } from '#lib/util/say.ts';
+	import type { DetailModel, SpellModel } from '#lib/content/detail.ts';
 	import type { WikiEditDraft } from './wikiEdit';
 	import DiceIcon from './DiceIcon.svelte';
 	import RollButton from './RollButton.svelte';

@@ -6,12 +6,12 @@
 	// Scope is the one real choice: a rewrite belongs to the character you are playing by default, and
 	// can be promoted to the whole install. The toggle only appears when a character is open, because
 	// with none there is nothing for "just this one" to mean.
-	import { _ } from '$lib/i18n';
-	import { app } from '$lib/stores/app.svelte';
-	import { overrides, OVERRIDE_SCOPE, type OverrideScope } from '$lib/content/overrides.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import { overrides, OVERRIDE_SCOPE, type OverrideScope } from '#lib/content/overrides.svelte.ts';
 	import Icon from './Icon.svelte';
-	import { growToFit } from '$lib/actions/growToFit';
-	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
+	import { growToFit } from '#lib/actions/growToFit.ts';
+	import { dismissOnEscape } from '#lib/actions/dismissOnEscape.ts';
 
 	let {
 		rowId,

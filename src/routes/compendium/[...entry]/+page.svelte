@@ -1,26 +1,27 @@
 <script lang="ts">
 	// Compendium — the same two-pane shape as the Spellbook (d-spellmgr), read-only: a grouped
 	// list of every content row + the wiki detail from its CSV. Reuses EntryList + WikiDetail.
-	import { foldForSearch } from '$lib/util/search-fold';
-	import Icon from '$lib/components/Icon.svelte';
-	import { _ } from '$lib/i18n';
-	import { sayIfFails } from '$lib/toast/toast';
+	import { foldForSearch } from '#lib/util/search-fold.ts';
+	import Icon from '#lib/components/Icon.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import { sayIfFails } from '#lib/toast/toast.ts';
 	import { onMount, untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { base } from '$app/paths';
-	import { content, loadContentStore, reloadContent } from '$lib/content/store.svelte';
-	import type { LoadedRow } from '$lib/content/loader';
-	import { hasProse, type ContentType } from '$lib/content/schemas';
+	import { resolve } from '$app/paths';
+	import { BASE_PATH } from '#lib/config/base-path.ts';
+	import { content, loadContentStore, reloadContent } from '#lib/content/store.svelte.ts';
+	import type { LoadedRow } from '#lib/content/loader.ts';
+	import { hasProse, type ContentType } from '#lib/content/schemas.ts';
 	import {
 		buildDetail,
 		sourceLabel,
 		compendiumEntryPath,
 		localizedName,
-	} from '$lib/content/detail';
-	import { toEntryGroups } from '$lib/content/entry-list';
-	import { getSpellAccess } from '$lib/content/spellAccess';
-	import { weaponPropertyRowsFor } from '$lib/content/weapon-properties';
+	} from '#lib/content/detail.ts';
+	import { toEntryGroups } from '#lib/content/entry-list.ts';
+	import { getSpellAccess } from '#lib/content/spellAccess.ts';
+	import { weaponPropertyRowsFor } from '#lib/content/weapon-properties.ts';
 	import {
 		groupingsFor,
 		facetFor,
@@ -28,20 +29,20 @@
 		distinctValues,
 		fieldValues,
 		byDisplayName,
-	} from '$lib/content/grouping';
-	import EntryList from '$lib/components/EntryList.svelte';
-	import WikiDetail from '$lib/components/WikiDetail.svelte';
-	import Loading from '$lib/components/Loading.svelte';
-	import LanguagePicker from '$lib/components/LanguagePicker.svelte';
-	import EditContentForm from '$lib/components/EditContentForm.svelte';
-	import LinkedRows from '$lib/components/LinkedRows.svelte';
-	import DraftsPane from '$lib/components/DraftsPane.svelte';
-	import OrphanDialog from '$lib/components/OrphanDialog.svelte';
-	import SchemaDiscardDialog from '$lib/components/SchemaDiscardDialog.svelte';
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-	import Chip from '$lib/components/Chip.svelte';
-	import { getUserStorage } from '$lib/storage/provider';
-	import { removeHomebrewRow, rowToDraft, HOMEBREW_SOURCE } from '$lib/content/homebrew';
+	} from '#lib/content/grouping.ts';
+	import EntryList from '#lib/components/EntryList.svelte';
+	import WikiDetail from '#lib/components/WikiDetail.svelte';
+	import Loading from '#lib/components/Loading.svelte';
+	import LanguagePicker from '#lib/components/LanguagePicker.svelte';
+	import EditContentForm from '#lib/components/EditContentForm.svelte';
+	import LinkedRows from '#lib/components/LinkedRows.svelte';
+	import DraftsPane from '#lib/components/DraftsPane.svelte';
+	import OrphanDialog from '#lib/components/OrphanDialog.svelte';
+	import SchemaDiscardDialog from '#lib/components/SchemaDiscardDialog.svelte';
+	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
+	import Chip from '#lib/components/Chip.svelte';
+	import { getUserStorage } from '#lib/storage/provider.ts';
+	import { removeHomebrewRow, rowToDraft, HOMEBREW_SOURCE } from '#lib/content/homebrew.ts';
 	import {
 		findOrphanDrafts,
 		findStaleDrafts,
@@ -50,11 +51,11 @@
 		deleteDraftFiles,
 		writeDraft,
 		type DraftEnvelope,
-	} from '$lib/drafts/store';
-	import { isRowActive } from '$lib/content/sources.svelte';
-	import { app, inActiveEdition } from '$lib/stores/app.svelte';
-	import { ui } from '$lib/stores/ui.svelte';
-	import { readStored, writeStored } from '$lib/util/persist';
+	} from '#lib/drafts/store.ts';
+	import { isRowActive } from '#lib/content/sources.svelte.ts';
+	import { app, inActiveEdition } from '#lib/stores/app.svelte.ts';
+	import { ui } from '#lib/stores/ui.svelte.ts';
+	import { readStored, writeStored } from '#lib/util/persist.ts';
 
 	const inEdition = (r: LoadedRow) => inActiveEdition(r.systems);
 	const showEdition = $derived(app.activeEditions.length > 1);
@@ -155,7 +156,8 @@
 				id: t.id,
 				locale: t.locale,
 			});
-			void goto(`${base}/translate?${qs.toString()}`);
+
+			void goto(resolve(`translate?${qs.toString()}`));
 		} else if (t.kind === 'add') {
 			resumeAdd = { guid: t.addGuid, data: env.data as Record<string, string> };
 			selectedType = t.type;
@@ -189,10 +191,9 @@
 		editRow = null;
 		showDrafts = false;
 		selected = row;
-		void goto(compendiumEntryPath(base, row.type, row.source, row.data.id), {
-			replaceState: true,
-			keepFocus: true,
-			noScroll: true,
+		void goto(compendiumEntryPath(BASE_PATH, row.type, row.source, row.data.id), {
+			replace: true,
+			reset: false,
 		});
 	}
 	$effect(() => {
@@ -211,6 +212,7 @@
 				facetFilter = new Set();
 			}
 			const rows = g.list(t as ContentType);
+
 			selected =
 				(source && g.get(`${t}:${source}:${id}`)) || rows.find((r) => r.data.id === id) || null;
 		});
@@ -479,9 +481,10 @@
 			{/if}
 
 			{#if inMode}
-				<button class="back-to-browse pill-btn accent" onclick={exitMode}
-					><Icon name="arrow-left" size={13} /> {$_('compendium.backToBrowse')}</button
-				>
+				<button class="back-to-browse pill-btn accent" onclick={exitMode}>
+					<Icon name="arrow-left" size={13} />
+					{$_('compendium.backToBrowse')}
+				</button>
 			{:else}
 				<details class="mode-picker" bind:open={pickerOpen} use:autoClose>
 					<summary class="pill-btn accent"
@@ -494,7 +497,7 @@
 							class="mode-item"
 							onclick={() => {
 								pickerOpen = false;
-								void goto(`${base}/translate`);
+								void goto(resolve(`translate`));
 							}}
 						>
 							<b>{$_('compendium.modeTranslate')}</b><small
@@ -623,12 +626,12 @@
 									class="hb-btn"
 									onclick={() =>
 										selected && sayIfFails($_('app.actionFailed'), convertToDraft(selected))}
+									>{$_('compendium.moveToDrafts')}</button
 								>
-									{$_('compendium.moveToDrafts')}
-								</button>
-								<button class="hb-btn danger" onclick={() => (confirmDelete = selected)}>
-									{$_('compendium.deleteEntry')}
-								</button>
+
+								<button class="hb-btn danger" onclick={() => (confirmDelete = selected)}
+									>{$_('compendium.deleteEntry')}</button
+								>
 							</div>
 						{/if}
 					{/snippet}

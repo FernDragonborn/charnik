@@ -5,10 +5,10 @@
 	// whatever timed out. ALWAYS offered out of combat: passing time moves the round counter whether or
 	// not something is ticking, and a bar that came and went with the player's buffs was a control they
 	// could not reach for when they wanted it.
-	import Icon from '$lib/components/Icon.svelte';
-	import { provenance } from '$lib/actions/provenance';
+	import Icon from '#lib/components/Icon.svelte';
+	import { provenance } from '#lib/actions/provenance.ts';
 	import { combat } from '../combat-view-model.svelte';
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 
 	// key → rounds (1 round = 6 s → 1 min = 10 rd, 10 min = 100 rd, 1 hr = 600 rd). The step is the
 	// app's own vocabulary, and its abbreviation is not "rd" in every language

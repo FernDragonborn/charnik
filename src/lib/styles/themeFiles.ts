@@ -8,7 +8,7 @@
  * SECURITY: an imported/on-disk file is untrusted → every load runs through `sanitizeThemeTokens`
  * (known token names + safe values only) and `isSafeThemeId`, so a hostile file can't inject CSS.
  */
-import type { Storage } from '$lib/storage/types';
+import type { Storage } from '#lib/storage/types.ts';
 import { sanitizeThemeTokens, isSafeThemeId, type CustomTheme } from './customThemes';
 
 const THEMES_DIR = 'themes';

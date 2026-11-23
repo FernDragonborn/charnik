@@ -8,7 +8,7 @@
  *  - `reloadContent()` only READS (never writes), so the app's own homebrew save can't create a
  *    write→reload→write loop — at worst one redundant re-read (already coalesced by the debounce).
  */
-import { detectPlatform, Platform, getUserStorage } from '$lib/storage/provider';
+import { detectPlatform, Platform, getUserStorage } from '#lib/storage/provider.ts';
 import { isPackFile } from './remote/github';
 import { isPackWriteInFlight } from './remote/install';
 import { autoAdoptDrift } from './review.svelte';

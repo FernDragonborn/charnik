@@ -4,20 +4,20 @@
 	// controls: health diagnostics, two-dimensional source filtering, and collision resolution.
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { loadContentStore, content } from '$lib/content/store.svelte';
-	import { detectCollisions } from '$lib/content/sources.svelte';
-	import GeneralSettings from '$lib/components/settings/GeneralSettings.svelte';
-	import StorageSettings from '$lib/components/settings/StorageSettings.svelte';
-	import ContentHealth from '$lib/components/settings/ContentHealth.svelte';
-	import SourceManager from '$lib/components/settings/SourceManager.svelte';
-	import CollisionManager from '$lib/components/settings/CollisionManager.svelte';
-	import PluginsSettings from '$lib/components/settings/PluginsSettings.svelte';
-	import ThemesSettings from '$lib/components/settings/ThemesSettings.svelte';
-	import TableSettings from '$lib/components/settings/TableSettings.svelte';
+	import { loadContentStore, content } from '#lib/content/store.svelte.ts';
+	import { detectCollisions } from '#lib/content/sources.svelte.ts';
+	import GeneralSettings from '#lib/components/settings/GeneralSettings.svelte';
+	import StorageSettings from '#lib/components/settings/StorageSettings.svelte';
+	import ContentHealth from '#lib/components/settings/ContentHealth.svelte';
+	import SourceManager from '#lib/components/settings/SourceManager.svelte';
+	import CollisionManager from '#lib/components/settings/CollisionManager.svelte';
+	import PluginsSettings from '#lib/components/settings/PluginsSettings.svelte';
+	import ThemesSettings from '#lib/components/settings/ThemesSettings.svelte';
+	import TableSettings from '#lib/components/settings/TableSettings.svelte';
 	import { table } from '../table/table-view-model.svelte';
-	import { _ } from '$lib/i18n';
-	import { deriveHealth } from '$lib/character/health.svelte';
-	import { updates } from '$lib/content/remote/updates.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import { deriveHealth } from '#lib/character/health.svelte.ts';
+	import { updates } from '#lib/content/remote/updates.svelte.ts';
 
 	const TAB_IDS = [
 		'general',

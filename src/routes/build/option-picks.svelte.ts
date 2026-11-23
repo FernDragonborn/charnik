@@ -4,9 +4,9 @@
  * (`content/options.ts`), so this knows nothing of warlocks — a homebrew feature with a `choose`
  * and three option rows asks the same way.
  */
-import { countAtLevel } from '$lib/content/level-gate';
-import { activeClassFeatures } from '$lib/character/features';
-import type { LoadedRowByType } from '$lib/content/loader';
+import { countAtLevel } from '#lib/content/level-gate.ts';
+import { activeClassFeatures } from '#lib/character/features.ts';
+import type { LoadedRowByType } from '#lib/content/loader.ts';
 import {
 	OPTION_ANSWER,
 	OPTION_BLOCK,
@@ -17,8 +17,8 @@ import {
 	writePick,
 	type OptionBlock,
 	type OptionRow,
-} from '$lib/content/options';
-import { isRowActive } from '$lib/content/sources.svelte';
+} from '#lib/content/options.ts';
+import { isRowActive } from '#lib/content/sources.svelte.ts';
 import { toggleCapped } from './draft';
 import type { BuildVM } from './build-view-model.svelte';
 

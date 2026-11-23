@@ -7,10 +7,10 @@
  * player's side keeps the connection's state, and `asks` (`PlayerRequests`) the requests waiting
  * for an answer — **a request never applies itself**.
  */
-import { toast } from '$lib/toast/toast';
-import { t } from '$lib/i18n';
-import { app } from '$lib/stores/app.svelte';
-import { getTableLink } from '$lib/table-link/provider';
+import { toast } from '#lib/toast/toast.ts';
+import { t } from '#lib/i18n/index.ts';
+import { app } from '#lib/stores/app.svelte.ts';
+import { getTableLink } from '#lib/table-link/provider.ts';
 import {
 	CLOSE_REASON,
 	CONNECTION,
@@ -39,9 +39,9 @@ import {
 	type VersionGap,
 	type UnavailableReason,
 	type Unsubscribe,
-} from '$lib/table-link/types';
-import { tableViewOf } from '$lib/table-link/view';
-import type { TableView } from '$lib/table-link/wire-schema';
+} from '#lib/table-link/types.ts';
+import { tableViewOf } from '#lib/table-link/view.ts';
+import type { TableView } from '#lib/table-link/wire-schema.ts';
 import { combat } from '../combat/combat-view-model.svelte';
 import { PlayerRequests } from './player-requests.svelte';
 import { TableLog } from './table-log.svelte';

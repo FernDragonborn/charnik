@@ -8,8 +8,8 @@
 	// combobox — APG's is single-select with selection following focus, and these pickers are
 	// multi-select walks that deliberately commit nothing (`option-walk.ts`). The command palette IS
 	// a combobox, and says why it differs: `docs/internals/ui.md` ▸ the picker contract.
-	import Icon from '$lib/components/Icon.svelte';
-	import { _ } from '$lib/i18n';
+	import Icon from '#lib/components/Icon.svelte';
+	import { _ } from '#lib/i18n/index.ts';
 
 	let {
 		query = $bindable(''),

@@ -6,12 +6,12 @@
 	//
 	// Reads the `combat` view-model singleton; the character and its sheet come in as props.
 	import { untrack } from 'svelte';
-	import Icon from '$lib/components/Icon.svelte';
-	import { _ } from '$lib/i18n';
-	import { motion } from '$lib/stores/motion.svelte';
-	import { downMotionOf, type Character, type DownMotion } from '$lib/character/schema';
-	import type { CharacterSheet } from '$lib/character/derive';
-	import { DEATH_SAVE_TRACK, isStable } from '$lib/play/hit-points';
+	import Icon from '#lib/components/Icon.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import { motion } from '#lib/stores/motion.svelte.ts';
+	import { downMotionOf, type Character, type DownMotion } from '#lib/character/schema.ts';
+	import type { CharacterSheet } from '#lib/character/derive.ts';
+	import { DEATH_SAVE_TRACK, isStable } from '#lib/play/hit-points.ts';
 	import HpStanding from './HpStanding.svelte';
 	import HpDown from './HpDown.svelte';
 	import DownSide from './DownSide.svelte';

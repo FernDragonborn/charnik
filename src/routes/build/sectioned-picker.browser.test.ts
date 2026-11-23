@@ -10,9 +10,9 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import SectionedPicker from './blocks/SectionedPicker.svelte';
-import { CONTENT_TYPES } from '$lib/content/schemas';
-import type { LoadedRow } from '$lib/content/loader';
-import { startI18n } from '$lib/i18n';
+import { CONTENT_TYPES } from '#lib/content/schemas.ts';
+import type { LoadedRow } from '#lib/content/loader.ts';
+import { startI18n } from '#lib/i18n/index.ts';
 
 const SOURCE = 'SRD 5.2.1';
 

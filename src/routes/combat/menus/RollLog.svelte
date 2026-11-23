@@ -12,14 +12,14 @@
 	// its own rule. That is the whole use of the group id here — the fact survives a reload, and it
 	// costs no second rendering path, because each throw is still its own ordinary row.
 	import { combat } from '../combat-view-model.svelte';
-	import { rollToastModel } from '$lib/dice/roll-toast';
-	import { actionRuns, type RollLogEntry } from '$lib/combat/roll';
-	import { isTurnAct, LOG_KIND } from '$lib/character/log-kind';
-	import { _ } from '$lib/i18n';
-	import { app } from '$lib/stores/app.svelte';
-	import { localizedName } from '$lib/content/detail';
-	import { resourceName } from '$lib/play/resources';
-	import RollRow from '$lib/components/RollRow.svelte';
+	import { rollToastModel } from '#lib/dice/roll-toast.ts';
+	import { actionRuns, type RollLogEntry } from '#lib/combat/roll.ts';
+	import { isTurnAct, LOG_KIND } from '#lib/character/log-kind.ts';
+	import { _ } from '#lib/i18n/index.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import { localizedName } from '#lib/content/detail.ts';
+	import { resourceName } from '#lib/play/resources.ts';
+	import RollRow from '#lib/components/RollRow.svelte';
 	import { deltaPhrases } from '../delta-text';
 
 	const actions = $derived(actionRuns(combat.journal.log));

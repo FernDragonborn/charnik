@@ -9,11 +9,11 @@ import { FeatSlots } from './feat-slots.svelte';
 import { SkillPicks } from './skill-picks.svelte';
 import { blankDraft, type DraftState, type EditContext } from './draft';
 import { ASI, rowOfType } from './rows';
-import { makeRow } from '$lib/content/test-utils';
-import type { Ability } from '$lib/rules/core';
-import { assembleCharacter } from '$lib/character/assemble';
-import { POINT_BUY_MIN, STANDARD_ARRAY } from '$lib/build/rules';
-import type { LoadedRowByType } from '$lib/content/loader';
+import { makeRow } from '#lib/content/test-utils.ts';
+import type { Ability } from '#lib/rules/core.ts';
+import { assembleCharacter } from '#lib/character/assemble.ts';
+import { POINT_BUY_MIN, STANDARD_ARRAY } from '#lib/build/rules.ts';
+import type { LoadedRowByType } from '#lib/content/loader.ts';
 
 /** A level-up's carried context. Only the boosts and `loaded` matter here — the rest is what the
  *  save puts back untouched. `loaded` is the draft the save was made FROM, because that is what the

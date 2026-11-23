@@ -8,9 +8,9 @@
 	// discovery and the roster both ignore, and removes it at the end. The close-flush marker it
 	// leaves is read after the window is closed from outside (`tooling.md`).
 	import { onMount } from 'svelte';
-	import { currentDataDir, utf8Hex } from '$lib/storage/tauri';
-	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
-	import { onBeforeReload } from '$lib/content/reload';
+	import { currentDataDir, utf8Hex } from '#lib/storage/tauri.ts';
+	import { detectPlatform, getUserStorage, Platform } from '#lib/storage/provider.ts';
+	import { onBeforeReload } from '#lib/content/reload.ts';
 	import { invokeRaw } from '../invoke-raw';
 
 	const DIR = '.probe-durable';

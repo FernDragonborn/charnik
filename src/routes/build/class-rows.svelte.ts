@@ -6,9 +6,9 @@
  * returning one takes back); this is its reactive face, plus the two caps that must agree — the
  * character level cap, and what a played character has already settled under Strict.
  */
-import { toast } from '$lib/toast/toast';
-import { t } from '$lib/i18n';
-import { MAX_CHARACTER_LEVEL } from '$lib/build/rules';
+import { toast } from '#lib/toast/toast.ts';
+import { t } from '#lib/i18n/index.ts';
+import { MAX_CHARACTER_LEVEL } from '#lib/build/rules.ts';
 import { newClassRow } from './draft';
 import { removeClassRow, switchClass } from './class-picks-cache';
 import type { BuildVM } from './build-view-model.svelte';

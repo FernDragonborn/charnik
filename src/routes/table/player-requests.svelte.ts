@@ -4,12 +4,12 @@
  * effects picker's switch), so what a GM's damage does to a sheet is what the player's own Damage
  * press does (`docs/internals/table-link.md` ▸ What a request does on a sheet).
  */
-import { toast } from '$lib/toast/toast';
-import { t } from '$lib/i18n';
-import { saveCharacterGuarded } from '$lib/character/store.svelte';
-import type { RollLogEntry } from '$lib/combat/roll';
-import { diceTrayIsLive } from '$lib/dice/tray.svelte';
-import { heal, takeDamage } from '$lib/play/hit-points';
+import { toast } from '#lib/toast/toast.ts';
+import { t } from '#lib/i18n/index.ts';
+import { saveCharacterGuarded } from '#lib/character/store.svelte.ts';
+import type { RollLogEntry } from '#lib/combat/roll.ts';
+import { diceTrayIsLive } from '#lib/dice/tray.svelte.ts';
+import { heal, takeDamage } from '#lib/play/hit-points.ts';
 import {
 	DELIVERY,
 	TABLE_ANSWER,
@@ -18,8 +18,8 @@ import {
 	type RequestId,
 	type TableAnswer,
 	type TableRequest,
-} from '$lib/table-link/types';
-import type { TableRoll } from '$lib/table-link/wire-schema';
+} from '#lib/table-link/types.ts';
+import type { TableRoll } from '#lib/table-link/wire-schema.ts';
 import type { StateChoice } from '../combat/effects-editor.svelte';
 import { combat } from '../combat/combat-view-model.svelte';
 import {

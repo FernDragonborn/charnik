@@ -3,8 +3,8 @@
  * 2 → 0". The delta is facts; the words are made here, in the reader's language, when the line is
  * read — never written into `log.jsonl` (the reason `RollLogEntry.noteParts` is facts).
  */
-import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
-import { isRecord, type PlayChange, type PlayDelta } from '$lib/play/delta';
+import { PACT_SLOT_KEY } from '#lib/rules/spellcasting.ts';
+import { isRecord, type PlayChange, type PlayDelta } from '#lib/play/delta.ts';
 
 /** What the phrases need besides the delta: the catalog, and names the play state holds as ids. */
 export interface DeltaWords {

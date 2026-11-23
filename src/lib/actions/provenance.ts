@@ -1,6 +1,6 @@
 import type { Action } from 'svelte/action';
 import { FOCUSABLE } from './trapFocus';
-import { renderContentMarkdown } from '$lib/content/markdown';
+import { renderContentMarkdown } from '#lib/content/markdown.ts';
 
 /*
  * The provenance popover: how an auto-calculated value explains itself (docs/internals/ui.md ▸ The

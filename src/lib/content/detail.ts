@@ -8,13 +8,13 @@ import {
 	type ContentGraph,
 	type LoadedRow,
 	type LoadedRowOf,
-} from '$lib/content/loader';
-import { asText, metres, signed, titleCase } from '$lib/util/format';
-import { ABILITY_IDS, abilityModifier } from '$lib/rules/core';
-import { costSaid } from '$lib/rules/currency';
-import { PROSE_BASES, type ContentType, type RowColumn } from '$lib/content/schemas';
+} from '#lib/content/loader.ts';
+import { asText, metres, signed, titleCase } from '#lib/util/format.ts';
+import { ABILITY_IDS, abilityModifier } from '#lib/rules/core.ts';
+import { costSaid } from '#lib/rules/currency.ts';
+import { PROSE_BASES, type ContentType, type RowColumn } from '#lib/content/schemas.ts';
 import { cellText, localizedCell } from './prose';
-import type { Said, SaidText } from '$lib/util/say';
+import type { Said, SaidText } from '#lib/util/say.ts';
 import { packNameOf } from './disk';
 import { ITEM_TAG, parseBonusChoices, parseItemTags, type ItemTags } from './item-tags';
 import { resolveItem } from './resolved-item';

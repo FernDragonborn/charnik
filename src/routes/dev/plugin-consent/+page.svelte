@@ -10,9 +10,9 @@
 	// The native dialog is the one part no driver reaches: the button below raises it, for a hand to
 	// answer. The probe's namespace is forgotten again whatever the answer.
 	import { onMount } from 'svelte';
-	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
-	import { app } from '$lib/stores/app.svelte';
-	import type { PluginPrefs, PluginPrefsStore } from '$lib/effects/plugin-host';
+	import { detectPlatform, getUserStorage, Platform } from '#lib/storage/provider.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import type { PluginPrefs, PluginPrefsStore } from '#lib/effects/plugin-host.ts';
 
 	const NAMESPACE = 'zz-probe-plugin';
 	const HASH = 'a'.repeat(64);
@@ -50,7 +50,7 @@
 			return;
 		}
 		ran = true;
-		const prefs = (await import('$lib/effects/plugin-prefs-tauri')).tauriPluginPrefs;
+		const prefs = (await import('#lib/effects/plugin-prefs-tauri.ts')).tauriPluginPrefs;
 		store = prefs;
 
 		const before = await prefs.read();

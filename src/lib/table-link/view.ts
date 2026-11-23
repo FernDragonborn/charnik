@@ -5,12 +5,12 @@
  * renders numbers that explain themselves and derives nothing from a peer's tokens. What is left
  * out is left out here, before anything leaves: no notes, no inventory, no build, no portrait.
  */
-import type { CharacterSheet } from '$lib/character/derive';
-import type { Character, EffectInstance } from '$lib/character/schema';
-import { conditionIdOf } from '$lib/combat/effects-view';
-import { ABILITY_IDS } from '$lib/rules/core';
-import type { Computed } from '$lib/rules/pipeline';
-import { hitPointMaximum } from '$lib/play/hit-points';
+import type { CharacterSheet } from '#lib/character/derive.ts';
+import type { Character, EffectInstance } from '#lib/character/schema.ts';
+import { conditionIdOf } from '#lib/combat/effects-view.ts';
+import { ABILITY_IDS } from '#lib/rules/core.ts';
+import type { Computed } from '#lib/rules/pipeline.ts';
+import { hitPointMaximum } from '#lib/play/hit-points.ts';
 import { LABEL_MAX, LIST_MAX, NAME_MAX, type TableView } from './wire-schema';
 
 /** A computed value without the clamp it was folded under, which only a re-fold reads. */

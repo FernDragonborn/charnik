@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MemoryStorage } from '$lib/storage/memory';
+import { MemoryStorage } from '#lib/storage/memory.ts';
 import { forgetUninstalledPacks, seedShippedContent } from './provider';
 import { discoverContentRoots } from './disk';
 import { emptyPackConfig, orphanedTranslations, packConfig, registerPack } from './packs.svelte';

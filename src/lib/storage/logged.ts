@@ -8,8 +8,8 @@
  * logging those would bury the writes that actually went wrong under a list of files nobody expected
  * to be there.
  */
-import { logger, redactPath } from '$lib/diag/logger';
-import { errText } from '$lib/util/format';
+import { logger, redactPath } from '#lib/diag/logger.ts';
+import { errText } from '#lib/util/format.ts';
 import type { FileEntry, Storage } from './types';
 
 /** Run one mutation, recording what it was and — on the way out — whether it landed. The path is

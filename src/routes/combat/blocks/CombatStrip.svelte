@@ -4,11 +4,11 @@
 	// (spanning both rows). Resources are just counters, so they live here in the sheet's stat grid
 	// rather than a full-width bar of their own; the chips wrap to fill the block (1 or 12, it scales).
 	// Reads the `combat` view-model; the derived sheet comes in as a prop.
-	import Icon from '$lib/components/Icon.svelte';
-	import { _ } from '$lib/i18n';
-	import { abilityShortLabel } from '$lib/util/format';
-	import DefenseStrip, { hasDefenseChips } from '$lib/components/DefenseStrip.svelte';
-	import type { CharacterSheet } from '$lib/character/derive';
+	import Icon from '#lib/components/Icon.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import { abilityShortLabel } from '#lib/util/format.ts';
+	import DefenseStrip, { hasDefenseChips } from '#lib/components/DefenseStrip.svelte';
+	import type { CharacterSheet } from '#lib/character/derive.ts';
 	import { combat } from '../combat-view-model.svelte';
 	import {
 		why,
@@ -19,10 +19,10 @@
 		metres,
 		range,
 		rechargeLabel,
-	} from '$lib/combat/helpers';
-	import { sayText } from '$lib/util/say';
-	import { provenance } from '$lib/actions/provenance';
-	import { SOURCE_KEY } from '$lib/rules/pipeline';
+	} from '#lib/combat/helpers.ts';
+	import { sayText } from '#lib/util/say.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { SOURCE_KEY } from '#lib/rules/pipeline.ts';
 
 	let { s }: { s: CharacterSheet } = $props();
 	const passives = $derived(combat.passives);

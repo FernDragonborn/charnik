@@ -8,8 +8,8 @@
  * can I afford", and mixing them makes every price a lookup through the same list a player scrolls
  * for their sword. So it is its own play-state map, and the only thing the two share is weight.
  */
-import type { Said } from '$lib/util/say';
-import { asText } from '$lib/util/format';
+import type { Said } from '#lib/util/say.ts';
+import { asText } from '#lib/util/format.ts';
 
 /** One denomination: its id (the key in `play.currency`) and what it is worth in copper. */
 export interface Coin {

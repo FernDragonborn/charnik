@@ -6,7 +6,7 @@
  *
  * "Local-first, no auto-upload": this only formats text; sending is the user pasting it.
  */
-import type { Character } from '$lib/character/schema';
+import type { Character } from '#lib/character/schema.ts';
 import type { LogEntry } from './logger';
 import { LogLevel } from './logger';
 

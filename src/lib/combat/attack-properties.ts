@@ -13,11 +13,11 @@
  * itself: a property is said, or offered, never folded. A token of any other kind means nothing on
  * a single attack and is handed back for the row to show, rather than dropped.
  */
-import type { Translate } from '$lib/i18n';
-import { abilityShortLabel, titleCase } from '$lib/util/format';
-import { localizedName } from '$lib/content/detail';
-import { ITEM_TAG, type ItemTags } from '$lib/content/item-tags';
-import type { WeaponPropertyRow } from '$lib/content/weapon-properties';
+import type { Translate } from '#lib/i18n/index.ts';
+import { abilityShortLabel, titleCase } from '#lib/util/format.ts';
+import { localizedName } from '#lib/content/detail.ts';
+import { ITEM_TAG, type ItemTags } from '#lib/content/item-tags.ts';
+import type { WeaponPropertyRow } from '#lib/content/weapon-properties.ts';
 import {
 	EFFECT_KIND,
 	EXTRA_ATTACK_WORD,
@@ -26,10 +26,10 @@ import {
 	resolveEffectValue,
 	scopeMatches,
 	splitGuard,
-} from '$lib/effects/token-parser';
-import type { ExtraAttackRule } from '$lib/effects/facts';
-import { withAttackMod, type ExprContext } from '$lib/effects/context';
-import { evalExpression } from '$lib/effects/expression-evaluator';
+} from '#lib/effects/token-parser.ts';
+import type { ExtraAttackRule } from '#lib/effects/facts.ts';
+import { withAttackMod, type ExprContext } from '#lib/effects/context.ts';
+import { evalExpression } from '#lib/effects/expression-evaluator.ts';
 
 /** A mastery property as a row prints it. */
 export interface WeaponMastery {

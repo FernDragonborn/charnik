@@ -3,8 +3,8 @@
  * the state it returns to was a settled one — and refused, with a word, when anything the act
  * changed has moved since.
  */
-import type { Character } from '$lib/character/schema';
-import { LOG_KIND } from '$lib/character/log-kind';
+import type { Character } from '#lib/character/schema.ts';
+import { LOG_KIND } from '#lib/character/log-kind.ts';
 import { undoDelta, type PlayDelta } from './delta';
 import { quietly, type PlayOutcome } from './outcome';
 

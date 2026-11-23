@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
  * when the auto-pick was wrong, and silently.
  */
 import { attackAbility } from './attacks';
-import { parseItemTags } from '$lib/content/item-tags';
+import { parseItemTags } from '#lib/content/item-tags.ts';
 
 const tags = (s: string) => parseItemTags(s);
 const RAPIER = tags('martial, melee, finesse');

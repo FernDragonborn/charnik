@@ -5,7 +5,7 @@
  * stack (`ammo:arrow`), so a longbow draws from arrows; SRD 5.1 prints "Ammunition (range 80/320)"
  * and never which ammunition, so a 5.1 weapon may draw from any stack and the player says which.
  */
-import { ITEM_TAG, type ItemTags } from '$lib/content/item-tags';
+import { ITEM_TAG, type ItemTags } from '#lib/content/item-tags.ts';
 
 /** The item category a stack of ammunition carries. */
 export const AMMUNITION_CATEGORY = 'ammunition';

@@ -5,15 +5,15 @@
 	// send in one step is a report nobody sends. Nothing leaves the app but by that press, and the
 	// full snapshot also goes to the clipboard, since a link has a length (`diag/issue-link.ts`).
 	import DialogShell from './DialogShell.svelte';
-	import { _ } from '$lib/i18n';
-	import { toast } from '$lib/toast/toast';
-	import { app } from '$lib/stores/app.svelte';
-	import { characters } from '$lib/character/store.svelte';
-	import { content } from '$lib/content/store.svelte';
-	import { detectPlatform } from '$lib/storage/provider';
-	import { getLogTail } from '$lib/diag/logger';
-	import { buildDiagnostics, formatBundle } from '$lib/diag/bundle';
-	import { issueLink } from '$lib/diag/issue-link';
+	import { _ } from '#lib/i18n/index.ts';
+	import { toast } from '#lib/toast/toast.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import { characters } from '#lib/character/store.svelte.ts';
+	import { content } from '#lib/content/store.svelte.ts';
+	import { detectPlatform } from '#lib/storage/provider.ts';
+	import { getLogTail } from '#lib/diag/logger.ts';
+	import { buildDiagnostics, formatBundle } from '#lib/diag/bundle.ts';
+	import { issueLink } from '#lib/diag/issue-link.ts';
 
 	let { onDismiss }: { onDismiss: () => void } = $props();
 

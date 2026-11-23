@@ -13,7 +13,7 @@ import {
 } from './store.svelte';
 import { dirOf } from './repository';
 import { newCharacter } from './schema';
-import { getUserStorage } from '$lib/storage/provider';
+import { getUserStorage } from '#lib/storage/provider.ts';
 
 beforeEach(async () => {
 	await loadRoster();

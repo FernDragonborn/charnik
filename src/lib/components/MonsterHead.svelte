@@ -1,10 +1,10 @@
 <script lang="ts">
 	// The "shapka" of a monster stat block: eyebrow, title, the vitals + abilities panels, and the
 	// senses/defenses band. Structural stats are read-only; only the title is editable (translate).
-	import { abilityShortLabel } from '$lib/util/format';
-	import { _ } from '$lib/i18n';
-	import { say, sayText } from '$lib/util/say';
-	import type { DetailModel, MonsterModel } from '$lib/content/detail';
+	import { abilityShortLabel } from '#lib/util/format.ts';
+	import { _ } from '#lib/i18n/index.ts';
+	import { say, sayText } from '#lib/util/say.ts';
+	import type { DetailModel, MonsterModel } from '#lib/content/detail.ts';
 	import type { WikiEditDraft } from './wikiEdit';
 	import DiceIcon from './DiceIcon.svelte';
 	import RollButton from './RollButton.svelte';

@@ -7,11 +7,11 @@
  * mid-edit. The lighter refresh, which re-reads the disk and reloads nothing, is `reloadContent()`;
  * `reloadIntentOf` says which of the two a key asks for.
  */
-import { logger } from '$lib/diag/logger';
-import { markReload } from '$lib/stores/flash';
-import { errText } from '$lib/util/format';
-import { toast } from '$lib/toast/toast';
-import { t } from '$lib/i18n';
+import { logger } from '#lib/diag/logger.ts';
+import { markReload } from '#lib/stores/flash.ts';
+import { errText } from '#lib/util/format.ts';
+import { toast } from '#lib/toast/toast.ts';
+import { t } from '#lib/i18n/index.ts';
 
 export const RELOAD_INTENT = {
 	/** Not a reload key here: the browser keeps it. */

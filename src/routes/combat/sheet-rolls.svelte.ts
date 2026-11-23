@@ -5,14 +5,14 @@
  * These functions are what the dice tray calls, and the host interface below is the contract it
  * satisfies (docs/internals/roller.md).
  */
-import { toast } from '$lib/toast/toast';
-import { t, translator } from '$lib/i18n';
-import { attackRollName, extraAttackMark, extraAttackRollName } from '$lib/combat/attack-names';
-import type { ExtraAttackRow } from '$lib/combat/attacks';
-import { EFFECT_KIND, EXTRA_ATTACK_WORD, ROLL_LIMIT } from '$lib/effects/token-parser';
-import type { ExprContext } from '$lib/effects/expression-evaluator';
-import type { Character } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
+import { toast } from '#lib/toast/toast.ts';
+import { t, translator } from '#lib/i18n/index.ts';
+import { attackRollName, extraAttackMark, extraAttackRollName } from '#lib/combat/attack-names.ts';
+import type { ExtraAttackRow } from '#lib/combat/attacks.ts';
+import { EFFECT_KIND, EXTRA_ATTACK_WORD, ROLL_LIMIT } from '#lib/effects/token-parser.ts';
+import type { ExprContext } from '#lib/effects/expression-evaluator.ts';
+import type { Character } from '#lib/character/schema.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
 import {
 	DIE_ROLE,
 	naturalOf,
@@ -20,11 +20,11 @@ import {
 	totalOf,
 	type Rolled,
 	type RolledDie,
-} from '$lib/rules/dice';
-import { CRIT_THRESHOLD_MAX } from '$lib/rules/core';
-import { app } from '$lib/stores/app.svelte';
-import { toastRoll } from '$lib/dice/roll-toast';
-import type { PlayNotice } from '$lib/play/outcome';
+} from '#lib/rules/dice.ts';
+import { CRIT_THRESHOLD_MAX } from '#lib/rules/core.ts';
+import { app } from '#lib/stores/app.svelte.ts';
+import { toastRoll } from '#lib/dice/roll-toast.ts';
+import type { PlayNotice } from '#lib/play/outcome.ts';
 import {
 	wantsTray,
 	sheetRollEffects,
@@ -45,7 +45,7 @@ import {
 	type RollName,
 	sayRollName,
 	nameFields,
-} from '$lib/combat/helpers';
+} from '#lib/combat/helpers.ts';
 import type { RollSpec, RollJournal } from './roll-journal.svelte';
 import type { TurnEconomy } from './turn-economy.svelte';
 

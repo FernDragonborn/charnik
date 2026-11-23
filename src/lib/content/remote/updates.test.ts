@@ -7,7 +7,7 @@
  */
 import 'fake-indexeddb/auto';
 import { describe, it, expect, afterAll, beforeAll, beforeEach } from 'vitest';
-import { getUserStorage } from '$lib/storage/provider';
+import { getUserStorage } from '#lib/storage/provider.ts';
 import { packConfig, emptyPackConfig, UPDATE_MODE } from '../packs.svelte';
 import {
 	updates,

@@ -8,7 +8,7 @@
 import 'fake-indexeddb/auto';
 import { describe, it, expect, vi } from 'vitest';
 
-vi.mock('$lib/toast/toast', () => ({
+vi.mock('#lib/toast/toast.ts', () => ({
 	toast: Object.assign(() => {}, { success: () => {}, warning: () => {}, error: () => {} }),
 	toastRollCard: () => {},
 	toastFailure: () => {},
@@ -16,7 +16,7 @@ vi.mock('$lib/toast/toast', () => ({
 }));
 
 import { loadPacks } from '../../test-support/real-content';
-import { newCharacter, type Character, classRow } from '$lib/character/schema';
+import { newCharacter, type Character, classRow } from '#lib/character/schema.ts';
 import { combat } from './combat-view-model.svelte';
 
 const EDITIONS = [

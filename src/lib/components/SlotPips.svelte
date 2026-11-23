@@ -2,7 +2,7 @@
 	// A spell-slot pool as pips: the ones left lit, the spent ones dim. With `onpick` each pip is a
 	// button (the Combat panel's click-to-set); without it they are only read (the Spellbook header,
 	// where a cast is seen to take one).
-	import { range } from '$lib/combat/helpers';
+	import { range } from '#lib/combat/helpers.ts';
 
 	let {
 		full,

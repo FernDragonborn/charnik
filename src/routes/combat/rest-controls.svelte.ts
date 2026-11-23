@@ -4,10 +4,10 @@
  * variant). The long rest: which spent Hit Dice come back, where it cannot return them all.
  *
  * What a rest DOES is not here — the recharge, the Hit Dice and the healing are pure actions in
- * `$lib/play/rests`. What this file owns is the popovers: the choice being made, and the press that
+ * `#lib/play/rests.ts`. What this file owns is the popovers: the choice being made, and the press that
  * hands it over.
  */
-import { hitDiceRecovery } from '$lib/rules/core';
+import { hitDiceRecovery } from '#lib/rules/core.ts';
 import {
 	diceShortRest,
 	halfShortRest,
@@ -15,19 +15,19 @@ import {
 	shortRestHealingOptions,
 	spendHitDie,
 	type RestKind,
-} from '$lib/play/rests';
-import type { ContentGraph } from '$lib/content/loader';
+} from '#lib/play/rests.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
 import {
 	shortRestSlotGroups,
 	slotRecoveryCost,
 	type SlotRecoveryPicks,
-} from '$lib/play/rest-slot-recovery';
-import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
-import type { Character, ShortRestMode } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
-import { speciesCantripChoice } from '$lib/character/species-spells';
-import { currentFeaturePicks } from '$lib/character/features';
-import type { MenuKind } from '$lib/combat/helpers';
+} from '#lib/play/rest-slot-recovery.ts';
+import type { PlayContext, PlayOutcome } from '#lib/play/outcome.ts';
+import type { Character, ShortRestMode } from '#lib/character/schema.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
+import { speciesCantripChoice } from '#lib/character/species-spells.ts';
+import { currentFeaturePicks } from '#lib/character/features.ts';
+import type { MenuKind } from '#lib/combat/helpers.ts';
 import type { ResourceTracker } from './resource-tracker.svelte';
 import type { OpenOverlay } from './menu-overlay.svelte';
 

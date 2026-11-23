@@ -1,7 +1,7 @@
 /** Startup recovery settles only the staging folders of packs this app installed or ships; a
  *  folder the user named `notes.prev` is theirs (audit-oct-27 D13). */
 import { describe, expect, it } from 'vitest';
-import { MemoryStorage } from '$lib/storage/memory';
+import { MemoryStorage } from '#lib/storage/memory.ts';
 import { recoverInterruptedApplies } from './provider';
 import { packConfig } from './packs.svelte';
 

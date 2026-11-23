@@ -2,11 +2,11 @@
 	// The 5.5e origin feat. GRANTED by the background, never chosen — so this is not a picker: there
 	// is no list, nothing to take, and no way to clear it (change the background instead). What it is
 	// still worth opening for is the article, and the choices the feat itself asks back.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build, rowName } from '../build-view-model.svelte';
 	import { rowDetail } from '../rows';
 	import { ORIGIN_SLOT_KEY } from '../draft';
-	import WikiDetail from '$lib/components/WikiDetail.svelte';
+	import WikiDetail from '#lib/components/WikiDetail.svelte';
 	import FeatSubChoices from './FeatSubChoices.svelte';
 	const b = build;
 

@@ -3,8 +3,8 @@
  * ability spread, and an effect carrying one token. Kept out of `fixtures.ts` so nothing outside the
  * effects tests imports the effects module by accident — the engine is removable by design.
  */
-import type { PluginCtx } from '$lib/effects/plugin-registry';
-import type { ActiveEffect } from '$lib/effects/token-parser';
+import type { PluginCtx } from '#lib/effects/plugin-registry.ts';
+import type { ActiveEffect } from '#lib/effects/token-parser.ts';
 
 /** A level-7 fighter/rogue with a WIS mod of +2 — the shape every plugin handler in the tests reads.
  *  `play` is merged over the defaults, which is the half that varies (hp drives the §4.2 memo split). */

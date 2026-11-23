@@ -1,28 +1,28 @@
 /*
  * Spell casting on the sheet — what a slot adds as the panels and the roller read it, the pickers a
  * cast can open (which slot, which pool, which weapon), and the prepared toggle. What a cast DOES to
- * the character is a pure action in `$lib/play/cast`; the rolls it asks for are `rolls`
+ * the character is a pure action in `#lib/play/cast`; the rolls it asks for are `rolls`
  * (`spell-cast-rolls.ts`), which reads what a slot adds back through this class.
  *
  * It reads the host through a narrow interface rather than importing the view-model class, so
  * nothing here depends on the rest of the sheet and there is no import cycle.
  */
-import { toast } from '$lib/toast/toast';
-import { t, translator, type Translate } from '$lib/i18n';
-import { sayText } from '$lib/util/say';
-import { NOTE_KEY } from '$lib/combat/roll';
-import { canCastWithSlots, spellEntries } from '$lib/character/spellcasting';
+import { toast } from '#lib/toast/toast.ts';
+import { t, translator, type Translate } from '#lib/i18n/index.ts';
+import { sayText } from '#lib/util/say.ts';
+import { NOTE_KEY } from '#lib/combat/roll.ts';
+import { canCastWithSlots, spellEntries } from '#lib/character/spellcasting.ts';
 import { upcastPreview } from './spell-roll-name';
-import type { Character } from '$lib/character/schema';
-import type { ResourceDef } from '$lib/effects/facts';
+import type { Character } from '#lib/character/schema.ts';
+import type { ResourceDef } from '#lib/effects/facts.ts';
 import {
 	castSpell,
 	enchantableWeapons,
 	upcastAt,
 	poolAllowsSpell,
 	spellcastingBlock,
-} from '$lib/play/cast';
-import { PLAY_REQUEST, type PlayContext, type PlayOutcome } from '$lib/play/outcome';
+} from '#lib/play/cast.ts';
+import { PLAY_REQUEST, type PlayContext, type PlayOutcome } from '#lib/play/outcome.ts';
 import {
 	effectsCaption,
 	canTogglePreparedFor,
@@ -30,9 +30,9 @@ import {
 	type SpellRow,
 	type MenuKind,
 	type Attack,
-} from '$lib/combat/helpers';
-import { castablePactLevel, castableSlotLevels } from '$lib/rules/spellcasting';
-import { NO_VARS, withWalkingSpeed } from '$lib/effects/context';
+} from '#lib/combat/helpers.ts';
+import { castablePactLevel, castableSlotLevels } from '#lib/rules/spellcasting.ts';
+import { NO_VARS, withWalkingSpeed } from '#lib/effects/context.ts';
 import { SpellCastRolls, type CastRollsHost, type UpcastFlatKind } from './spell-cast-rolls';
 
 /** How a cast was asked for. `weapon` is the one a magic-weapon buff lands on: a weapon id, or
@@ -65,7 +65,7 @@ export class SpellCasting {
 		this.rolls = new SpellCastRolls(host, this);
 	}
 
-	/** A spell's `upcast` cell at a slot level (`$lib/play/cast` ▸ `upcastAt`). Each caller picks the
+	/** A spell's `upcast` cell at a slot level (`#lib/play/cast` ▸ `upcastAt`). Each caller picks the
 	 *  kinds it cares about. */
 	private evalUpcastAt(r: SpellRow, slotLevel: number): ReturnType<typeof upcastAt> {
 		const sheet = this.host.sheet;
@@ -238,7 +238,7 @@ export class SpellCasting {
 		);
 
 	/**
-	 * Cast a spell (`$lib/play/cast`), then do what the cast asks of the sheet: open the weapon picker
+	 * Cast a spell (`#lib/play/cast.ts`), then do what the cast asks of the sheet: open the weapon picker
 	 * when a magic-weapon buff has several weapons to land on — nothing is paid until it is answered —
 	 * or make the cast's rolls. `opts.slot` overrides the auto-lowest slot (the upcast picker) and is
 	 * honoured or blocked, never downshifted.

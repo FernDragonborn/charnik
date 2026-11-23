@@ -12,7 +12,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import type { z } from 'zod';
-import { logger } from '$lib/diag/logger';
+import { logger } from '#lib/diag/logger.ts';
 import {
 	DELIVERY,
 	SEATING,

@@ -8,7 +8,7 @@
  * SUM of caster contributions into ONE full table (not the senior class); warlock Pact Magic is a
  * separate pool and contributes NOTHING to the shared caster level.
  */
-import type { SaidText } from '$lib/util/say';
+import type { SaidText } from '#lib/util/say.ts';
 import type { System } from './pipeline';
 
 /** Multiclass caster-level contribution + rounding (data value `caster_share`). */

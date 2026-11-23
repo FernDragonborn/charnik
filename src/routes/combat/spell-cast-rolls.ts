@@ -7,15 +7,15 @@
  * What a slot ADDS is not decided here. `SpellCasting` owns the upcast evaluation, because the
  * carrier effect and the weapon picker read it too, and hands it in as `UpcastReads`.
  */
-import { LOG_KIND } from '$lib/character/log-kind';
-import { toast } from '$lib/toast/toast';
-import { t } from '$lib/i18n';
-import type { SaidText } from '$lib/util/say';
-import { rollPool } from '$lib/rules/dice';
-import { NOTE_KEY, nameFields, type RollName } from '$lib/combat/roll';
+import { LOG_KIND } from '#lib/character/log-kind.ts';
+import { toast } from '#lib/toast/toast.ts';
+import { t } from '#lib/i18n/index.ts';
+import type { SaidText } from '#lib/util/say.ts';
+import { rollPool } from '#lib/rules/dice.ts';
+import { NOTE_KEY, nameFields, type RollName } from '#lib/combat/roll.ts';
 import { SPELL_OUTCOME, saidNote, spellRollName, type SpellOutcomeKind } from './spell-roll-name';
-import type { CharacterSheet } from '$lib/character/derive';
-import type { SpellcastingClass } from '$lib/character/spellcasting';
+import type { CharacterSheet } from '#lib/character/derive.ts';
+import type { SpellcastingClass } from '#lib/character/spellcasting.ts';
 import {
 	wantsTray,
 	netAdvantage,
@@ -30,12 +30,12 @@ import {
 	type DamagePartSpec,
 	type SpellRow,
 	type MenuKind,
-} from '$lib/combat/helpers';
+} from '#lib/combat/helpers.ts';
 import type { RollSpec, RollJournal } from './roll-journal.svelte';
-import { combinePools } from '$lib/effects/upcast';
-import { HEAL_MODIFIER } from '$lib/content/schemas';
-import { withCastSlot } from '$lib/effects/context';
-import type { ExprContext } from '$lib/effects/expression-evaluator';
+import { combinePools } from '#lib/effects/upcast.ts';
+import { HEAL_MODIFIER } from '#lib/content/schemas.ts';
+import { withCastSlot } from '#lib/effects/context.ts';
+import type { ExprContext } from '#lib/effects/expression-evaluator.ts';
 
 /** The upcast contribution to ONE cast: the folded damage/heal deltas as typed parts (item 2 —
  *  `damage:cold:…` routes to the cold part), the slot it came out of, and the provenance the roll

@@ -6,11 +6,11 @@
  * key rather than being appended to the sentence it produced: "(slot 5)" glued onto a translated
  * phrase is not a part a translator can move.
  */
-import { t, translator } from '$lib/i18n';
-import { sayText, type SaidText } from '$lib/util/say';
-import { formatDamageParts, metres, sayRounds } from '$lib/combat/helpers';
-import type { evalUpcast } from '$lib/effects/upcast';
-import type { RollName } from '$lib/combat/roll';
+import { t, translator } from '#lib/i18n/index.ts';
+import { sayText, type SaidText } from '#lib/util/say.ts';
+import { formatDamageParts, metres, sayRounds } from '#lib/combat/helpers.ts';
+import type { evalUpcast } from '#lib/effects/upcast.ts';
+import type { RollName } from '#lib/combat/roll.ts';
 
 /** What a non-attack cast produces. A named member because it selects the roll's NAME, and a bare
  *  string would let a typo pick a key that does not exist. */

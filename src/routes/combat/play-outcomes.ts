@@ -1,34 +1,34 @@
 /*
  * Carrying a play-state action out on the open character.
  *
- * An action is pure (`$lib/play`): it returns the character that results, the lines for the roll
+ * An action is pure (`#lib/play`): it returns the character that results, the lines for the roll
  * log and the notices. This is the one place that result reaches the world — the character the
  * panels hold, the log, the toasts — so every action lands the same way whichever control built it.
  */
-import { toast, type ToastAction } from '$lib/toast/toast';
-import { translator } from '$lib/i18n';
-import { app } from '$lib/stores/app.svelte';
-import { say, type Said } from '$lib/util/say';
-import { LOG_KIND } from '$lib/character/log-kind';
-import { playChanges } from '$lib/play/changes';
-import { playDelta } from '$lib/play/delta';
-import { undoAct } from '$lib/play/undo';
-import { resourceName } from '$lib/play/resources';
-import { localizedName } from '$lib/content/detail';
-import { isRowActive } from '$lib/content/sources.svelte';
-import type { ContentGraph } from '$lib/content/loader';
-import type { Character } from '$lib/character/schema';
-import { deriveSheet, type CharacterSheet } from '$lib/character/derive';
-import { settlePlay } from '$lib/play/settle';
+import { toast, type ToastAction } from '#lib/toast/toast.ts';
+import { translator } from '#lib/i18n/index.ts';
+import { app } from '#lib/stores/app.svelte.ts';
+import { say, type Said } from '#lib/util/say.ts';
+import { LOG_KIND } from '#lib/character/log-kind.ts';
+import { playChanges } from '#lib/play/changes.ts';
+import { playDelta } from '#lib/play/delta.ts';
+import { undoAct } from '#lib/play/undo.ts';
+import { resourceName } from '#lib/play/resources.ts';
+import { localizedName } from '#lib/content/detail.ts';
+import { isRowActive } from '#lib/content/sources.svelte.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
+import type { Character } from '#lib/character/schema.ts';
+import { deriveSheet, type CharacterSheet } from '#lib/character/derive.ts';
+import { settlePlay } from '#lib/play/settle.ts';
 import {
 	adoptCharacter,
 	type OwedConcentrationSave,
 	type PlayContext,
 	type PlayNotice,
 	type PlayOutcome,
-} from '$lib/play/outcome';
+} from '#lib/play/outcome.ts';
 import type { RollJournal } from './roll-journal.svelte';
-import type { LogEvent } from '$lib/combat/roll';
+import type { LogEvent } from '#lib/combat/roll.ts';
 
 /** What carrying an outcome out needs from the sheet around it. */
 export interface PlayOutcomesHost {

@@ -2,9 +2,9 @@
  *  Abilities panel rolls, the skills built on it, and initiative — a Dexterity check in both SRDs. */
 import { beforeAll, describe, expect, it } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
-import { classRow, newCharacter, type Character } from '$lib/character/schema';
-import { deriveSheet } from '$lib/character/derive';
-import type { ContentGraph } from '$lib/content/loader';
+import { classRow, newCharacter, type Character } from '#lib/character/schema.ts';
+import { deriveSheet } from '#lib/character/derive.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
 import { abilityCheckRoll } from './sheet-roll-specs';
 import { netAdvantage, sheetRollEffects } from './roll';
 

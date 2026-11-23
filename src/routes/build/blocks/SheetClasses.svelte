@@ -2,15 +2,15 @@
 	// Class, subclass, level — and everything those levels actually handed over. A character is not
 	// necessarily built at level 1, so the feature list is the proof: every level up to this one is
 	// listed, plus the next few, so nothing arrives unexplained and nothing is silently skipped.
-	import Icon from '$lib/components/Icon.svelte';
-	import { provenance } from '$lib/actions/provenance';
-	import { _ } from '$lib/i18n';
+	import Icon from '#lib/components/Icon.svelte';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build, rowName, rowOfType } from '../build-view-model.svelte';
 	import { rowDetail, rowText, savesLabel } from '../rows';
-	import { classFeatureLines } from '$lib/build/derive';
+	import { classFeatureLines } from '#lib/build/derive.ts';
 	import PickerCard from './PickerCard.svelte';
-	import { MULTICLASS_MIN_SCORE, meetsMulticlassPrereq, multiclassPrereq } from '$lib/rules/multiclass';
-	import { abilityShortLabel } from '$lib/util/format';
+	import { MULTICLASS_MIN_SCORE, meetsMulticlassPrereq, multiclassPrereq } from '#lib/rules/multiclass.ts';
+	import { abilityShortLabel } from '#lib/util/format.ts';
 	const b = build;
 
 	/** The scores a class asks of a multiclassed character, when this one falls short — said beside

@@ -11,7 +11,7 @@
 	import { build } from '../../build/build-view-model.svelte';
 	import { Inspector, type InspectorTarget } from '../../build/inspector.svelte';
 	import InspectorPane from '../../build/blocks/Inspector.svelte';
-	import '$lib/styles/build.css';
+	import '#lib/styles/build.css';
 
 	interface Target {
 		label: string;

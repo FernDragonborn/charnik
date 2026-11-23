@@ -4,8 +4,8 @@
 	// switch, and a refresh re-scan. Desktop-only (PLG-SEC 21) — the web build shows an explainer.
 	// Broken folders are listed with their problem, never silently skipped.
 	import Icon from '../Icon.svelte';
-	import { provenance } from '$lib/actions/provenance';
-	import { _ } from '$lib/i18n';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { _ } from '#lib/i18n/index.ts';
 	import {
 		plugins,
 		refreshPlugins,
@@ -16,13 +16,17 @@
 		setKillSwitch,
 		pluginStatus,
 		type PluginStatus,
-	} from '$lib/effects/plugin-store.svelte';
-	import { LOCAL_ORIGIN, pluginDescription, type DiscoveredPlugin } from '$lib/effects/plugin-host';
-	import { content } from '$lib/content/store.svelte';
-	import { tokensOf } from '$lib/content/loader';
-	import { localizedName } from '$lib/content/detail';
+	} from '#lib/effects/plugin-store.svelte.ts';
+	import {
+		LOCAL_ORIGIN,
+		pluginDescription,
+		type DiscoveredPlugin,
+	} from '#lib/effects/plugin-host.ts';
+	import { content } from '#lib/content/store.svelte.ts';
+	import { tokensOf } from '#lib/content/loader.ts';
+	import { localizedName } from '#lib/content/detail.ts';
 	import PluginConsentDialog from './PluginConsentDialog.svelte';
-	import { app } from '$lib/stores/app.svelte';
+	import { app } from '#lib/stores/app.svelte.ts';
 
 	let consentFor = $state<DiscoveredPlugin | null>(null);
 

@@ -2,22 +2,22 @@
 	// What the character carries, and whether they can carry it. Equipping is here rather than in the
 	// inspector because it is a one-click state on a row you are already looking at; ADDING an item is
 	// a search through hundreds of rows, which is what the inspector's equipment pane is for.
-	import Icon from '$lib/components/Icon.svelte';
-	import { _ } from '$lib/i18n';
+	import Icon from '#lib/components/Icon.svelte';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build, rowName, rowOfType } from '../build-view-model.svelte';
 	import {
 		asksWhichOne,
 		type InstanceAnswers,
 		type InstanceQuestions,
-	} from '$lib/content/item-instance';
+	} from '#lib/content/item-instance.ts';
 	import ItemInstanceAsk from './ItemInstanceAsk.svelte';
 	import { askAgain, type InstanceAsk } from '../item-instance-picking.svelte';
 	import type { DraftState } from '../draft';
-	import { why } from '$lib/combat/effects-view';
-	import { provenance } from '$lib/actions/provenance';
-	import { kilograms } from '$lib/combat/constants';
-	import { tagInt, ITEM_TAG } from '$lib/content/item-tags';
-	import { resolveItem } from '$lib/content/resolved-item';
+	import { why } from '#lib/combat/effects-view.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { kilograms } from '#lib/combat/constants.ts';
+	import { tagInt, ITEM_TAG } from '#lib/content/item-tags.ts';
+	import { resolveItem } from '#lib/content/resolved-item.ts';
 	import { purseSaid } from '../starting-kit-picks.svelte';
 	const b = build;
 

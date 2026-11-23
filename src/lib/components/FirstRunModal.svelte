@@ -5,8 +5,8 @@
 	// plain browser (see /dev/firstrun) and the Tauri wiring stays out of the component.
 	import { untrack } from 'svelte';
 	import DialogShell from './DialogShell.svelte';
-	import { _ } from '$lib/i18n';
-	import { toastFailure } from '$lib/toast/toast';
+	import { _ } from '#lib/i18n/index.ts';
+	import { toastFailure } from '#lib/toast/toast.ts';
 
 	let {
 		defaultDir,

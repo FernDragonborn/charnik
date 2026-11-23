@@ -1,8 +1,8 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { render } from 'vitest-browser-svelte';
-import { startI18n } from '$lib/i18n';
-import { SYSTEMS, newCharacter } from '$lib/character/schema';
-import type { ContentGraph } from '$lib/content/loader';
+import { startI18n } from '#lib/i18n/index.ts';
+import { SYSTEMS, newCharacter } from '#lib/character/schema.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
 import { makeTempContentRoot } from '../../../../test-support/fixtures';
 import { combat } from '../../combat-view-model.svelte';
 import SpellsPanel from './SpellsPanel.svelte';

@@ -2,17 +2,17 @@
 	// Actions panel body: one ordered list of everything the character can DO on a turn — standard
 	// actions (Show/hide-filtered), feature-granted rollables (Sneak Attack, Bardic Inspiration…) and
 	// resource spend-options (Ki → Flurry) with a cost chip. Three kinds, one order the player owns.
-	import Icon from '$lib/components/Icon.svelte';
-	import { provenance } from '$lib/actions/provenance';
-	import { _ } from '$lib/i18n';
+	import Icon from '#lib/components/Icon.svelte';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { _ } from '#lib/i18n/index.ts';
 	import { combat } from '../../combat-view-model.svelte';
 	import { dndzone } from 'svelte-dnd-action';
-	import { dragMotion, TOUCH_HOLD_MS } from '$lib/actions/dragMotion';
+	import { dragMotion, TOUCH_HOLD_MS } from '#lib/actions/dragMotion.ts';
 	import RowGrip from '../RowGrip.svelte';
-	import { ROW_PANEL } from '$lib/combat/row-order';
-	import type { StandardAction } from '$lib/combat/helpers';
-	import { ACTION_DEFAULT } from '$lib/combat/actions';
-	import { OPTION_SPENDS_SLOT } from '$lib/play/options';
+	import { ROW_PANEL } from '#lib/combat/row-order.ts';
+	import type { StandardAction } from '#lib/combat/helpers.ts';
+	import { ACTION_DEFAULT } from '#lib/combat/actions.ts';
+	import { OPTION_SPENDS_SLOT } from '#lib/play/options.ts';
 	/** The three things this panel lists. A player sees one list of things they can do, so they order
 	 *  one list: a spend-option that opens the character's whole turn has as much claim to the top as
 	 *  Dash does. The kind rides on the row because each renders differently, not because each sorts

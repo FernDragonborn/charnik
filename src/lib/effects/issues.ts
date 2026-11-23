@@ -2,7 +2,7 @@
  * What the derive says when one token does not work — the catalog keys and the issue shape
  * content-health lists beside the loader's.
  */
-import type { SaidText } from '$lib/util/say';
+import type { SaidText } from '#lib/util/say.ts';
 
 /** Catalog keys for the derive-time issues — the ONE owner, like `NOTE_KEY` for the engine's rule
  *  notes, so the producers below and the message catalogs never drift on a bare string. */

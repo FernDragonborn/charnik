@@ -14,7 +14,7 @@ export const LOG_KIND = {
 	damage: 'damage',
 	healing: 'healing',
 	rest: 'rest',
-	/** An act taken back (`$lib/play/undo`): the player's own doing, with what it reversed under it. */
+	/** An act taken back (`#lib/play/undo`): the player's own doing, with what it reversed under it. */
 	undo: 'undo',
 	/** What an action SAID — the sentence its toast carried. */
 	notice: 'notice',

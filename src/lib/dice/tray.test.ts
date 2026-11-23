@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { registerDiceTray, openDiceTray, type DiceTrayRequest } from './tray.svelte';
 
 // the no-handler fallback rolls + toasts; stub the toast so the test asserts only the routing
-vi.mock('$lib/toast/toast', () => ({
+vi.mock('#lib/toast/toast.ts', () => ({
 	toast: Object.assign(() => {}, { success: () => {}, warning: () => {}, error: () => {} }),
 	toastRollCard: () => {},
 	toastFailure: () => {},

@@ -13,8 +13,8 @@
  * The view-model keeps `overlay` / `openMenu` / `openDice` as its own names (ui.md ▸ Splitting a large view) — every panel and
  * both sibling subsystems are written against them.
  */
-import { parseDamageParts, type MenuKind } from '$lib/combat/helpers';
-import { registerDiceTray, type DiceTrayRequest } from '$lib/dice/tray.svelte';
+import { parseDamageParts, type MenuKind } from '#lib/combat/helpers.ts';
+import { registerDiceTray, type DiceTrayRequest } from '#lib/dice/tray.svelte.ts';
 import type { RollJournal } from './roll-journal.svelte';
 
 /** What the menus need from the sheet around them: somewhere to put a prefilled roll. */

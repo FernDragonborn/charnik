@@ -6,8 +6,8 @@
 	//
 	// There is no commit footer: a click on an option TAKES it. The only thing left down there is
 	// Clear, because un-making a choice has no other affordance.
-	import Icon from '$lib/components/Icon.svelte';
-	import { _ } from '$lib/i18n';
+	import Icon from '#lib/components/Icon.svelte';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build } from '../build-view-model.svelte';
 	import { targetKey, type EditPane, type Inspector } from '../inspector.svelte';
 	import InspectorGrid from './InspectorGrid.svelte';

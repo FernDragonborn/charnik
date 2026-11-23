@@ -2,17 +2,17 @@
  * Weapon/unarmed attack rows for the Combat view: parse a damage string, fold a weapon's own magic
  * bonus, and build the attack list from equipped inventory. Pure. Split out of combat/helpers.ts.
  */
-import type { Ability } from '$lib/rules/core';
-import { matchesTarget } from '$lib/effects/facts';
+import type { Ability } from '#lib/rules/core.ts';
+import { matchesTarget } from '#lib/effects/facts.ts';
 import {
 	gatherProfGrants,
 	isWeaponProficient,
 	withGrantedProfs,
 	type ProfGrants,
-} from '$lib/rules/proficiency';
-import { itemTagLabel, weaponCategoryOf, ITEM_TAG, type ItemTags } from '$lib/content/item-tags';
-import { needsBaseItem, resolveItem } from '$lib/content/resolved-item';
-import { weaponPropertyRows, type WeaponPropertyRow } from '$lib/content/weapon-properties';
+} from '#lib/rules/proficiency.ts';
+import { itemTagLabel, weaponCategoryOf, ITEM_TAG, type ItemTags } from '#lib/content/item-tags.ts';
+import { needsBaseItem, resolveItem } from '#lib/content/resolved-item.ts';
+import { weaponPropertyRows, type WeaponPropertyRow } from '#lib/content/weapon-properties.ts';
 import {
 	attackProperties,
 	carriesProperty,
@@ -21,28 +21,28 @@ import {
 	type ExtraAttack,
 	type WeaponMastery,
 } from './attack-properties';
-import { needsAttunement } from '$lib/character/inventory';
-import type { ContentGraph } from '$lib/content/loader';
-import type { Character } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
-import { classEquipmentColumn, grantedEquipmentProfs } from '$lib/character/granted-proficiency';
-import { parseDicePool } from '$lib/rules/dice';
-import { signed } from '$lib/util/format';
+import { needsAttunement } from '#lib/character/inventory.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
+import type { Character } from '#lib/character/schema.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
+import { classEquipmentColumn, grantedEquipmentProfs } from '#lib/character/granted-proficiency.ts';
+import { parseDicePool } from '#lib/rules/dice.ts';
+import { signed } from '#lib/util/format.ts';
 import {
 	EFFECT_KIND,
 	parseToken,
 	isWeaponOwnBonus,
 	resolveEffectValue,
 	scopeMatches,
-} from '$lib/effects/token-parser';
+} from '#lib/effects/token-parser.ts';
 import { swingOf, withRuleDie } from './weapon-rules';
 export { attackAbility } from './weapon-rules';
-import { NO_VARS, withItemBonus, type ExprContext } from '$lib/effects/context';
+import { NO_VARS, withItemBonus, type ExprContext } from '#lib/effects/context.ts';
 import { effectTag } from './effects-view';
-import { localizedName } from '$lib/content/detail';
-import { instanceName } from '$lib/content/item-instance';
-import { formatNote, type Note } from '$lib/rules/pipeline';
-import type { Translate } from '$lib/i18n';
+import { localizedName } from '#lib/content/detail.ts';
+import { instanceName } from '#lib/content/item-instance.ts';
+import { formatNote, type Note } from '#lib/rules/pipeline.ts';
+import type { Translate } from '#lib/i18n/index.ts';
 import { parseDamageParts, type DamagePart } from './damage-parts';
 export {
 	parseDamageParts,

@@ -6,8 +6,8 @@
  * reload, and not past the app's window.
  */
 import { z } from 'zod';
-import type { TableId } from '$lib/table-link/types';
-import { tableRequestSchema, tableRollSchema } from '$lib/table-link/wire-schema';
+import type { TableId } from '#lib/table-link/types.ts';
+import { tableRequestSchema, tableRollSchema } from '#lib/table-link/wire-schema.ts';
 
 export const ASK_STATUS = {
 	pending: 'pending',

@@ -5,13 +5,13 @@
  */
 import { makeTempContentRoot } from '../../test-support/fixtures';
 import 'fake-indexeddb/auto'; // the VM's saveCharacterToStore hits IndexedDB (rest/level-up) — provide it
-import { undoAct } from '$lib/play/undo';
+import { undoAct } from '#lib/play/undo.ts';
 import { describe, it, expect, beforeEach, beforeAll, vi } from 'vitest';
 
 /** What was toasted, in order. A notice is the deliverable for a few of these behaviours (a window
  *  opening, a resource restored), so the test has to be able to read what the player was told. */
 const toasts: string[] = [];
-vi.mock('$lib/toast/toast', () => {
+vi.mock('#lib/toast/toast.ts', () => {
 	const say = (message: string) => toasts.push(message);
 	return {
 		toast: Object.assign(say, { success: say, warning: say, error: say }),
@@ -21,19 +21,19 @@ vi.mock('$lib/toast/toast', () => {
 	};
 });
 import { loadPacks } from '../../test-support/real-content';
-import { type ContentGraph } from '$lib/content/loader';
-import { newCharacter, type Character, classRow, inventoryRow } from '$lib/character/schema';
-import type { ResourceOption } from '$lib/character/derive';
-import { AMENDMENT_KIND, spellRow } from '$lib/combat/helpers';
-import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
-import { DIE_ROLE } from '$lib/rules/dice';
+import { type ContentGraph } from '#lib/content/loader.ts';
+import { newCharacter, type Character, classRow, inventoryRow } from '#lib/character/schema.ts';
+import type { ResourceOption } from '#lib/character/derive.ts';
+import { AMENDMENT_KIND, spellRow } from '#lib/combat/helpers.ts';
+import { PACT_SLOT_KEY } from '#lib/rules/spellcasting.ts';
+import { DIE_ROLE } from '#lib/rules/dice.ts';
 import { combat } from './combat-view-model.svelte';
-import { LOG_KIND, isTurnAct } from '$lib/character/log-kind';
-import { logLineFor } from '$lib/character/log-repository';
-import { startI18n, locale, waitLocale } from '$lib/i18n';
+import { LOG_KIND, isTurnAct } from '#lib/character/log-kind.ts';
+import { logLineFor } from '#lib/character/log-repository.ts';
+import { startI18n, locale, waitLocale } from '#lib/i18n/index.ts';
 import { PanelLayout, PANEL_MOVE } from './panel-layout.svelte';
-import { UNARMED_STRIKE_ID, attackNotes } from '$lib/combat/attacks';
-import { numberedAttackRollName } from '$lib/combat/attack-names';
+import { UNARMED_STRIKE_ID, attackNotes } from '#lib/combat/attacks.ts';
+import { numberedAttackRollName } from '#lib/combat/attack-names.ts';
 
 const S = 'SRD 5.2.1';
 

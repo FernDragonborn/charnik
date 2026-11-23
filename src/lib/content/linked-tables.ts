@@ -12,7 +12,7 @@ import { splitList, type ContentType } from './schemas';
 import type { ContentGraph, LoadedRow } from './loader';
 import { localizedName } from './detail';
 import { optionParentKey } from './options';
-import { asText } from '$lib/util/format';
+import { asText } from '#lib/util/format.ts';
 
 export interface LinkSpec {
 	/** The type whose rows belong to this article. */

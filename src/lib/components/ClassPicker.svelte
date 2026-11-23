@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Icon from './Icon.svelte';
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	// Multi-select for a spell's `classes` column: tick which EXISTING classes (pulled from the loaded
 	// content) it's available to, and/or add a class that isn't in the CSVs by name. Existing classes are
 	// stored by their id (so they resolve); a custom one is stored by its raw name (it won't resolve by

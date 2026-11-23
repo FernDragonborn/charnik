@@ -3,7 +3,7 @@
  * turn effect tokens / typed facts into short display tags, split active effects into buffs /
  * debuffs / resources, and duration math. Pure. Split out of the old combat/helpers.ts junk-drawer.
  */
-import { ABILITY_IDS } from '$lib/rules/core';
+import { ABILITY_IDS } from '#lib/rules/core.ts';
 import {
 	formatNote,
 	sourceNoteText,
@@ -11,25 +11,25 @@ import {
 	type Computed,
 	type Contribution,
 	type Translate,
-} from '$lib/rules/pipeline';
+} from '#lib/rules/pipeline.ts';
 import { shownTrace } from './shown-trace';
-import { abilityShortLabel, titleCase, signed } from '$lib/util/format';
+import { abilityShortLabel, titleCase, signed } from '#lib/util/format.ts';
 import {
 	parseToken,
 	resolveEffectValue,
 	splitGuard,
 	EFFECT_KIND,
 	type RechargePolicy,
-} from '$lib/effects/token-parser';
-import type { ExprContext } from '$lib/effects/expression-evaluator';
-import type { EffectFacts, NumericFact } from '$lib/effects/apply';
-import type { EffectInstance } from '$lib/character/schema';
-import type { SkillId } from '$lib/character/skills';
-import type { SaidText } from '$lib/util/say';
-import { RECHARGE_ALL } from '$lib/rules/recharge';
+} from '#lib/effects/token-parser.ts';
+import type { ExprContext } from '#lib/effects/expression-evaluator.ts';
+import type { EffectFacts, NumericFact } from '#lib/effects/apply.ts';
+import type { EffectInstance } from '#lib/character/schema.ts';
+import type { SkillId } from '#lib/character/skills.ts';
+import type { SaidText } from '#lib/util/say.ts';
+import { RECHARGE_ALL } from '#lib/rules/recharge.ts';
 
 /** A runtime effect instance — the character-schema type, re-exported for the combat views. */
-export type { EffectInstance } from '$lib/character/schema';
+export type { EffectInstance } from '#lib/character/schema.ts';
 
 /** Ops that read as a comparison get a symbol; a plain addend or multiplier reads as its own sign. */
 const OP_SYMBOL: Record<Contribution['op'], string> = {

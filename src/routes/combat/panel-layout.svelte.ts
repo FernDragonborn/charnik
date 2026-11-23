@@ -5,7 +5,7 @@
  * constructor callbacks — the column order round-trips onto the character's `ui.panelColumns` and
  * the collapsed ids onto `ui.panelsCollapsed`, because the arrangement is per character.
  */
-import { movedOrder, orderRows } from '$lib/combat/row-order';
+import { movedOrder, orderRows } from '#lib/combat/row-order.ts';
 
 /** Which way a keyboard move goes. Up/down reorders inside a column; left/right hands the panel to
  *  the other one — between them they reach every arrangement a drag can. */

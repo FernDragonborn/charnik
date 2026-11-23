@@ -3,9 +3,9 @@
 	// linked from the app; open /dev/storage to see it live. The real section is desktop-gated (Tauri
 	// fs), so this reproduces the rows statically and drives DataMigrationDialog through each state so
 	// it previews in a plain browser.
-	import DataMigrationDialog from '$lib/components/settings/DataMigrationDialog.svelte';
-	import DataConflictDialog from '$lib/components/settings/DataConflictDialog.svelte';
-	import { conflictRows, type DirFile } from '$lib/storage/migrate';
+	import DataMigrationDialog from '#lib/components/settings/DataMigrationDialog.svelte';
+	import DataConflictDialog from '#lib/components/settings/DataConflictDialog.svelte';
+	import { conflictRows, type DirFile } from '#lib/storage/migrate.ts';
 
 	// Sample two folders that overlap, to preview the conflict table (collisions highlight the newer side).
 	const day = 24 * 3600_000;

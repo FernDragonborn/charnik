@@ -102,19 +102,19 @@ Combat is the view that has them. Which field to open first:
 
 | field         | file               | owns                                                             |
 | ------------- | ------------------ | ---------------------------------------------------------------- |
-| `hp`          | `hit-points`       | the hit being entered and the save it left owed; the rules are `$lib/play/hit-points` |
-| `outcomes`    | `play-outcomes`    | carrying a `$lib/play` action out: the held character, the log, the notices |
-| `casting`     | `spell-casting`    | what a slot adds as panels and the roller read it, the slot / pool / weapon pickers, prepared; the cast is `$lib/play/cast`, its rolls `spell-cast-rolls` |
-| `concentration` | `concentration`  | which spell is held, and the player ending it; what else ends it is `$lib/play/settle` |
-| `executor`    | `action-executor`  | the names panels call to use a spend-option, enter combat, end a turn (`$lib/play/options`, `events`); the strikes and the form question an action asks for |
+| `hp`          | `hit-points`       | the hit being entered and the save it left owed; the rules are `#lib/play/hit-points.ts` |
+| `outcomes`    | `play-outcomes`    | carrying a `#lib/play` action out: the held character, the log, the notices |
+| `casting`     | `spell-casting`    | what a slot adds as panels and the roller read it, the slot / pool / weapon pickers, prepared; the cast is `#lib/play/cast`, its rolls `spell-cast-rolls` |
+| `concentration` | `concentration`  | which spell is held, and the player ending it; what else ends it is `#lib/play/settle.ts` |
+| `executor`    | `action-executor`  | the names panels call to use a spend-option, enter combat, end a turn (`#lib/play/options`, `events`); the strikes and the form question an action asks for |
 | `rolls`       | `sheet-rolls`      | what a tap on a stat, save, skill or attack actually rolls        |
 | `journal`     | `roll-journal`     | the dice tray, the roll log, and roll execution                   |
-| `resources`   | `resource-tracker` | the names panels call for slot and pool pips and rests (`$lib/play/resources`, `rests`); an ability's window opening |
-| `rests`       | `rest-controls`    | a rest's popovers — the Hit Dice it asks about; the rest itself is `$lib/play/rests` |
-| `economy`     | `turn-economy`     | the turn's pips and movement as panels read them; the actions are `$lib/play/turn` |
-| `forms`       | `form-shift`       | the form picker: which stat blocks are offered and the question asked; assuming and leaving are `$lib/play/form-shift` |
-| `effects`     | `effects-editor`   | the picker and forms for effects and conditions; the actions are `$lib/play/effects` |
-| `inventory`   | `inventory`        | what is carried as the panel reads it, and firing a shot; equip, attune, count and use are `$lib/play/inventory` |
+| `resources`   | `resource-tracker` | the names panels call for slot and pool pips and rests (`#lib/play/resources`, `rests`); an ability's window opening |
+| `rests`       | `rest-controls`    | a rest's popovers — the Hit Dice it asks about; the rest itself is `#lib/play/rests.ts` |
+| `economy`     | `turn-economy`     | the turn's pips and movement as panels read them; the actions are `#lib/play/turn.ts` |
+| `forms`       | `form-shift`       | the form picker: which stat blocks are offered and the question asked; assuming and leaving are `#lib/play/form-shift.ts` |
+| `effects`     | `effects-editor`   | the picker and forms for effects and conditions; the actions are `#lib/play/effects.ts` |
+| `inventory`   | `inventory`        | what is carried as the panel reads it, and firing a shot; equip, attune, count and use are `#lib/play/inventory.ts` |
 | `featureView` | `feature-view`     | which features are shown, which are pinned, and in what order     |
 | `layout`      | `panel-layout`     | the two panel columns, their order, and what is collapsed         |
 | `menus`       | `menu-overlay`     | where a dropdown opens, and the one dice-tray seam every roll uses |
@@ -419,7 +419,7 @@ good", so they are pinned here and every component follows them.
     rather than stacking under it, because a stack shows only its newest and keeps the rest
     collapsed until hovered. A notice said with `duration: Infinity` is STANDING: it rides every
     card after it until dismissed. A notice said with an `id` is said once however often it
-    repeats. All of it is `$lib/toast/toast`, the only module allowed to import `svelte-sonner`
+    repeats. All of it is `#lib/toast/toast`, the only module allowed to import `svelte-sonner`
     besides the `<Toaster>` in `+layout.svelte` — the linter refuses the import anywhere else. A
     lone notice keeps the toaster's own card; a roll's card and the log stay the place a past roll
     is read again.
@@ -704,7 +704,7 @@ and travelling with the control while the page scrolls, on the side it opened on
 the surface — its own list, a rail of chips — moves nothing. A floating part that lives in the body
 — a picker's card — is named to it as a companion, so a press there is not a press outside.
 **A picker mounted outside the builder brings the builder's stylesheet and its scope with it**
-(`import '$lib/styles/build.css'` and `build-page` on the surface): the round ✓ that takes a row
+(`import '#lib/styles/build.css'` and `build-page` on the surface): the round ✓ that takes a row
 and the picker's scrollbars are styled there, under that scope, and without both the picker is
 drawn with the browser's own buttons. A rail that overflows sideways takes `wheelSideways`
 (`lib/actions`), so a mouse wheel moves it. Not being
@@ -973,8 +973,10 @@ keyboard typed it. A new filter uses it on both the query and the text it search
 
 **Shortcuts match the physical key** (`e.code`: `'KeyK'`, `'Digit1'`), never `e.key`, which is
 layout-dependent — on a Cyrillic layout the K key yields `"к"`. **Every internal link and navigation
-carries `base`** from `$app/paths`, including the palette's `goto`, or it 404s under the GitHub Pages
-subpath.
+goes through `resolve()`** from `$app/paths`, including the palette's `goto`, or it 404s under the
+GitHub Pages subpath; a file in `static/` through `asset()`. `resolve` takes each route as a literal,
+so a typo is a type error: a list of links resolves each entry where it is named. The few places that
+join a path themselves take the prefix from `BASE_PATH` (`lib/config/base-path.ts`).
 
 Ukrainian UI copy uses the formal **«ви»**, never «ти», and prefers impersonal phrasing where that
 reads naturally.

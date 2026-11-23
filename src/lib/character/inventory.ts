@@ -9,10 +9,10 @@
  * Nothing here reads prose. Whether an item can be equipped, needs attunement, or is used up comes
  * from its `category` column and its `tags` (docs/internals/content.md).
  */
-import { ITEM_TAG } from '$lib/content/item-tags';
-import type { InstanceAnswers } from '$lib/content/item-instance';
-import type { ResolvedItem } from '$lib/content/resolved-item';
-import type { ContentGraph } from '$lib/content/loader';
+import { ITEM_TAG } from '#lib/content/item-tags.ts';
+import type { InstanceAnswers } from '#lib/content/item-instance.ts';
+import type { ResolvedItem } from '#lib/content/resolved-item.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
 import { inventoryRow, type Character } from './schema';
 
 export type InventoryEntry = Character['build']['inventory'][number];

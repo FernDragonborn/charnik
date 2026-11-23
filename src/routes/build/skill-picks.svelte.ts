@@ -7,11 +7,11 @@
  * forward is to un-pick something first. What differs is the count — the class-skill cap counts only
  * non-background picks, since a background overlap frees a slot.
  */
-import { toast } from '$lib/toast/toast';
-import { t } from '$lib/i18n';
-import { SKILL_ABILITY, type SkillId } from '$lib/character/skills';
-import { featureSkillSlots, skillsFitSlots } from '$lib/build/derive';
-import { ANY_OPTION, splitList } from '$lib/content/schemas';
+import { toast } from '#lib/toast/toast.ts';
+import { t } from '#lib/i18n/index.ts';
+import { SKILL_ABILITY, type SkillId } from '#lib/character/skills.ts';
+import { featureSkillSlots, skillsFitSlots } from '#lib/build/derive.ts';
+import { ANY_OPTION, splitList } from '#lib/content/schemas.ts';
 import { toggleCapped } from './draft';
 import type { BuildVM } from './build-view-model.svelte';
 

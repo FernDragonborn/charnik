@@ -2,9 +2,9 @@
  *  ends inside the rest or outlasts it. */
 import { beforeAll, describe, expect, it } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
-import { classRow, newCharacter, type Character } from '$lib/character/schema';
-import { deriveSheet } from '$lib/character/derive';
-import type { ContentGraph } from '$lib/content/loader';
+import { classRow, newCharacter, type Character } from '#lib/character/schema.ts';
+import { deriveSheet } from '#lib/character/derive.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
 import { assumeForm } from './form-shift';
 import { rest } from './rests';
 import type { PlayContext } from './outcome';

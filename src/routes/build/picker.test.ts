@@ -4,9 +4,9 @@
  * like an empty cell, and a broken walk looks like a list that "just doesn't do arrows".
  */
 import { describe, it, expect } from 'vitest';
-import { type LoadedRow } from '$lib/content/loader';
+import { type LoadedRow } from '#lib/content/loader.ts';
 import { pickerMeta } from './rows';
-import { walkOptions } from '$lib/util/option-walk';
+import { walkOptions } from '#lib/util/option-walk.ts';
 import { makeTempContentRoot } from '../../test-support/fixtures';
 
 const S = 'SRD 5.2.1';

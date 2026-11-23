@@ -2,10 +2,10 @@ import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { userEvent } from 'vitest/browser';
 import Roller from './Roller.svelte';
-import { DiceTray } from '$lib/dice/dice-tray.svelte';
-import { rollerCandidates, type NamedRollSource } from '$lib/dice/roller-vocabulary';
-import { PILL_KIND, ROLLER_ROLE } from '$lib/dice/roller';
-import { startI18n, locale, waitLocale } from '$lib/i18n';
+import { DiceTray } from '#lib/dice/dice-tray.svelte.ts';
+import { rollerCandidates, type NamedRollSource } from '#lib/dice/roller-vocabulary.ts';
+import { PILL_KIND, ROLLER_ROLE } from '#lib/dice/roller.ts';
+import { startI18n, locale, waitLocale } from '#lib/i18n/index.ts';
 
 /*
  * The tray's KEYBOARD, in a real browser — the half of the design that unit tests can't reach,

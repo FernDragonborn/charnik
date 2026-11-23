@@ -10,7 +10,7 @@
 	// Two native range inputs, not a hand-rolled drag: the keyboard, the screen reader and the
 	// touch target all come with them. They overlap on one track, each owning its own handle.
 	import { untrack } from 'svelte';
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { RARITY_BAND } from '../rarity';
 
 	let { from = $bindable(0), to = $bindable(RARITY_BAND.length - 1) }: { from?: number; to?: number } =

@@ -13,17 +13,17 @@
 	// The picker's shared pieces — the round ✓ that takes a row, its scrollbars — are styled in the
 	// builder's stylesheet, under the builder's scope. Mounting the picker outside the builder means
 	// bringing both: the sheet, and the scope on the surface the picker sits in.
-	import '$lib/styles/build.css';
+	import '#lib/styles/build.css';
 	import { onMount } from 'svelte';
-	import { _ } from '$lib/i18n';
-	import Icon from '$lib/components/Icon.svelte';
-	import { anchored } from '$lib/actions/anchored';
-	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
+	import { _ } from '#lib/i18n/index.ts';
+	import Icon from '#lib/components/Icon.svelte';
+	import { anchored } from '#lib/actions/anchored.ts';
+	import { dismissOnEscape } from '#lib/actions/dismissOnEscape.ts';
 	import SectionedPicker from '../../build/blocks/SectionedPicker.svelte';
 	import RarityRange from '../../build/blocks/RarityRange.svelte';
 	import { WHOLE_BAND, itemSectionsWithin } from '../../build/rarity';
 	import { rowDetail, rowName } from '../../build/rows';
-	import { isRowActive } from '$lib/content/sources.svelte';
+	import { isRowActive } from '#lib/content/sources.svelte.ts';
 	import { combat } from '../combat-view-model.svelte';
 	import { INSTANCE_SECTION, InstancePicking } from '../../build/item-instance-picking.svelte';
 	import ItemInstanceAsk from '../../build/blocks/ItemInstanceAsk.svelte';

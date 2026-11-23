@@ -21,7 +21,7 @@
  * scheduled for much later and deliberately not a tail of REL-4. Until then this file is the fast
  * path AND the only path — deliberately.
  */
-import { parseUrl } from '$lib/util/links';
+import { parseUrl } from '#lib/util/links.ts';
 import {
 	MAX_PACK_BYTES,
 	MAX_PACK_FILES,

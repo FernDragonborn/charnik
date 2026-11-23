@@ -9,12 +9,12 @@
 	// can be inspected after the window is closed. It only READS — nothing is applied, nothing is
 	// installed, and the registry is untouched.
 	import { onMount } from 'svelte';
-	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
-	import { SHIPPED_PACK_REPO } from '$lib/content/packs.svelte';
-	import { checkRepo, parseGithubRepo, rawUrl } from '$lib/content/remote/github';
-	import { diffPack } from '$lib/content/remote/diff';
-	import { gitBlobSha } from '$lib/content/hash';
-	import { tauriFetcher } from '$lib/content/remote/tauri-fetch';
+	import { detectPlatform, getUserStorage, Platform } from '#lib/storage/provider.ts';
+	import { SHIPPED_PACK_REPO } from '#lib/content/packs.svelte.ts';
+	import { checkRepo, parseGithubRepo, rawUrl } from '#lib/content/remote/github.ts';
+	import { diffPack } from '#lib/content/remote/diff.ts';
+	import { gitBlobSha } from '#lib/content/hash.ts';
+	import { tauriFetcher } from '#lib/content/remote/tauri-fetch.ts';
 
 	const REPO = SHIPPED_PACK_REPO;
 	const REPORT = 'packs-live-probe.txt';

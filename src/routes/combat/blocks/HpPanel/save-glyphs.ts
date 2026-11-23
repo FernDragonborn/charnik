@@ -2,7 +2,7 @@
  * What a death save is drawn as: wings under a halo for a success, the skull necrotic damage wears
  * for a failure. Paths for the 24-unit box every hand-drawn glyph uses.
  */
-import { damageGlyph } from '$lib/components/damage-glyphs';
+import { damageGlyph } from '#lib/components/damage-glyphs.ts';
 
 /** Two feathers a side, drawn to fill the square so the silhouette survives 24px, under a halo
  *  whose opening is still an opening at that size. */

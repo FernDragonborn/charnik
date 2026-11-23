@@ -3,12 +3,12 @@
 	// discovered from the dataDir), so this route force-seeds the store with fake discovered
 	// plugins in every status — broken / needs-consent / code-changed / disabled / enabled — to
 	// exercise the list AND the consent dialog in a plain browser. Open /dev/plugins.
-	import PluginsSettings from '$lib/components/settings/PluginsSettings.svelte';
-	import PluginNeeds from '$lib/components/PluginNeeds.svelte';
-	import { ISSUE_KEY, type EffectIssue } from '$lib/effects/token-parser';
-	import { plugins } from '$lib/effects/plugin-store.svelte';
-	import { LOCAL_ORIGIN, type DiscoveredPlugin } from '$lib/effects/plugin-host';
-	import { titleCase } from '$lib/util/format';
+	import PluginsSettings from '#lib/components/settings/PluginsSettings.svelte';
+	import PluginNeeds from '#lib/components/PluginNeeds.svelte';
+	import { ISSUE_KEY, type EffectIssue } from '#lib/effects/token-parser.ts';
+	import { plugins } from '#lib/effects/plugin-store.svelte.ts';
+	import { LOCAL_ORIGIN, type DiscoveredPlugin } from '#lib/effects/plugin-host.ts';
+	import { titleCase } from '#lib/util/format.ts';
 
 	const fake = (over: Partial<DiscoveredPlugin> & { namespace: string }): DiscoveredPlugin => ({
 		origin: LOCAL_ORIGIN,

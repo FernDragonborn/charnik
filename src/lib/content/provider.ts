@@ -20,17 +20,19 @@
  *
  * Everything above this uses `getContentGraph()` and never touches Storage directly.
  */
-import { base } from '$app/paths';
-import { FetchStorage } from '$lib/storage/fetch';
-import { getUserStorage, detectPlatform, Platform } from '$lib/storage/provider';
-import type { Storage } from '$lib/storage/types';
-import { listFilesRecursive } from '$lib/storage/walk';
+import { BASE_PATH } from '#lib/config/base-path.ts';
+import { FetchStorage } from '#lib/storage/fetch.ts';
+import { getUserStorage, detectPlatform, Platform } from '#lib/storage/provider.ts';
+import type { Storage } from '#lib/storage/types.ts';
+import { listFilesRecursive } from '#lib/storage/walk.ts';
 import { loadContent, type ContentGraph, type ContentSource } from './loader';
 import { HOMEBREW_ROOT } from './homebrew';
 import { CONTENT_DIR, discoverContentRoots, isProtectedFromOverwrite, packNameOf } from './disk';
 import { parseContentDirectives } from './meta';
-import { CONTENT_SEED_VERSION } from '$lib/schema/version';
+import { CONTENT_SEED_VERSION } from '#lib/schema/version.ts';
+
 import { duringPackWrite, isPackWriteInFlight, recoverInterruptedApply } from './remote/install';
+
 import {
 	bundledPacks,
 	forgetPack,
@@ -41,8 +43,8 @@ import {
 	SHIPPED_PACK_REPO,
 	unDismissMissing,
 } from './packs.svelte';
-import { logger } from '$lib/diag/logger';
-import { errText } from '$lib/util/format';
+import { logger } from '#lib/diag/logger.ts';
+import { errText } from '#lib/util/format.ts';
 import {
 	beginCarryRun,
 	finishCarryRun,
@@ -69,7 +71,7 @@ async function buildGraph(): Promise<ContentGraph> {
 	const homebrew: ContentSource[] =
 		platform === Platform.Headless ? [] : [{ storage: getUserStorage(), root: HOMEBREW_ROOT }];
 
-	const bundled = new FetchStorage(base);
+	const bundled = new FetchStorage(BASE_PATH);
 	if (platform === Platform.Desktop) {
 		// desktop: seed/UPDATE the BUNDLED packs on disk (first run + version bumps), then read every
 		// pack that is actually installed there — which is the bundled set plus anything the user added.
@@ -132,6 +134,7 @@ export async function recoverInterruptedApplies(
 			.filter((e) => e.isDir && /\.(new|prev|old)$/i.test(e.name))
 			.map((e) => e.name.replace(/\.(new|prev|old)$/i, '')),
 	);
+
 	// only a pack this app installed or ships: a `notes.prev` folder the user made is theirs
 	const ours = (pack: string) => packConfig.packs[pack] !== undefined || shipped.includes(pack);
 	for (const pack of interrupted) if (ours(pack)) await recoverInterruptedApply(storage, pack);
@@ -164,7 +167,7 @@ export function forgetUninstalledPacks(installed: string[]): void {
  * same copy step, asked for explicitly instead of happening behind the user's back.
  */
 export async function restoreBundledPacks(packs: string[]): Promise<void> {
-	const bundled = new FetchStorage(base);
+	const bundled = new FetchStorage(BASE_PATH);
 	const user = getUserStorage();
 	// Under the in-flight flag, like every other writer of `content/`: this brings a pack back file by
 	// file, and a watcher-driven rebuild landing in the middle would build a graph from half of it —
@@ -179,6 +182,7 @@ export async function restoreBundledPacks(packs: string[]): Promise<void> {
 				// for a pack that is ABSENT, so this normally finds nothing — but "normally" is not a
 				// guard, and a folder half-deleted by hand is exactly when it stops being true.
 				if ((await user.exists(path)) && (await isProtectedFromOverwrite(user, path))) continue;
+
 				await user.writeBytes(
 					path,
 					await keepLocalTranslations(run, path, await bundled.readBytes(path)),
@@ -257,6 +261,7 @@ export async function seedShippedContent(
 			const path = (await to.exists(shipped))
 				? shipped
 				: (renamed.get(contentIdOf(bytes)) ?? shipped);
+
 			if ((await to.exists(path)) && (await isProtectedFromOverwrite(to, path))) {
 				preserved.push(path); // user hand-edited this shipped file → keep their version
 				continue;

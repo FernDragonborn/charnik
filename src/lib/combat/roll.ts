@@ -18,17 +18,17 @@ import {
 	type Rng,
 	type Rolled,
 	type StoredRoll,
-} from '$lib/rules/dice';
-import { matchesTarget, type EffectFacts, type NumericFact } from '$lib/effects/apply';
-import { parseToken, resolveEffectValue, scopeMatches } from '$lib/effects/token-parser';
-import type { ExprContext } from '$lib/effects/expression-evaluator';
-import { sayText, type Said, type SaidValue } from '$lib/util/say';
-import type { Translate } from '$lib/i18n';
-import type { RollMod } from '$lib/effects/facts';
-import type { CharacterSheet, SkillId } from '$lib/character/derive';
-import type { Character } from '$lib/character/schema';
-import { LOG_KIND, type LogKind } from '$lib/character/log-kind';
-import type { PlayDelta } from '$lib/play/delta';
+} from '#lib/rules/dice.ts';
+import { matchesTarget, type EffectFacts, type NumericFact } from '#lib/effects/apply.ts';
+import { parseToken, resolveEffectValue, scopeMatches } from '#lib/effects/token-parser.ts';
+import type { ExprContext } from '#lib/effects/expression-evaluator.ts';
+import { sayText, type Said, type SaidValue } from '#lib/util/say.ts';
+import type { Translate } from '#lib/i18n/index.ts';
+import type { RollMod } from '#lib/effects/facts.ts';
+import type { CharacterSheet, SkillId } from '#lib/character/derive.ts';
+import type { Character } from '#lib/character/schema.ts';
+import { LOG_KIND, type LogKind } from '#lib/character/log-kind.ts';
+import type { PlayDelta } from '#lib/play/delta.ts';
 
 /** A rolled damage slice carrying its damage type ("slashing", "radiant"). A single-type hit is one
  *  of these; a multi-type weapon rolls several, each shown separately with its own total (BUG-DMG-1). */
@@ -192,7 +192,7 @@ export type RollLogEntry = Rolled & {
 	 *  unrelated rolls. */
 	group?: string;
 	/** What the act changed in play state — only the fields that moved, so the capped file pays for
-	 *  what the act touched. The line says it, and Undo applies it in reverse (`$lib/play/delta`). */
+	 *  what the act touched. The line says it, and Undo applies it in reverse (`#lib/play/delta.ts`). */
 	delta?: PlayDelta;
 };
 
@@ -203,7 +203,7 @@ export interface LogEvent {
 	outcome?: AutoOutcome;
 	/** What the line explains itself with — a notice's description. */
 	noteParts?: Said[];
-	/** What the act this line opens changed in play state (`$lib/play/delta`). */
+	/** What the act this line opens changed in play state (`#lib/play/delta.ts`). */
 	delta?: PlayDelta;
 }
 

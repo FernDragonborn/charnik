@@ -2,8 +2,8 @@
  * Undoing an applied update (audit-oct-27 D8): the previous version the swap kept beside the pack
  * comes back, and the user says what becomes of what they changed since (`ROLLBACK_MODE`).
  */
-import type { Storage } from '$lib/storage/types';
-import { listFilesRecursive } from '$lib/storage/walk';
+import type { Storage } from '#lib/storage/types.ts';
+import { listFilesRecursive } from '#lib/storage/walk.ts';
 import { isProtectedFromOverwrite } from '../disk';
 import {
 	backupPathOf,

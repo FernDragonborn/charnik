@@ -5,11 +5,11 @@
  * objects — this is the only file in the roller that knows a content graph exists.
  */
 import { get } from 'svelte/store';
-import { DAMAGE_TYPES } from '$lib/components/damage-glyphs';
-import type { ContentGraph } from '$lib/content/loader';
-import { localesOf, namesByLocale } from '$lib/content/names';
-import { FALLBACK_LOCALE, LOCALES, json } from '$lib/i18n';
-import { ADVANTAGE_MODE, type AdvantageMode } from '$lib/rules/dice';
+import { DAMAGE_TYPES } from '#lib/components/damage-glyphs.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
+import { localesOf, namesByLocale } from '#lib/content/names.ts';
+import { FALLBACK_LOCALE, LOCALES, json } from '#lib/i18n/index.ts';
+import { ADVANTAGE_MODE, type AdvantageMode } from '#lib/rules/dice.ts';
 import type { NamedRollSource } from './roller-vocabulary';
 
 /** What every installed language calls this thing, keyed by locale — the same whole-map shape a

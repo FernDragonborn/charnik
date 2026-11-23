@@ -15,8 +15,8 @@ import {
 	featureKey,
 	type CharacterFeature,
 	type FeaturePreset,
-} from '$lib/character/features';
-import type { Character } from '$lib/character/schema';
+} from '#lib/character/features.ts';
+import type { Character } from '#lib/character/schema.ts';
 
 export class FeatureView {
 	constructor(

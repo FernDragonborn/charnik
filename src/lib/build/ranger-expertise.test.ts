@@ -1,7 +1,7 @@
 /** A 5.5e Ranger's Expertise picks, against the real pack. */
 import { beforeAll, describe, expect, it } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
-import type { ContentGraph } from '$lib/content/loader';
+import type { ContentGraph } from '#lib/content/loader.ts';
 import { expertiseBudget } from './derive';
 
 describe('the Expertise a 5.5e Ranger gains at level 2', () => {

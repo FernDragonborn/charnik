@@ -2,18 +2,18 @@
 	// "Something outside Charnik changed this character" — asked when a save was refused because
 	// `character.json` is not the file this app last held. No `onDismiss`: nothing has been written,
 	// and a stray click on the backdrop must not pick a winner for the player.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import DialogShell from './DialogShell.svelte';
 	import {
 		characters,
 		resolveConflict,
 		CONFLICT_CHOICE,
 		type ConflictChoice,
-	} from '$lib/character/store.svelte';
-	import { rosterEntryOf } from '$lib/character/repository';
-	import type { Character } from '$lib/character/schema';
-	import { errText } from '$lib/util/format';
-	import { toast } from '$lib/toast/toast';
+	} from '#lib/character/store.svelte.ts';
+	import { rosterEntryOf } from '#lib/character/repository.ts';
+	import type { Character } from '#lib/character/schema.ts';
+	import { errText } from '#lib/util/format.ts';
+	import { toast } from '#lib/toast/toast.ts';
 
 	const conflict = $derived(characters.conflict);
 	const theirs = $derived(conflict?.file.character ?? null);

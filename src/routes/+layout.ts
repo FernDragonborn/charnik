@@ -1,7 +1,7 @@
 // Standalone Tauri desktop app: client-side SPA (render in the webview), prerender the
 // shell. No server.
-import { app } from '$lib/stores/app.svelte';
-import { startI18n, waitLocale } from '$lib/i18n';
+import { app } from '#lib/stores/app.svelte.ts';
+import { startI18n, waitLocale } from '#lib/i18n/index.ts';
 
 export const ssr = false;
 export const prerender = true;

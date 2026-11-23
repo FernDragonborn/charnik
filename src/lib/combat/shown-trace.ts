@@ -3,7 +3,7 @@
  * the parts the engine folded. Beside effects-view.ts, which says each part; this decides which
  * parts there are.
  */
-import { foldRank, type Computed, type Contribution } from '$lib/rules/pipeline';
+import { foldRank, type Computed, type Contribution } from '#lib/rules/pipeline.ts';
 
 /** Ops that read as a comparison say something even at 0 (`= 0`); a plain addend of 0 says nothing. */
 const COMPARES: ReadonlySet<Contribution['op']> = new Set(['set', 'base', 'floor', 'cap']);

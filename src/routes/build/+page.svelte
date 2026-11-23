@@ -5,22 +5,22 @@
 	// the inspector shows what taking an option would do to the sheet before it is taken.
 	//
 	// A thin shell composing src/routes/build/blocks/*; each block reads the shared `build` view-model.
-	// Shared builder CSS lives in $lib/styles/build.css (confined to `.build-page`); block-local CSS
+	// Shared builder CSS lives in #lib/styles/build.css (confined to `.build-page`); block-local CSS
 	// stays scoped inside its block.
 	import { goto, afterNavigate } from '$app/navigation';
-	import { toast } from '$lib/toast/toast';
+	import { toast } from '#lib/toast/toast.ts';
 	import { page } from '$app/state';
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { build } from './build-view-model.svelte';
-	import { loadCharacterBySlug } from '$lib/character/store.svelte';
-	import { loadDraft } from '$lib/character/draft-repository';
-	import { getUserStorage } from '$lib/storage/provider';
-	import { onBeforeReload } from '$lib/content/reload';
-	import { content } from '$lib/content/store.svelte';
-	import { ui } from '$lib/stores/ui.svelte';
-	import { _ } from '$lib/i18n';
-	import Loading from '$lib/components/Loading.svelte';
-	import '$lib/styles/build.css';
+	import { loadCharacterBySlug } from '#lib/character/store.svelte.ts';
+	import { loadDraft } from '#lib/character/draft-repository.ts';
+	import { getUserStorage } from '#lib/storage/provider.ts';
+	import { onBeforeReload } from '#lib/content/reload.ts';
+	import { content } from '#lib/content/store.svelte.ts';
+	import { ui } from '#lib/stores/ui.svelte.ts';
+	import { _ } from '#lib/i18n/index.ts';
+	import Loading from '#lib/components/Loading.svelte';
+	import '#lib/styles/build.css';
 	import BuildHead from './blocks/BuildHead.svelte';
 	import SheetOrigin from './blocks/SheetOrigin.svelte';
 	import SheetAbilities from './blocks/SheetAbilities.svelte';
@@ -52,7 +52,9 @@
 	// doesn't remount): ?edit/?levelup=<slug> hydrates from that character, ?draft=<guid> resumes an
 	// unfinished build; no param → a fresh draft (so "New character" after a level-up doesn't reopen
 	// the last edit).
-	afterNavigate(async () => {
+	afterNavigate(async ({ shallow, type }) => {
+		if (shallow && type === 'goto') return;
+
 		// The graph is loaded HERE rather than beside this in `onMount`, because hydrate needs it and
 		// two unawaited starts race: `hydrate` subtracts the boosts the restored feat slots re-derive,
 		// those slots come from the class's `asi_levels`, and with no graph the fallback levels hide a
@@ -64,10 +66,10 @@
 		const char = slug ? await loadCharacterBySlug(slug) : null;
 		if (slug && !char) {
 			// a level-up of a save that does not read is not a new blank character
-			toast($_('roster.cannotOpen', { values: { name: slug } }), {
-				description: $_('roster.cannotOpenBody'),
-			});
-			void goto(`${base}/`);
+			toast($_('roster.cannotOpen', { values: { name: slug } }), { description: $_('roster.cannotOpenBody') });
+
+			void goto(resolve(''));
+
 			return;
 		}
 		if (char) build.hydrate(char);
@@ -103,7 +105,7 @@
 		const onKey = (event: KeyboardEvent) => {
 			if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
 			if (event.target instanceof Element && event.target.closest('input, textarea')) return;
-			const redo = event.code === 'KeyY' || (event.code === 'KeyZ' && event.shiftKey);
+			const redo = event.code === 'KeyY' || event.code === 'KeyZ' && event.shiftKey;
 			if (!redo && event.code !== 'KeyZ') return;
 			event.preventDefault();
 			if (redo) build.history.redo();
@@ -122,7 +124,7 @@
 		// a save that only navigates leaves the player guessing whether it took — the failure path has
 		// said so all along, and the success path said nothing (playtest feedback)
 		toast.success($_(wasEdit ? 'build.notice.saved' : 'build.notice.created'));
-		void goto(`${base}/combat`);
+		void goto(resolve(`combat`));
 	}
 </script>
 
@@ -157,7 +159,7 @@
 				</div>
 				<SheetInventory />
 				<SheetStory />
-				<ReviewBar {create} />
+				<ReviewBar create={create} />
 			</div>
 
 			<aside class="inspector scrolly" aria-label={$_('build.inspector.label')}>

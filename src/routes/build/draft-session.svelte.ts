@@ -5,10 +5,10 @@
  * the view-model is at its line budget. The host is declared structurally (like InspectorHost next
  * door) so the two modules stay acyclic.
  */
-import { toast } from '$lib/toast/toast';
-import { t } from '$lib/i18n';
-import { getUserStorage } from '$lib/storage/provider';
-import { saveDraft, deleteDraft, type DraftRecord } from '$lib/character/draft-repository';
+import { toast } from '#lib/toast/toast.ts';
+import { t } from '#lib/i18n/index.ts';
+import { getUserStorage } from '#lib/storage/provider.ts';
+import { saveDraft, deleteDraft, type DraftRecord } from '#lib/character/draft-repository.ts';
 import { draftSummary, isDraftWorthKeeping, type DraftState } from './draft';
 import type { ClassScopedPicks } from './class-picks-cache';
 

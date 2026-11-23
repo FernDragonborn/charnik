@@ -3,12 +3,12 @@
 	// different kinds of answer, so the ability-improvement option gets its own card with its own
 	// allocator on top of the feat list, and a chosen feat's sub-choices (a half-feat's +1, a
 	// skill-granting feat's picks) open right under it.
-	import Icon from '$lib/components/Icon.svelte';
-	import { _ } from '$lib/i18n';
-	import { abilityShortLabel } from '$lib/util/format';
+	import Icon from '#lib/components/Icon.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import { abilityShortLabel } from '#lib/util/format.ts';
 	import { build, ASI } from '../build-view-model.svelte';
 	import type { Inspector } from '../inspector.svelte';
-	import { ABILITIES } from '$lib/character/schema';
+	import { ABILITIES } from '#lib/character/schema.ts';
 	import InspectorGrid from './InspectorGrid.svelte';
 	import FeatSubChoices from './FeatSubChoices.svelte';
 	const b = build;

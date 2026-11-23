@@ -7,12 +7,12 @@
 	// Reading and taking are separate controls (§6): the toggle on the left takes the row — the same
 	// slot, and the same gold, as the spellbook's prepared switch and SkillRows' proficiency dot — and
 	// the row body opens the article. Hover teases it (PickerPeek), a click reads it (PickerCard).
-	import { wheelSideways } from '$lib/actions/wheelSideways';
-	import Icon from '$lib/components/Icon.svelte';
-	import { _ } from '$lib/i18n';
+	import { wheelSideways } from '#lib/actions/wheelSideways.ts';
+	import Icon from '#lib/components/Icon.svelte';
+	import { _ } from '#lib/i18n/index.ts';
 	import { untrack, type Snippet } from 'svelte';
-	import type { LoadedRow } from '$lib/content/loader';
-	import type { DetailModel } from '$lib/content/detail';
+	import type { LoadedRow } from '#lib/content/loader.ts';
+	import type { DetailModel } from '#lib/content/detail.ts';
 	import { filterByName, pickerMeta, rowName, rowText } from '../rows';
 	import { PickerReading } from '../picker-reading.svelte';
 	import PickerSearch from './PickerSearch.svelte';

@@ -3,12 +3,12 @@
 	// that does not resolve leaves the sheet standing and its numbers short, so the fact has to be
 	// said beside those numbers, not three tabs away in content health. Renders nothing for a sheet
 	// that needs none.
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import Icon from './Icon.svelte';
-	import { _ } from '$lib/i18n';
-	import { plugins } from '$lib/effects/plugin-store.svelte';
-	import { pluginNeeds } from '$lib/effects/plugin-needs';
-	import type { EffectIssue } from '$lib/effects/token-parser';
+	import { _ } from '#lib/i18n/index.ts';
+	import { plugins } from '#lib/effects/plugin-store.svelte.ts';
+	import { pluginNeeds } from '#lib/effects/plugin-needs.ts';
+	import type { EffectIssue } from '#lib/effects/token-parser.ts';
 
 	let { issues }: { issues: readonly EffectIssue[] } = $props();
 	const needs = $derived(pluginNeeds(issues, plugins));
@@ -27,7 +27,9 @@
 		</div>
 		<!-- where plugins do not run there is nothing in Settings to do about it -->
 		{#if plugins.supported}
-			<a class="pill-btn" href="{base}/settings?tab=plugins">{$_('settings.plugins.needs.open')}</a>
+			<a class="pill-btn" href={resolve('settings?tab=plugins')}
+				>{$_('settings.plugins.needs.open')}</a
+			>
 		{/if}
 	</div>
 {/if}

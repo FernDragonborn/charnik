@@ -16,9 +16,9 @@
 	import { onMount } from 'svelte';
 	import { build } from '../../build/build-view-model.svelte';
 	import SheetDefenses from '../../build/blocks/SheetDefenses.svelte';
-	import DefenseStrip from '$lib/components/DefenseStrip.svelte';
-	import '$lib/styles/build.css';
-	import { inventoryRow } from '$lib/character/schema';
+	import DefenseStrip from '#lib/components/DefenseStrip.svelte';
+	import '#lib/styles/build.css';
+	import { inventoryRow } from '#lib/character/schema.ts';
 
 	/** One item per chip kind, by the id its row has in the 2024 pack. An id the loaded content does
 	 *  not have is SAID rather than skipped quietly â a thinner card would read as a regression. */

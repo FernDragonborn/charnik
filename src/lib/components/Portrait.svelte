@@ -3,9 +3,9 @@
 	// here and revoked here — a portrait that outlives its component is a leak nobody sees, and two
 	// call sites each minting their own URL is the same bug written twice.
 	import Icon from './Icon.svelte';
-	import { photoMime, type PortraitSource } from '$lib/character/photo';
-	import { readCharacterPhoto } from '$lib/character/portrait-files';
-	import { getUserStorage } from '$lib/storage/provider';
+	import { photoMime, type PortraitSource } from '#lib/character/photo.ts';
+	import { readCharacterPhoto } from '#lib/character/portrait-files.ts';
+	import { getUserStorage } from '#lib/storage/provider.ts';
 
 	let {
 		source,

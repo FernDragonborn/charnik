@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { foldForSearch } from '$lib/util/search-fold';
-	import { _ } from '$lib/i18n';
-	import { asText } from '$lib/util/format';
+	import { foldForSearch } from '#lib/util/search-fold.ts';
+	import { _ } from '#lib/i18n/index.ts';
+	import { asText } from '#lib/util/format.ts';
 	import Icon from './Icon.svelte';
-	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
-	import { trapFocus } from '$lib/actions/trapFocus';
-	import { submitOnEnter } from '$lib/actions/submitOnEnter';
+	import { dismissOnEscape } from '#lib/actions/dismissOnEscape.ts';
+	import { trapFocus } from '#lib/actions/trapFocus.ts';
+	import { submitOnEnter } from '#lib/actions/submitOnEnter.ts';
 	// Orphan-draft reassign dialog — fires when the draft cache is read and a draft's target row no longer
 	// exists (deleted / renamed / source disabled). The house attention-dialog template
 	// (charnik-dialog-design-template): flag-badge header, "N of M" step-through, two-pane body (your draft
@@ -20,12 +20,12 @@
 		readDraft,
 		type DraftEnvelope,
 		type DraftTarget,
-	} from '$lib/drafts/store';
-	import { getUserStorage } from '$lib/storage/provider';
-	import { rowName, type ContentGraph, type LoadedRow } from '$lib/content/loader';
+	} from '#lib/drafts/store.ts';
+	import { getUserStorage } from '#lib/storage/provider.ts';
+	import { rowName, type ContentGraph, type LoadedRow } from '#lib/content/loader.ts';
 	import LangSwitcher from './LangSwitcher.svelte';
-	import { localizedName } from '$lib/content/detail';
-	import { app } from '$lib/stores/app.svelte';
+	import { localizedName } from '#lib/content/detail.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
 
 	let {
 		orphans,

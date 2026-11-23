@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { newCharacter } from '$lib/character/schema';
+import { newCharacter } from '#lib/character/schema.ts';
 import { gainExperience } from './experience';
 
 describe.each(['5e', '5.5e'] as const)('experience · %s', (system) => {

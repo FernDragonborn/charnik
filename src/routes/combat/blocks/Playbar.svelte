@@ -11,13 +11,13 @@
 	// The row is NOT wrapped in a button: the log cue is its own control. That keeps the roll's own
 	// pills free to become controls (UX-3's retroactive advantage) without nesting a button in a
 	// button — the constraint that shaped the toast.
-	import Icon from '$lib/components/Icon.svelte';
-	import { _ } from '$lib/i18n';
-	import DiceIcon from '$lib/components/DiceIcon.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import DiceIcon from '#lib/components/DiceIcon.svelte';
 	import { combat } from '../combat-view-model.svelte';
-	import { rollToastModel, ROLL_LAYOUT } from '$lib/dice/roll-toast';
-	import RollRow from '$lib/components/RollRow.svelte';
-	import { isTurnAct, LOG_KIND } from '$lib/character/log-kind';
+	import { rollToastModel, ROLL_LAYOUT } from '#lib/dice/roll-toast.ts';
+	import RollRow from '#lib/components/RollRow.svelte';
+	import { isTurnAct, LOG_KIND } from '#lib/character/log-kind.ts';
 
 	const { openMenu } = combat;
 	const log = $derived(combat.journal.log);

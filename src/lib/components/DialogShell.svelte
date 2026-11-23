@@ -7,10 +7,10 @@
 	// pass their own body and footer as children, and the panel WIDTH as a prop (the one per-dialog
 	// value; kept inline so the global `.dialog` shell stays width-agnostic).
 	import type { Snippet } from 'svelte';
-	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
-	import { trapFocus } from '$lib/actions/trapFocus';
-	import { focusHalo } from '$lib/actions/focusHalo';
-	import { _ } from '$lib/i18n';
+	import { dismissOnEscape } from '#lib/actions/dismissOnEscape.ts';
+	import { trapFocus } from '#lib/actions/trapFocus.ts';
+	import { focusHalo } from '#lib/actions/focusHalo.ts';
+	import { _ } from '#lib/i18n/index.ts';
 	import LangSwitcher from './LangSwitcher.svelte';
 
 	// the key a Mac's keyboard prints is Return

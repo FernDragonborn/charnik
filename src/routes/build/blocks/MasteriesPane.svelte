@@ -6,12 +6,12 @@
 	//
 	// Chips, like every other capped grant in the builder: the cap comes from the class's own ladder
 	// and at the cap a click replaces the oldest pick rather than doing nothing.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build, rowName } from '../build-view-model.svelte';
-	import { itemTagLabel } from '$lib/content/item-tags';
-	import { describedPlainProse } from '$lib/content/overrides.svelte';
-	import { provenance } from '$lib/actions/provenance';
-	import { app } from '$lib/stores/app.svelte';
+	import { itemTagLabel } from '#lib/content/item-tags.ts';
+	import { describedPlainProse } from '#lib/content/overrides.svelte.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
 	const b = build;
 
 	const cap = $derived(b.masteryPicks.cap);

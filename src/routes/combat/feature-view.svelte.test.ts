@@ -11,9 +11,9 @@ import {
 	FEATURE_SECTION,
 	featureKey,
 	type CharacterFeature,
-} from '$lib/character/features';
-import { newCharacter } from '$lib/character/schema';
-import { makeRow } from '$lib/content/test-utils';
+} from '#lib/character/features.ts';
+import { newCharacter } from '#lib/character/schema.ts';
+import { makeRow } from '#lib/content/test-utils.ts';
 
 const classFeature = (id: string, at: number, className: string): CharacterFeature => ({
 	section: FEATURE_SECTION.classFeatures,

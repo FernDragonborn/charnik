@@ -9,15 +9,15 @@
  * 2014 has no such rule, ships no `mastery_slots` and no `mastery:` tag, so the cap is 0 there and
  * every surface that asks about mastery gets nothing rather than a 5.5e idea leaking into it.
  */
-import { masteryBudget, masteryWeaponTags } from '$lib/build/derive';
-import { weaponProfGrants } from '$lib/combat/attacks';
-import { isWeaponProficient } from '$lib/rules/proficiency';
-import { ITEM_TAG, parseItemTags, weaponCategoryOf } from '$lib/content/item-tags';
-import type { LoadedRowByType } from '$lib/content/loader';
-import { weaponPropertyRows, type WeaponPropertyRow } from '$lib/content/weapon-properties';
+import { masteryBudget, masteryWeaponTags } from '#lib/build/derive.ts';
+import { weaponProfGrants } from '#lib/combat/attacks.ts';
+import { isWeaponProficient } from '#lib/rules/proficiency.ts';
+import { ITEM_TAG, parseItemTags, weaponCategoryOf } from '#lib/content/item-tags.ts';
+import type { LoadedRowByType } from '#lib/content/loader.ts';
+import { weaponPropertyRows, type WeaponPropertyRow } from '#lib/content/weapon-properties.ts';
 import { toggleCapped } from './draft';
-import { localizedName } from '$lib/content/detail';
-import { app } from '$lib/stores/app.svelte';
+import { localizedName } from '#lib/content/detail.ts';
+import { app } from '#lib/stores/app.svelte.ts';
 import type { BuildVM } from './build-view-model.svelte';
 
 /** What the picker needs from the build view-model around it. `import type` is erased, so picking the

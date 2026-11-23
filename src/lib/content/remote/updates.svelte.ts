@@ -8,10 +8,10 @@
  *
  * A pack ARRIVING, being renamed or leaving is the neighbouring concern, in `pack-lifecycle.ts`.
  */
-import { detectPlatform, Platform, getUserStorage } from '$lib/storage/provider';
-import { logger } from '$lib/diag/logger';
-import { readCharacterFiles } from '$lib/character/repository';
-import { draftEffectiveId, draftsTargeting } from '$lib/drafts/store';
+import { detectPlatform, Platform, getUserStorage } from '#lib/storage/provider.ts';
+import { logger } from '#lib/diag/logger.ts';
+import { readCharacterFiles } from '#lib/character/repository.ts';
+import { draftEffectiveId, draftsTargeting } from '#lib/drafts/store.ts';
 import { content } from '../store.svelte';
 import {
 	listTranslationBackups,

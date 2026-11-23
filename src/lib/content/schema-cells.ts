@@ -71,7 +71,7 @@ const isUnknownArray = (v: unknown): v is unknown[] => Array.isArray(v);
  *  a future `reroll:`/`min_die:` kind) is kept VERBATIM and degrades to an inert text note when the
  *  engine interprets it (`parseToken` → `unknown`), never a killed row — so vocabulary growth is
  *  additive, not a breaking change for older apps. Classifying/flagging an unknown token is the
- *  effect engine's job (and a downstream content-health pass, which may import `$lib/effects`), NOT
+ *  effect engine's job (and a downstream content-health pass, which may import `#lib/effects`), NOT
  *  the schema's — the schema deliberately stays independent of the removable engine. */
 export const EFFECT_TOKEN_SEPARATOR = ';';
 

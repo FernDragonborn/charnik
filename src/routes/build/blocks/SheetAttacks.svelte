@@ -3,7 +3,7 @@
 	// combat view uses — so the row you see while building is the row you get while playing. Equipping
 	// a weapon in the inventory pane changes this list immediately; that is the point of showing it
 	// here rather than after the character exists.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build } from '../build-view-model.svelte';
 	import {
 		attackMeta,
@@ -13,12 +13,12 @@
 		computeAttacks,
 		formatDamageParts,
 		type Attack,
-	} from '$lib/combat/attacks';
-	import { EXTRA_ATTACK_WORD } from '$lib/effects/token-parser';
-	import { app } from '$lib/stores/app.svelte';
-	import { describedRules } from '$lib/content/overrides.svelte';
-	import { provenance } from '$lib/actions/provenance';
-	import { signed } from '$lib/util/format';
+	} from '#lib/combat/attacks.ts';
+	import { EXTRA_ATTACK_WORD } from '#lib/effects/token-parser.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import { describedRules } from '#lib/content/overrides.svelte.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { signed } from '#lib/util/format.ts';
 	const b = build;
 
 	/** The Notes cell: what kind of attack it is, what was folded into it, then each extra attack its

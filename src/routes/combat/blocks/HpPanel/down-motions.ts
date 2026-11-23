@@ -1,7 +1,7 @@
 /*
  * What the hit-point block knows about its motions beyond their names.
  */
-import type { DeathCause, DownMotion } from '$lib/character/schema';
+import type { DeathCause, DownMotion } from '#lib/character/schema.ts';
 
 /**
  * The motions that cost noticeably more to draw than the rest, and say so in the pencil's list.

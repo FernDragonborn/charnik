@@ -3,13 +3,13 @@
 	// group per feature that asks, chips like every other capped grant in the builder: the count is
 	// the feature's own ladder, and at the cap a click replaces the oldest pick. Each chip says the
 	// option's own text on hover and on focus, because nothing here is picked blind.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build } from '../build-view-model.svelte';
-	import { describedPlainProse } from '$lib/content/overrides.svelte';
-	import { localizedName } from '$lib/content/detail';
-	import { provenance } from '$lib/actions/provenance';
-	import { app } from '$lib/stores/app.svelte';
-	import type { OptionRow } from '$lib/content/options';
+	import { describedPlainProse } from '#lib/content/overrides.svelte.ts';
+	import { localizedName } from '#lib/content/detail.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import type { OptionRow } from '#lib/content/options.ts';
 	import type { FeatureChoice } from '../option-picks.svelte';
 	const b = build;
 

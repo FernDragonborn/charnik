@@ -1,8 +1,8 @@
 import 'fake-indexeddb/auto';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
-import type { ContentGraph } from '$lib/content/loader';
-import { SYSTEMS, characterSchema } from '$lib/character/schema';
+import type { ContentGraph } from '#lib/content/loader.ts';
+import { SYSTEMS, characterSchema } from '#lib/character/schema.ts';
 import { build } from './build-view-model.svelte';
 import { draftFromCharacter, newClassRow, parseDraftState } from './draft';
 import type { InspectorTarget } from './inspector-specs';

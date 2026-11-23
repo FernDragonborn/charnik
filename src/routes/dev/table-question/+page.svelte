@@ -6,9 +6,9 @@
 	// stand-in for Rust and the page's script is run again. The words come from the catalog in the
 	// current locale, a fit resizes the frame as Rust resizes the window, and an answer is said under
 	// it. The shipped page is not touched, and no inline script is needed, so the app's CSP holds.
-	import { base } from '$app/paths';
+	import { asset } from '$app/paths';
 	import { page } from '$app/state';
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 
 	/** The question window's logical size, `table_link/question.rs`. */
 	const WINDOW_WIDTH = 480;
@@ -88,7 +88,7 @@
 			doc.head.append(still);
 		}
 		const script = doc.createElement('script');
-		script.src = `${base}/table-question.js`;
+		script.src = asset('table-question.js');
 		doc.head.append(script);
 	}
 
@@ -113,7 +113,7 @@
 					<figcaption>{kind}{answers[kind] ? ` — answered ${answers[kind]}` : ''}</figcaption>
 					<iframe
 						title={kind}
-						src="{base}/table-question.html"
+						src={asset('table-question.html')}
 						onload={(event) => wake(event.currentTarget, kind, route)}
 						style:width="{WINDOW_WIDTH}px"
 						style:height="{heights[kind] ?? WINDOW_HEIGHT_MIN}px"

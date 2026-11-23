@@ -4,13 +4,13 @@
  * the same word names: RAW's "while you are unarmed or wielding only Monk weapons". The armour and
  * shield half of that sentence is the token's own guard.
  */
-import { WEAPON_RULE_WORD, scopeMatches, type WeaponRuleWord } from '$lib/effects/token-parser';
-import type { EffectFacts } from '$lib/effects/facts';
-import { parseDiceTerm } from '$lib/rules/dice';
-import { ITEM_TAG, type ItemTags } from '$lib/content/item-tags';
-import type { Ability } from '$lib/rules/core';
-import type { Character } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
+import { WEAPON_RULE_WORD, scopeMatches, type WeaponRuleWord } from '#lib/effects/token-parser.ts';
+import type { EffectFacts } from '#lib/effects/facts.ts';
+import { parseDiceTerm } from '#lib/rules/dice.ts';
+import { ITEM_TAG, type ItemTags } from '#lib/content/item-tags.ts';
+import type { Ability } from '#lib/rules/core.ts';
+import type { Character } from '#lib/character/schema.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
 
 type Scopes = ReadonlySet<string>;
 

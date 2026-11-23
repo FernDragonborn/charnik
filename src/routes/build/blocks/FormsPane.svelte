@@ -4,10 +4,10 @@
 	// blocks come from the feature's own rules, and at the cap a click replaces the oldest pick.
 	// Each chip carries the stat block's Challenge Rating, the one number the rule limits it by, and
 	// says the body it would give on hover and on focus.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build, rowName } from '../build-view-model.svelte';
-	import { provenance } from '$lib/actions/provenance';
-	import type { MonsterRow } from '$lib/character/forms';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import type { MonsterRow } from '#lib/character/forms.ts';
 	const b = build;
 
 	const choices = $derived(b.formPicks.choices);

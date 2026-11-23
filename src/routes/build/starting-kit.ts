@@ -8,14 +8,14 @@
  * exactly what it added. Coins are not rows — they are read off the alternatives taken, and land in
  * the purse when the character is created.
  */
-import { inventoryRow } from '$lib/character/schema';
+import { inventoryRow } from '#lib/character/schema.ts';
 import {
 	KIT_PART,
 	KIT_SOURCE,
 	kitCoins,
 	type KitLine,
 	type KitSource,
-} from '$lib/content/starting-equipment';
+} from '#lib/content/starting-equipment.ts';
 import type { DraftState } from './draft';
 
 /** A kit as the player has taken it. */

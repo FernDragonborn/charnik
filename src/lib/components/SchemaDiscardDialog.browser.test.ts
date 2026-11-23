@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { page } from 'vitest/browser';
 import SchemaDiscardDialog from './SchemaDiscardDialog.svelte';
-import { startI18n, locale, waitLocale } from '$lib/i18n';
-import type { DraftEnvelope } from '$lib/drafts/store';
+import { startI18n, locale, waitLocale } from '#lib/i18n/index.ts';
+import type { DraftEnvelope } from '#lib/drafts/store.ts';
 
 const stale: DraftEnvelope = {
 	schemaVersion: 999,

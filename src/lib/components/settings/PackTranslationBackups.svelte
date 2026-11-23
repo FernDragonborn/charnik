@@ -2,10 +2,10 @@
 	// The way back out of `content-backups/`, under the pack whose files a run copied aside before it
 	// replaced them (`content/translation-backups.ts`). One row per run; putting one back is the same
 	// swap an update is, so it sits beside "undo this update" and is reversed by it.
-	import { _ } from '$lib/i18n';
-	import { toast } from '$lib/toast/toast';
-	import { restoreTranslations } from '$lib/content/remote/updates.svelte';
-	import type { TranslationBackup } from '$lib/content/translation-backups';
+	import { _ } from '#lib/i18n/index.ts';
+	import { toast } from '#lib/toast/toast.ts';
+	import { restoreTranslations } from '#lib/content/remote/updates.svelte.ts';
+	import type { TranslationBackup } from '#lib/content/translation-backups.ts';
 	import ConfirmDialog from '../ConfirmDialog.svelte';
 
 	let {

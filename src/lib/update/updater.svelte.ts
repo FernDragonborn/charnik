@@ -5,7 +5,7 @@
 // The page holds no update handle and passes no arguments: which release, from where, and whether an
 // older one counts are decided in Rust (`src-tauri/src/self_update.rs`), and progress comes back as
 // events. Neither the updater plugin's nor the process plugin's own commands are granted.
-import { detectPlatform, Platform } from '$lib/storage/provider';
+import { detectPlatform, Platform } from '#lib/storage/provider.ts';
 
 export type UpdateStatus = 'idle' | 'available' | 'downloading' | 'installing' | 'error';
 

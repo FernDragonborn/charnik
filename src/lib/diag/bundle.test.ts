@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { newCharacter, classRow } from '$lib/character/schema';
+import { newCharacter, classRow } from '#lib/character/schema.ts';
 import { buildDiagnostics, summarizeCharacter, formatBundle } from './bundle';
 import { LogLevel, type LogEntry } from './logger';
 

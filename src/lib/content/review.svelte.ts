@@ -8,8 +8,8 @@
  * is nothing to write back to — the loader still DETECTS both conditions and the content-health panel
  * still lists them, but a prompt whose only button cannot work is worse than no prompt.
  */
-import { app } from '$lib/stores/app.svelte';
-import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
+import { app } from '#lib/stores/app.svelte.ts';
+import { detectPlatform, getUserStorage, Platform } from '#lib/storage/provider.ts';
 import type { FilledMeta } from './meta';
 import type { ContentType } from './schemas';
 import { isPackWriteInFlight } from './remote/install';

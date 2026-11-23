@@ -18,7 +18,7 @@ import {
 	migrate,
 	type Migration,
 	type Versioned,
-} from '$lib/schema/version';
+} from '#lib/schema/version.ts';
 import type { ContentType } from './schemas';
 
 /** A file's rows carried together with the version they were authored at. */

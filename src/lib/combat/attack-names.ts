@@ -3,7 +3,7 @@
  * (`log.jsonl`), so each name here is a catalog key with its values beside the English it reads as —
  * the plain attack, a numbered strike inside an action, and the extra attack a property grants.
  */
-import type { SaidValue } from '$lib/util/say';
+import type { SaidValue } from '#lib/util/say.ts';
 import type { RollName } from './roll';
 import { attackName, type Attack, type ExtraAttackRow } from './attacks';
 

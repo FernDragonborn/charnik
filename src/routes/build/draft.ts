@@ -4,9 +4,9 @@
  * BuildVM so the draft shape + its construction are unit-testable with no Svelte runtime.
  */
 import { z } from 'zod';
-import type { SystemId } from '$lib/stores/app.svelte';
-import type { Ability } from '$lib/rules/core';
-import { DEFAULT_SYSTEM } from '$lib/rules/pipeline';
+import type { SystemId } from '#lib/stores/app.svelte.ts';
+import type { Ability } from '#lib/rules/core.ts';
+import { DEFAULT_SYSTEM } from '#lib/rules/pipeline.ts';
 import {
 	abilityScores,
 	ABILITIES,
@@ -15,11 +15,11 @@ import {
 	inventoryEntry,
 	type Character,
 	type ShortRestMode,
-} from '$lib/character/schema';
-import { moveSlotKeysToRow } from '$lib/character/migrations';
-import { TOOL_PREFIX } from '$lib/character/granted-proficiency';
-import type { ContentType } from '$lib/content/schemas';
-import { KIT_SOURCES, type KitSource } from '$lib/content/starting-equipment';
+} from '#lib/character/schema.ts';
+import { moveSlotKeysToRow } from '#lib/character/migrations.ts';
+import { TOOL_PREFIX } from '#lib/character/granted-proficiency.ts';
+import type { ContentType } from '#lib/content/schemas.ts';
+import { KIT_SOURCES, type KitSource } from '#lib/content/starting-equipment.ts';
 import type { TakenKit } from './starting-kit';
 import {
 	baseAbilities,
@@ -28,7 +28,7 @@ import {
 	STAT_METHODS,
 	type StatMethod,
 	type BoostShape,
-} from '$lib/build/rules';
+} from '#lib/build/rules.ts';
 
 /** ASI allocation shape: +2 to one ability ('2') or +1 to two ('1-1'). */
 const ASI_SHAPES = ['2', '1-1'] as const;

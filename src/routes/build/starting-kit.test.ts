@@ -3,8 +3,8 @@
  * and putting the kit back takes exactly what it added.
  */
 import { describe, it, expect } from 'vitest';
-import { parseStartingKit } from '$lib/content/starting-equipment';
-import { inventoryRow } from '$lib/character/schema';
+import { parseStartingKit } from '#lib/content/starting-equipment.ts';
+import { inventoryRow } from '#lib/character/schema.ts';
 import { blankDraft } from './draft';
 import { answerPick, dropKit, picksOwed, takeAlternative, takenCoins, type KitScope } from './starting-kit';
 

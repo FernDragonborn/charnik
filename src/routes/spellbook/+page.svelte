@@ -4,39 +4,39 @@
 	// edits the ACTIVE character through the Combat view-model, so a pin, a prepared spell and a cast
 	// here are the ones Combat shows: prepared on the spellEntry, hidden in ui.spellsHidden, pinned
 	// in ui.spellsPinned, and Cast is Combat's own cast — a slot spent, the dice rolled.
-	import { foldForSearch } from '$lib/util/search-fold';
+	import { foldForSearch } from '#lib/util/search-fold.ts';
 	import { onMount } from 'svelte';
-	import DiceIcon from '$lib/components/DiceIcon.svelte';
+	import DiceIcon from '#lib/components/DiceIcon.svelte';
 	import { goto } from '$app/navigation';
-	import { base } from '$app/paths';
-	import { toast } from '$lib/toast/toast';
-	import { _ } from '$lib/i18n';
-	import { sayText } from '$lib/util/say';
-	import { content, loadContentStore } from '$lib/content/store.svelte';
-	import { saveCharacterGuarded } from '$lib/character/store.svelte';
-	import { deriveSheet } from '$lib/character/derive';
-	import { spellEntries } from '$lib/character/spellcasting';
-	import { isRowActive } from '$lib/content/sources.svelte';
-	import { preparedTalliesOf, canTogglePreparedFor } from '$lib/combat/helpers';
-	import PreparedCaps from '$lib/components/PreparedCaps.svelte';
-	import { rowName, type LoadedRow } from '$lib/content/loader';
-	import type { Character } from '$lib/character/schema';
-	import { buildDetail } from '$lib/content/detail';
-	import { groupEntries, toEntryGroups } from '$lib/content/entry-list';
-	import { app } from '$lib/stores/app.svelte';
-	import EntryList from '$lib/components/EntryList.svelte';
-	import WikiDetail from '$lib/components/WikiDetail.svelte';
-	import Loading from '$lib/components/Loading.svelte';
-	import NoCharacter from '$lib/components/NoCharacter.svelte';
-	import Chip from '$lib/components/Chip.svelte';
-	import Switch from '$lib/components/Switch.svelte';
-	import EyeToggle from '$lib/components/EyeToggle.svelte';
-	import Pin from '$lib/components/Pin.svelte';
-	import SlotPips from '$lib/components/SlotPips.svelte';
+	import { resolve } from '$app/paths';
+	import { toast } from '#lib/toast/toast.ts';
+	import { _ } from '#lib/i18n/index.ts';
+	import { sayText } from '#lib/util/say.ts';
+	import { content, loadContentStore } from '#lib/content/store.svelte.ts';
+	import { saveCharacterGuarded } from '#lib/character/store.svelte.ts';
+	import { deriveSheet } from '#lib/character/derive.ts';
+	import { spellEntries } from '#lib/character/spellcasting.ts';
+	import { isRowActive } from '#lib/content/sources.svelte.ts';
+	import { preparedTalliesOf, canTogglePreparedFor } from '#lib/combat/helpers.ts';
+	import PreparedCaps from '#lib/components/PreparedCaps.svelte';
+	import { rowName, type LoadedRow } from '#lib/content/loader.ts';
+	import type { Character } from '#lib/character/schema.ts';
+	import { buildDetail } from '#lib/content/detail.ts';
+	import { groupEntries, toEntryGroups } from '#lib/content/entry-list.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import EntryList from '#lib/components/EntryList.svelte';
+	import WikiDetail from '#lib/components/WikiDetail.svelte';
+	import Loading from '#lib/components/Loading.svelte';
+	import NoCharacter from '#lib/components/NoCharacter.svelte';
+	import Chip from '#lib/components/Chip.svelte';
+	import Switch from '#lib/components/Switch.svelte';
+	import EyeToggle from '#lib/components/EyeToggle.svelte';
+	import Pin from '#lib/components/Pin.svelte';
+	import SlotPips from '#lib/components/SlotPips.svelte';
 	import { combat } from '../combat/combat-view-model.svelte';
-	import { prepState, spellRow } from '$lib/combat/spells';
-	import { casterForSpell } from '$lib/character/spellcasting';
-	import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
+	import { prepState, spellRow } from '#lib/combat/spells.ts';
+	import { casterForSpell } from '#lib/character/spellcasting.ts';
+	import { PACT_SLOT_KEY } from '#lib/rules/spellcasting.ts';
 
 	type SpellEntry = Character['build']['spells'][number];
 
@@ -182,7 +182,8 @@
 			>
 		{/each}
 		<span class="spacer"></span>
-		<button class="cta" onclick={() => goto(`${base}/combat`)}>{$_('spellbook.done')}</button>
+
+		<button class="cta" onclick={() => goto(resolve(`combat`))}>{$_('spellbook.done')}</button>
 	</div>
 
 	<div class="two-column">
@@ -197,9 +198,11 @@
 				<Chip active={filter === 'all'} onclick={() => (filter = 'all')}
 					>{$_('spellbook.filterAll')}</Chip
 				>
+
 				<Chip active={filter === 'prepared'} onclick={() => (filter = 'prepared')}
 					>{$_('spellbook.filterPrepared')}</Chip
 				>
+
 				<Chip active={filter === 'pinned'} onclick={() => (filter = 'pinned')}
 					>{$_('spellbook.filterPinned')}</Chip
 				>

@@ -1,6 +1,6 @@
 import { tick } from 'svelte';
 import type { Action } from 'svelte/action';
-import { motionWanted } from '$lib/util/motion';
+import { motionWanted } from '#lib/util/motion.ts';
 
 /*
  * The weight of a dragged block: the two beats `svelte-dnd-action` does not animate.

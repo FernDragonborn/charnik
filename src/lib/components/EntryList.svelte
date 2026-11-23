@@ -3,10 +3,10 @@
 	// Each row shows a name + meta sub-line; `leading`/`trailing` snippets add per-row controls
 	// (Spellbook: eye/pin + prepare toggle). Compendium passes none → a plain browsable list.
 	import Icon from './Icon.svelte';
-	import { _ } from '$lib/i18n';
-	import { walkOptions, optionDomId } from '$lib/util/option-walk';
+	import { _ } from '#lib/i18n/index.ts';
+	import { walkOptions, optionDomId } from '#lib/util/option-walk.ts';
 	import type { Snippet } from 'svelte';
-	import type { Entry } from '$lib/content/entry-list';
+	import type { Entry } from '#lib/content/entry-list.ts';
 
 	let {
 		groups,

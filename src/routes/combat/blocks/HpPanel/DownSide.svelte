@@ -14,7 +14,7 @@
 	//
 	// What loops is `transform` and `opacity`, with one exception that says so: liquid keeps the
 	// filter that makes it liquid, and the list marks it as the dear one.
-	import type { DownMotion } from '$lib/character/schema';
+	import type { DownMotion } from '#lib/character/schema.ts';
 
 	let { tone, earned, motion }: { tone: 'good' | 'bad'; earned: number; motion: DownMotion } =
 		$props();

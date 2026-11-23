@@ -3,12 +3,12 @@
  * line that says it was taken is written when the builder's save lands — once, by comparing the
  * character as it was on disk with the character written over it.
  */
-import type { Storage } from '$lib/storage/types';
+import type { Storage } from '#lib/storage/types.ts';
 import type { Character } from './schema';
 import { appendLog, logLineFor } from './log-repository';
 import { LOG_KIND } from './log-kind';
-import { eventEntries } from '$lib/combat/roll';
-import { logger } from '$lib/diag/logger';
+import { eventEntries } from '#lib/combat/roll.ts';
+import { logger } from '#lib/diag/logger.ts';
 
 type ClassEntry = Character['build']['classes'][number];
 

@@ -7,9 +7,9 @@
  * `apply_condition` expansion happen LATER, in the ONE resolve stage (effects/resolver.ts) — in
  * dependency order — so this phase is a pure collect, no interpretation.
  */
-import { ISSUE_KEY, isWeaponOwnBonus, splitGuard } from '$lib/effects/token-parser';
-import { withItemChoice, withOptionChoice } from '$lib/effects/token-answers';
-import { FORM_SHEDS, FORM_WORD } from '$lib/effects/token-words';
+import { ISSUE_KEY, isWeaponOwnBonus, splitGuard } from '#lib/effects/token-parser.ts';
+import { withItemChoice, withOptionChoice } from '#lib/effects/token-answers.ts';
+import { FORM_SHEDS, FORM_WORD } from '#lib/effects/token-words.ts';
 import { WEAPON_LIKE_ITEM_CATEGORIES } from '../content/schemas';
 import { conditionRows } from '../content/states';
 import { rowName, tokensOf, type ContentGraph, type LoadedRow } from '../content/loader';

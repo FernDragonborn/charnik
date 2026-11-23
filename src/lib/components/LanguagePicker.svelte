@@ -4,10 +4,10 @@
 	// a type-to-filter search over the loaded content locales plus (when `allowAdd`) every other known
 	// language, so a new target language is one click away. Picking an "add" language just sets the
 	// value to that code — translating + saving then creates its columns (no separate schema step).
-	import { foldForSearch } from '$lib/util/search-fold';
+	import { foldForSearch } from '#lib/util/search-fold.ts';
 	import Icon from './Icon.svelte';
-	import { _ } from '$lib/i18n';
-	import { languageName, languageSearchText, addableLanguages } from '$lib/i18n/languages';
+	import { _ } from '#lib/i18n/index.ts';
+	import { languageName, languageSearchText, addableLanguages } from '#lib/i18n/languages.ts';
 
 	let {
 		value = $bindable(),

@@ -1,9 +1,9 @@
 <script lang="ts">
 	// Attacks panel body: each weapon/attack row rolls to-hit (with adv/dis via modifier keys) and
 	// shows damage + meta. Uses the shared global `.combat-row` layout — no scoped CSS.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { combat } from '../../combat-view-model.svelte';
-	import { signed } from '$lib/combat/helpers';
+	import { signed } from '#lib/combat/helpers.ts';
 	import {
 		attackMeta,
 		attackName,
@@ -11,19 +11,19 @@
 		attackPropertyRows,
 		formatDamageParts,
 		type ExtraAttackRow,
-	} from '$lib/combat/attacks';
-	import { extraAttackMark } from '$lib/combat/attack-names';
-	import { EXTRA_ATTACK_WORD } from '$lib/effects/token-parser';
-	import Icon from '$lib/components/Icon.svelte';
-	import { why } from '$lib/combat/helpers';
-	import { provenance } from '$lib/actions/provenance';
-	import { describedRules } from '$lib/content/overrides.svelte';
-	import { app } from '$lib/stores/app.svelte';
+	} from '#lib/combat/attacks.ts';
+	import { extraAttackMark } from '#lib/combat/attack-names.ts';
+	import { EXTRA_ATTACK_WORD } from '#lib/effects/token-parser.ts';
+	import Icon from '#lib/components/Icon.svelte';
+	import { why } from '#lib/combat/helpers.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { describedRules } from '#lib/content/overrides.svelte.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
 	import { dndzone } from 'svelte-dnd-action';
-	import { dragMotion, TOUCH_HOLD_MS } from '$lib/actions/dragMotion';
+	import { dragMotion, TOUCH_HOLD_MS } from '#lib/actions/dragMotion.ts';
 	import RowGrip from '../RowGrip.svelte';
-	import { ROW_PANEL, uniqueRowKeys } from '$lib/combat/row-order';
-	import type { Attack } from '$lib/combat/attacks';
+	import { ROW_PANEL, uniqueRowKeys } from '#lib/combat/row-order.ts';
+	import type { Attack } from '#lib/combat/attacks.ts';
 	// the player's own order, applied where it is a view concern; the VM hands over the rows the
 	// character actually has, and this reconciles them against what was arranged
 	const attacks = $derived(combat.layout.ordered(ROW_PANEL.attacks, combat.attacks, (a) => a.id));

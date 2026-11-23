@@ -4,17 +4,17 @@
 	// button + drag handle). A thin dispatcher: each body lives in ./panels/*; character + sheet come in
 	// as props. The dnd grid that hosts these cards stays in the page.
 	import { tick } from 'svelte';
-	import { provenance } from '$lib/actions/provenance';
-	import Icon from '$lib/components/Icon.svelte';
-	import EyeIcon from '$lib/components/EyeIcon.svelte';
-	import { base } from '$app/paths';
-	import type { Character } from '$lib/character/schema';
-	import type { CharacterSheet } from '$lib/character/derive';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import Icon from '#lib/components/Icon.svelte';
+	import EyeIcon from '#lib/components/EyeIcon.svelte';
+	import { resolve } from '$app/paths';
+	import type { Character } from '#lib/character/schema.ts';
+	import type { CharacterSheet } from '#lib/character/derive.ts';
 	import { combat } from '../combat-view-model.svelte';
 	import { PANEL_MOVE, type PanelMove } from '../panel-layout.svelte';
 	import { dragHandle } from 'svelte-dnd-action';
-	import { _ } from '$lib/i18n';
-	import PreparedCaps from '$lib/components/PreparedCaps.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import PreparedCaps from '#lib/components/PreparedCaps.svelte';
 	import SkillsPanel from './panels/SkillsPanel.svelte';
 	import AttacksPanel from './panels/AttacksPanel.svelte';
 	import ActionsPanel from './panels/ActionsPanel.svelte';
@@ -61,16 +61,20 @@
 		>{$_(`combat.panel.${pid}`)}
 	</button>
 	{#if pid === 'actions'}
-		<button class="pill-btn" onclick={(e) => openMenu('showhide', e)}
-			><EyeIcon on={true} /> {$_('combat.panel.showHide')}</button
-		>
+		<button class="pill-btn" onclick={(e) => openMenu('showhide', e)}>
+			<EyeIcon on={true} />
+			{$_('combat.panel.showHide')}
+		</button>
 	{:else if pid === 'effects'}
 		<span class="head-btns">
 			<!-- ONE button: a condition and a buff are the same content type and the same act, so two
 			     "+"s beside each other were asking the player to know a distinction the data dropped -->
-			<button class="pill-btn" onclick={(e) => openMenu('addstate', e)}
-				><Icon name="plus" size={13} /> {$_('combat.panel.addState')}</button
-			>
+
+			<button class="pill-btn" onclick={(e) => openMenu('addstate', e)}>
+				<Icon name="plus" size={13} />
+				{$_('combat.panel.addState')}
+			</button>
+
 			<!-- Auto-calc lives HERE, not in the toolbar: switching it off drops the effect layers, and
 			     this is the panel those layers are. It is an escape hatch for a number the engine got
 			     wrong, so it stays out of sight until reached for. -->
@@ -84,23 +88,30 @@
 			>
 		</span>
 	{:else if pid === 'features'}
-		<button class="pill-btn" onclick={(e) => openMenu('featuresview', e)}
-			><EyeIcon on={true} /> {$_('combat.panel.showHide')}</button
-		>
+		<button class="pill-btn" onclick={(e) => openMenu('featuresview', e)}>
+			<EyeIcon on={true} />
+			{$_('combat.panel.showHide')}
+		</button>
 	{:else if pid === 'inventory'}
-		<button class="pill-btn" onclick={(e) => openMenu('coins', e)}
-			><Icon name="coins" size={13} /> {$_('combat.panel.coins')}</button
-		>
+		<button class="pill-btn" onclick={(e) => openMenu('coins', e)}>
+			<Icon name="coins" size={13} />
+			{$_('combat.panel.coins')}
+		</button>
 	{:else if pid === 'spells' && s.spellcasting.classes.length}
 		<span class="prepared-count"><PreparedCaps tallies={combat.preparedTallies} /></span>
-		<button class="pill-btn" onclick={cycleGroupBy} title={$_('combat.panel.changeGrouping')}
-			>{$_(groupByLabel)} <Icon name="chevron-down" size={12} /></button
-		>
+
+		<button class="pill-btn" onclick={cycleGroupBy} title={$_('combat.panel.changeGrouping')}>
+			{$_(groupByLabel)}
+			<Icon name="chevron-down" size={12} />
+		</button>
+
 		<!-- named for the view it opens, not for what you do there: `nav.spellbook` is that view's one
 		     name, and a link that calls it something else is a second name for one place -->
-		<a class="pill-btn" href="{base}/spellbook"
-			><Icon name="book-open" size={13} /> {$_('nav.spellbook')}</a
-		>
+
+		<a class="pill-btn" href={resolve('spellbook')}>
+			<Icon name="book-open" size={13} />
+			{$_('nav.spellbook')}
+		</a>
 	{/if}
 	<!-- The grip. Armed by the library's own `dragHandle`, not by a flag of ours — which fixes three
 	     things we had wrong at once. It `preventDefault()`s the press, so finishing a drag no longer

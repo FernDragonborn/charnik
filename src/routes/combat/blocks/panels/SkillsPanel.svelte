@@ -1,14 +1,14 @@
 <script lang="ts">
 	// Skills panel body: two columns of skills grouped by governing ability; each row rolls the check
 	// and shows proficiency tier (none / partial / proficient / expertise) + provenance on hover.
-	import { SKILL_ABILITY, type SkillId, type CharacterSheet } from '$lib/character/derive';
-	import { TABLE_CHOSEN_ABILITY, toolCheck } from '$lib/character/derive-stats';
-	import type { Ability } from '$lib/rules/core';
-	import { _ } from '$lib/i18n';
+	import { SKILL_ABILITY, type SkillId, type CharacterSheet } from '#lib/character/derive.ts';
+	import { TABLE_CHOSEN_ABILITY, toolCheck } from '#lib/character/derive-stats.ts';
+	import type { Ability } from '#lib/rules/core.ts';
+	import { _ } from '#lib/i18n/index.ts';
 	import { combat } from '../../combat-view-model.svelte';
-	import { why, signed, titleCase, ABIL } from '$lib/combat/helpers';
-	import { skillRoll } from '$lib/combat/sheet-roll-specs';
-	import { provenance } from '$lib/actions/provenance';
+	import { why, signed, titleCase, ABIL } from '#lib/combat/helpers.ts';
+	import { skillRoll } from '#lib/combat/sheet-roll-specs.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
 
 	let { s }: { s: CharacterSheet } = $props();
 	const { roll } = combat;

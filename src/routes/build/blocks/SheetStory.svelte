@@ -7,12 +7,12 @@
 	// on its own as abilities and proficiencies change. Nothing reads them but a human.
 	//
 	// The notes are free prose for the table — one bullet per line, no mechanics attached.
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build } from '../build-view-model.svelte';
-	import { socialBars } from '$lib/build/social';
+	import { socialBars } from '#lib/build/social.ts';
 	import { skillLabel } from '../rows';
-	import { why } from '$lib/combat/effects-view';
-	import { provenance } from '$lib/actions/provenance';
+	import { why } from '#lib/combat/effects-view.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
 	const b = build;
 
 	const bars = $derived(socialBars(b.sheet?.passives));

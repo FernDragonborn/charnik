@@ -10,7 +10,7 @@
  * config, a bad URL, or a bug up here. The page hands over an address and, for a listing, the
  * `ETag` to replay — nothing else. The check in this file is the second layer, not the boundary.
  */
-import { parseUrl } from '$lib/util/links';
+import { parseUrl } from '#lib/util/links.ts';
 import { invoke } from '@tauri-apps/api/core';
 import type { FetchResult, RemoteFetcher } from './types';
 

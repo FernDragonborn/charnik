@@ -15,9 +15,9 @@
  * Keyed by locale as well, exactly like the content's own `text_<code>` columns: prose written in
  * Ukrainian is not shown to a reader who switched to English, because it is not a translation of it.
  */
-import type { Storage } from '$lib/storage/types';
-import { getUserStorage } from '$lib/storage/provider';
-import { logger } from '$lib/diag/logger';
+import type { Storage } from '#lib/storage/types.ts';
+import { getUserStorage } from '#lib/storage/provider.ts';
+import { logger } from '#lib/diag/logger.ts';
 import type { LoadedRow } from './loader';
 import { localizedProse, plainProse, stripProse } from './prose';
 import { localizedName } from './detail';

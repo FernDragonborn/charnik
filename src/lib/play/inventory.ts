@@ -5,7 +5,7 @@
  * The inventory is BUILD data — the builder decides what a character owns — and these are the same
  * acts reached from where you notice them. They are actions like any other because what is equipped
  * and attuned moves the sheet: an item's `hp_max` leaving has to pull hit points down wherever the
- * item was taken off. The list semantics are `$lib/character/inventory`, shared with the builder.
+ * item was taken off. The list semantics are `#lib/character/inventory.ts`, shared with the builder.
  */
 import {
 	ATTUNEMENT_CAP,
@@ -21,9 +21,9 @@ import {
 	wornSlotIn,
 	useOne,
 	type InventoryEntry,
-} from '$lib/character/inventory';
-import type { Character } from '$lib/character/schema';
-import type { InstanceAnswers } from '$lib/content/item-instance';
+} from '#lib/character/inventory.ts';
+import type { Character } from '#lib/character/schema.ts';
+import type { InstanceAnswers } from '#lib/content/item-instance.ts';
 import { quietly, type PlayContext, type PlayOutcome } from './outcome';
 import { settled } from './settle';
 

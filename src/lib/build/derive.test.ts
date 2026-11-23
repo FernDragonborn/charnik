@@ -1,4 +1,4 @@
-import { countAtLevel } from '$lib/content/level-gate';
+import { countAtLevel } from '#lib/content/level-gate.ts';
 import { describe, it, expect } from 'vitest';
 import {
 	parseSpeciesBoostChoice,

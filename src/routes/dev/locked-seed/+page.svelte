@@ -13,10 +13,10 @@
 	// once the hold is proven, under a version no build ships: a file that went through anyway would
 	// fail the check below, and the probe then puts the marker back.
 	import { onMount } from 'svelte';
-	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
-	import { MemoryStorage } from '$lib/storage/memory';
-	import { seedShippedContent } from '$lib/content/provider';
-	import { stampWithHash } from '$lib/content/hash';
+	import { detectPlatform, getUserStorage, Platform } from '#lib/storage/provider.ts';
+	import { MemoryStorage } from '#lib/storage/memory.ts';
+	import { seedShippedContent } from '#lib/content/provider.ts';
+	import { stampWithHash } from '#lib/content/hash.ts';
 
 	const REPORT = 'locked-seed-probe.txt';
 	const ROOT = 'content/.probe-seed';

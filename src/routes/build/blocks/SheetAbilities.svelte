@@ -2,14 +2,14 @@
 	// The six scores as the sheet shows them: score, modifier, and whether a save is proficient.
 	// Clicking any of them opens the one allocator — they are never edited six different ways.
 	// A score raised above what you rolled/bought reads in crimson, so a boost is visible at a glance.
-	import { _ } from '$lib/i18n';
-	import Icon from '$lib/components/Icon.svelte';
-	import { abilityShortLabel } from '$lib/util/format';
+	import { _ } from '#lib/i18n/index.ts';
+	import Icon from '#lib/components/Icon.svelte';
+	import { abilityShortLabel } from '#lib/util/format.ts';
 	import { build } from '../build-view-model.svelte';
-	import { ABILITIES } from '$lib/character/schema';
-	import { signed } from '$lib/util/format';
-	import { why } from '$lib/combat/effects-view';
-	import { provenance } from '$lib/actions/provenance';
+	import { ABILITIES } from '#lib/character/schema.ts';
+	import { signed } from '#lib/util/format.ts';
+	import { why } from '#lib/combat/effects-view.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
 	import { abilityProvenanceText } from '../ability-allocation.svelte';
 	const b = build;
 

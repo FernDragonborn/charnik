@@ -5,10 +5,10 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
-import { newCharacter, type Character, classRow } from '$lib/character/schema';
-import { deriveSheet } from '$lib/character/derive';
-import type { ContentGraph } from '$lib/content/loader';
-import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
+import { newCharacter, type Character, classRow } from '#lib/character/schema.ts';
+import { deriveSheet } from '#lib/character/derive.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
+import { PACT_SLOT_KEY } from '#lib/rules/spellcasting.ts';
 import { castSpell } from './cast';
 import { addEffect } from './effects';
 import { PLAY_REQUEST, type PlayContext } from './outcome';

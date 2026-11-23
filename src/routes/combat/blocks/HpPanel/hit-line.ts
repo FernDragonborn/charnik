@@ -2,11 +2,11 @@
  * The hit's line, as the dice tray says a damage line: an amount, then the type that owns it.
  *
  * Pure. What is typed is read here, and the type menu's rows are ordered here; the names and the
- * matching are the tray's own (`$lib/dice/roller-vocabulary`), so a type is found on this line by
+ * matching are the tray's own (`#lib/dice/roller-vocabulary.ts`), so a type is found on this line by
  * the same words, in the same languages, as on a roller line.
  */
-import { matchCandidates, type RollerCandidate } from '$lib/dice/roller-vocabulary';
-import type { SensitivityBucket } from '$lib/combat/helpers';
+import { matchCandidates, type RollerCandidate } from '#lib/dice/roller-vocabulary.ts';
+import type { SensitivityBucket } from '#lib/combat/helpers.ts';
 
 /** How a defense is marked beside a damage type. Text, not icons: they are the game's own signs. */
 export const DEFENCE_MARK: Record<Exclude<SensitivityBucket, null>, string> = {

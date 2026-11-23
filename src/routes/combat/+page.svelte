@@ -1,17 +1,17 @@
 <script lang="ts">
 	// Thin shell: state + logic live in ./state.svelte.ts (the `combat` view-model);
-	// pure helpers in $lib/combat/helpers. Markup keeps bare names via reactive read-aliases;
+	// pure helpers in #lib/combat/helpers. Markup keeps bare names via reactive read-aliases;
 	// writes/binds go through `combat.*`.
 	import { onMount } from 'svelte';
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { dragHandleZone } from 'svelte-dnd-action';
-	import { dragMotion, TOUCH_HOLD_MS } from '$lib/actions/dragMotion';
+	import { dragMotion, TOUCH_HOLD_MS } from '#lib/actions/dragMotion.ts';
 	import { combat } from './combat-view-model.svelte';
-	import { content } from '$lib/content/store.svelte';
-	import { saveCharacterGuarded, saveCharacterToStore } from '$lib/character/store.svelte';
-	import { deriveHealth } from '$lib/character/health.svelte';
-	import type { Character } from '$lib/character/schema';
-	import { onBeforeReload } from '$lib/content/reload';
+	import { content } from '#lib/content/store.svelte.ts';
+	import { saveCharacterGuarded, saveCharacterToStore } from '#lib/character/store.svelte.ts';
+	import { deriveHealth } from '#lib/character/health.svelte.ts';
+	import type { Character } from '#lib/character/schema.ts';
+	import { onBeforeReload } from '#lib/content/reload.ts';
 	import CombatMenus from './CombatMenus.svelte';
 	import Hero from './blocks/Hero.svelte';
 	import Controls from './blocks/Controls.svelte';
@@ -23,9 +23,9 @@
 	import PanelCard from './blocks/PanelCard.svelte';
 	import FormDialog from './blocks/FormDialog.svelte';
 	import OptionQuestionDialog from './blocks/OptionQuestionDialog.svelte';
-	import Loading from '$lib/components/Loading.svelte';
-	import NoCharacter from '$lib/components/NoCharacter.svelte';
-	import PluginNeeds from '$lib/components/PluginNeeds.svelte';
+	import Loading from '#lib/components/Loading.svelte';
+	import NoCharacter from '#lib/components/NoCharacter.svelte';
+	import PluginNeeds from '#lib/components/PluginNeeds.svelte';
 
 	// The page is a thin shell: it renders the area blocks and owns only the draggable panel grid
 	// (which needs the dnd wiring). Everything else lives in the `combat` view-model + blocks/.
@@ -44,7 +44,7 @@
 	onMount(combat.registerTray);
 
 	// A sheet can change with no action at all — content reloaded, a source or a plugin switched —
-	// and the rules that follow a change (`$lib/play/settle`) are asked again when it does. Every
+	// and the rules that follow a change (`#lib/play/settle.ts`) are asked again when it does. Every
 	// action settles itself; nothing a verb does relies on this.
 	$effect(() => {
 		combat.outcomes.settle();

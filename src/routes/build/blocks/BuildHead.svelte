@@ -5,16 +5,16 @@
 	//
 	// There is deliberately no "guided vs full sheet" switch: only the full sheet exists (see
 	// docs/work/ui.md ▸ N3). A guided flow becomes a second entry point onto this view-model.
-	import Icon from '$lib/components/Icon.svelte';
-	import Portrait from '$lib/components/Portrait.svelte';
-	import { toast } from '$lib/toast/toast';
-	import { _ } from '$lib/i18n';
+	import Icon from '#lib/components/Icon.svelte';
+	import Portrait from '#lib/components/Portrait.svelte';
+	import { toast } from '#lib/toast/toast.ts';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build } from '../build-view-model.svelte';
-	import { SYSTEMS, SYSTEM_LABELS, SYSTEM_SHORT_LABELS } from '$lib/rules/pipeline';
-	import { signed } from '$lib/util/format';
+	import { SYSTEMS, SYSTEM_LABELS, SYSTEM_SHORT_LABELS } from '#lib/rules/pipeline.ts';
+	import { signed } from '#lib/util/format.ts';
 	import EditionSwitchDialog from './EditionSwitchDialog.svelte';
-	import { provenance } from '$lib/actions/provenance';
-	import type { SystemId } from '$lib/stores/app.svelte';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import type { SystemId } from '#lib/stores/app.svelte.ts';
 	const b = build;
 
 	let photoInput = $state<HTMLInputElement | null>(null);

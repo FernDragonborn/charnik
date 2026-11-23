@@ -12,7 +12,7 @@ import Fuse, { type FuseResultMatch } from 'fuse.js';
 import type { ContentGraph, LoadedRow } from './loader';
 import { localesOf, localizedName, namesByLocale } from './names';
 import { isBrowsable, type ContentType } from './schemas';
-import { foldForSearch } from '$lib/util/search-fold';
+import { foldForSearch } from '#lib/util/search-fold.ts';
 
 export interface NameDoc {
 	effectiveId: string;

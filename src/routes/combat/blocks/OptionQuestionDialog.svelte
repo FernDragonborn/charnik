@@ -2,8 +2,8 @@
 	// A question an option asks before anything is paid, answered with a number: which spell slot
 	// pays for it (a druid's Wild Resurgence), or how many uses a cost of X spends (Nature
 	// Magician). Taking a row answers; closing the dialog leaves it unanswered with nothing spent.
-	import { _ } from '$lib/i18n';
-	import DialogShell from '$lib/components/DialogShell.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import DialogShell from '#lib/components/DialogShell.svelte';
 	import { combat } from '../combat-view-model.svelte';
 
 	const asking = $derived(combat.executor.asking);

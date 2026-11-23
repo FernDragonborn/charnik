@@ -36,7 +36,7 @@ import type {
 	TargetValidator,
 	ResourceDef,
 } from './facts';
-// re-export the public facts contract so `$lib/effects/apply` import sites are unchanged
+// re-export the public facts contract so `#lib/effects/apply.ts` import sites are unchanged
 export { matchesTarget };
 export type { EffectFacts, NumericFact, TargetValidator, TargetCheck, ResourceDef } from './facts';
 

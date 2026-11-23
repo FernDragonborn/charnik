@@ -5,14 +5,14 @@
 	//
 	// Taking is repeated here because this is where the eyes are once you have read the thing. It is
 	// the same act as the toggle in the list, not a confirm step over it.
-	import Icon from '$lib/components/Icon.svelte';
-	import { _ } from '$lib/i18n';
-	import WikiDetail from '$lib/components/WikiDetail.svelte';
-	import LangSwitcher from '$lib/components/LangSwitcher.svelte';
-	import type { DetailModel } from '$lib/content/detail';
+	import Icon from '#lib/components/Icon.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import WikiDetail from '#lib/components/WikiDetail.svelte';
+	import LangSwitcher from '#lib/components/LangSwitcher.svelte';
+	import type { DetailModel } from '#lib/content/detail.ts';
 	import { placeCard, entryElement } from '../card-placement';
-	import { floatInBody } from '$lib/actions/floatInBody';
-	import { provenance } from '$lib/actions/provenance';
+	import { floatInBody } from '#lib/actions/floatInBody.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
 
 	let {
 		picker,

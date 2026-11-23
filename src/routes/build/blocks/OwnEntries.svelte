@@ -9,9 +9,9 @@
 	//
 	// The way out is the way in: every entry carries its own remove, so nothing typed here is
 	// permanent (`AGENTS.md` ▸ Reverse states).
-	import Icon from '$lib/components/Icon.svelte';
-	import { _ } from '$lib/i18n';
-	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
+	import Icon from '#lib/components/Icon.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import { dismissOnEscape } from '#lib/actions/dismissOnEscape.ts';
 
 	let {
 		label,

@@ -2,23 +2,23 @@
 	// The GM's one composer for asking the table something: who, what, and the few numbers and ids
 	// that "what" needs. A request is built from closed choices — an ability, a skill, a damage
 	// type, a state this app's content has — because that is all a request may carry.
-	import Switch from '$lib/components/Switch.svelte';
-	import { DAMAGE_TYPES } from '$lib/components/damage-glyphs';
-	import { provenance } from '$lib/actions/provenance';
-	import { _ } from '$lib/i18n';
-	import { app } from '$lib/stores/app.svelte';
-	import { content } from '$lib/content/store.svelte';
-	import { localizedName } from '$lib/content/detail';
-	import { addableStateRows } from '$lib/content/states';
-	import { SKILL_IDS, type SkillId } from '$lib/character/skills';
-	import { ABIL, titleCase } from '$lib/combat/helpers';
-	import type { Ability } from '$lib/rules/core';
+	import Switch from '#lib/components/Switch.svelte';
+	import { DAMAGE_TYPES } from '#lib/components/damage-glyphs.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { _ } from '#lib/i18n/index.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import { content } from '#lib/content/store.svelte.ts';
+	import { localizedName } from '#lib/content/detail.ts';
+	import { addableStateRows } from '#lib/content/states.ts';
+	import { SKILL_IDS, type SkillId } from '#lib/character/skills.ts';
+	import { ABIL, titleCase } from '#lib/combat/helpers.ts';
+	import type { Ability } from '#lib/rules/core.ts';
 	import {
 		REQUESTED_ROLL,
 		TABLE_REQUEST,
 		type RequestedRoll,
 		type TableRequest,
-	} from '$lib/table-link/types';
+	} from '#lib/table-link/types.ts';
 	import { table, type SeatedPlayer } from './table-view-model.svelte';
 
 	let { players }: { players: SeatedPlayer[] } = $props();

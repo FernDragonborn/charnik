@@ -2,8 +2,8 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { page } from 'vitest/browser';
 import HashDriftModal from './HashDriftModal.svelte';
-import { startI18n, locale, waitLocale } from '$lib/i18n';
-import type { DriftItem } from '$lib/content/meta';
+import { startI18n, locale, waitLocale } from '#lib/i18n/index.ts';
+import type { DriftItem } from '#lib/content/meta.ts';
 
 const items: DriftItem[] = [
 	{ file: 'content/homebrew/spells.csv', declaredDate: '2026-06-20', changedAt: '2026-07-06' },

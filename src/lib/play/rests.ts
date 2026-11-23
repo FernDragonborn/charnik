@@ -5,25 +5,25 @@
  * A rest is a DURATION, so it also expires what runs out inside it — and not what is still running
  * after: a long rest is eight hours, not forever.
  */
-import { LOG_KIND } from '$lib/character/log-kind';
-import { rollFormula } from '$lib/rules/dice';
+import { LOG_KIND } from '#lib/character/log-kind.ts';
+import { rollFormula } from '#lib/rules/dice.ts';
 import {
 	effectiveHpMax,
 	hitDiceRecoveredOnLongRest,
 	hitDiceRecovery,
 	shortRestHalfHeal,
-} from '$lib/rules/core';
-import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
-import { RECHARGE_ALL, restRecharge } from '$lib/rules/recharge';
-import { rechargeCount } from '$lib/effects/recharge-amount';
-import { remainingRounds, ROUNDS_PER_UNIT } from '$lib/combat/effects-view';
-import type { Character, CharacterPlay } from '$lib/character/schema';
-import { withoutForm } from '$lib/character/forms';
-import type { CharacterSheet } from '$lib/character/derive';
-import { activeClassFeatures, characterFeatures } from '$lib/character/features';
-import type { ContentGraph } from '$lib/content/loader';
-import { countAtLevel } from '$lib/content/level-gate';
-import { optionsOf } from '$lib/content/options';
+} from '#lib/rules/core.ts';
+import { PACT_SLOT_KEY } from '#lib/rules/spellcasting.ts';
+import { RECHARGE_ALL, restRecharge } from '#lib/rules/recharge.ts';
+import { rechargeCount } from '#lib/effects/recharge-amount.ts';
+import { remainingRounds, ROUNDS_PER_UNIT } from '#lib/combat/effects-view.ts';
+import type { Character, CharacterPlay } from '#lib/character/schema.ts';
+import { withoutForm } from '#lib/character/forms.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
+import { activeClassFeatures, characterFeatures } from '#lib/character/features.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
+import { countAtLevel } from '#lib/content/level-gate.ts';
+import { optionsOf } from '#lib/content/options.ts';
 import { endConcentration } from './concentration';
 import { endEffects } from './effects';
 import { leaveForm } from './form';
@@ -32,9 +32,9 @@ import { chain, quietly, type PlayContext, type PlayNotice, type PlayOutcome } f
 import { hitDiceSpent, resourceSpent } from './resources';
 import { settled } from './settle';
 import { recoverSlots, type SlotRecoveryPicks } from './rest-slot-recovery';
-import { localizedName } from '$lib/content/detail';
-import { speciesCantripChoice } from '$lib/character/species-spells';
-import { isResolvedFormula, resolveActionFormula } from '$lib/effects/action-token';
+import { localizedName } from '#lib/content/detail.ts';
+import { speciesCantripChoice } from '#lib/character/species-spells.ts';
+import { isResolvedFormula, resolveActionFormula } from '#lib/effects/action-token.ts';
 
 export type RestKind = 'short' | 'long';
 

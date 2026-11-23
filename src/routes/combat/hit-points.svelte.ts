@@ -3,7 +3,7 @@
  * them into an action.
  *
  * The RULES are not here. Damage, healing, the death-save track and the lethal rules are pure
- * actions in `$lib/play/hit-points`; this builds each one's intent from the fields below and hands
+ * actions in `#lib/play/hit-points`; this builds each one's intent from the fields below and hands
  * it to the view-model to carry out. What stays is what only a screen has: the amount being typed,
  * the type picked for it, and the concentration saves hits have left owed.
  *
@@ -11,10 +11,10 @@
  * the view-model re-exposes it (A14 — a manual max still has `hp_max` effects folded onto it), and
  * the action executor and the short rest read it from there rather than recomputing.
  */
-import type { SensitivityBucket } from '$lib/combat/helpers';
-import type { Character, DeathCause } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
-import { DAMAGE_TYPES } from '$lib/components/damage-glyphs';
+import type { SensitivityBucket } from '#lib/combat/helpers.ts';
+import type { Character, DeathCause } from '#lib/character/schema.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
+import { DAMAGE_TYPES } from '#lib/components/damage-glyphs.ts';
 import {
 	concentrationSaveDc,
 	die,
@@ -31,8 +31,8 @@ import {
 	takeDamage,
 	type DamagePart,
 	type DeathSavePip,
-} from '$lib/play/hit-points';
-import type { OwedConcentrationSave, PlayContext, PlayOutcome } from '$lib/play/outcome';
+} from '#lib/play/hit-points.ts';
+import type { OwedConcentrationSave, PlayContext, PlayOutcome } from '#lib/play/outcome.ts';
 import type { OpenOverlay } from './menu-overlay.svelte';
 
 /** What a Damage press will take once the character's defence against the picked type applies. */

@@ -11,13 +11,13 @@
  * (`rules/advancement.ts`). A pack that ships none leaves the counter without a goal rather than
  * giving it another edition's.
  */
-import type { Character, LevelingMode } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
-import type { ContentGraph } from '$lib/content/loader';
-import { isRowActive } from '$lib/content/sources.svelte';
-import { levelEarned, xpToReach, type LevelThreshold } from '$lib/rules/advancement';
-import { gainExperience } from '$lib/play/experience';
-import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
+import type { Character, LevelingMode } from '#lib/character/schema.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
+import { isRowActive } from '#lib/content/sources.svelte.ts';
+import { levelEarned, xpToReach, type LevelThreshold } from '#lib/rules/advancement.ts';
+import { gainExperience } from '#lib/play/experience.ts';
+import type { PlayContext, PlayOutcome } from '#lib/play/outcome.ts';
 
 /** What the XP counter needs from the sheet around it. */
 export interface ExperienceHost {

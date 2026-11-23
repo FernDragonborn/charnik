@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build, rowName } from '../build-view-model.svelte';
-	import type { LoadedRow } from '$lib/content/loader';
-	import { abilityShortLabel, titleCase } from '$lib/util/format';
-	import { ISSUE_KEY } from '$lib/effects/issues';
+	import type { LoadedRow } from '#lib/content/loader.ts';
+	import { abilityShortLabel, titleCase } from '#lib/util/format.ts';
+	import { ISSUE_KEY } from '#lib/effects/issues.ts';
 	import { rowDetail } from '../rows';
 	import SectionedPicker from './SectionedPicker.svelte';
 	const b = build;

@@ -6,15 +6,15 @@
  * mirrors the roster banner: explicit flag, or dev, or a non-root base path (the Pages build serves
  * under `/charnik`) — but never the shipped desktop app (base '', not dev, no flag).
  */
-import { dev } from '$app/environment';
-import { base } from '$app/paths';
-import { env } from '$env/dynamic/public';
-import { detectPlatform, Platform } from '$lib/storage/provider';
+import { dev } from '$app/env';
+import { BASE_PATH } from '#lib/config/base-path.ts';
+import { PUBLIC_DEMO } from '$app/env/public';
+import { detectPlatform, Platform } from '#lib/storage/provider.ts';
 
 /** Show the demo banner: the hosted preview, a `PUBLIC_DEMO=true` build, OR dev (so it can be
  *  previewed while developing). This is informational only — it does NOT gate writes. */
 export function isDemo(): boolean {
-	return env.PUBLIC_DEMO === 'true' || dev || base !== '';
+	return PUBLIC_DEMO === 'true' || dev || BASE_PATH !== '';
 }
 
 /**
@@ -25,5 +25,5 @@ export function isDemo(): boolean {
  */
 export function isReadOnlyContent(): boolean {
 	if (detectPlatform() === Platform.Desktop) return false;
-	return env.PUBLIC_DEMO === 'true' || base !== '';
+	return PUBLIC_DEMO === 'true' || BASE_PATH !== '';
 }

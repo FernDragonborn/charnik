@@ -5,14 +5,14 @@
 	//
 	// Auto-calc is NOT here. It is the escape hatch for a number the engine got wrong, pressed almost
 	// never, and it lives on the Effects panel head — beside the layers it drops.
-	import Icon from '$lib/components/Icon.svelte';
-	import { submitOnEnter } from '$lib/actions/submitOnEnter';
-	import type { Character } from '$lib/character/schema';
+	import Icon from '#lib/components/Icon.svelte';
+	import { submitOnEnter } from '#lib/actions/submitOnEnter.ts';
+	import type { Character } from '#lib/character/schema.ts';
 	import { combat } from '../combat-view-model.svelte';
-	import { _ } from '$lib/i18n';
-	import DiceIcon from '$lib/components/DiceIcon.svelte';
-	import { provenance } from '$lib/actions/provenance';
-	import { signed } from '$lib/util/format';
+	import { _ } from '#lib/i18n/index.ts';
+	import DiceIcon from '#lib/components/DiceIcon.svelte';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { signed } from '#lib/util/format.ts';
 
 	let { c }: { c: Character } = $props();
 	const conc = $derived(combat.conc);

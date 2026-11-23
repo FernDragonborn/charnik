@@ -10,11 +10,11 @@
  * the sheet a GM is shown and the sheet a player publishes are one shape with one owner.
  */
 import { z } from 'zod';
-import { ABILITY_IDS } from '$lib/rules/core';
-import { ADVANTAGE_MODE } from '$lib/rules/dice';
-import { LAYERS, OPS, SYSTEMS } from '$lib/rules/pipeline';
-import { AUTO_OUTCOME } from '$lib/combat/roll';
-import { EXHAUSTION_MAX } from '$lib/character/schema';
+import { ABILITY_IDS } from '#lib/rules/core.ts';
+import { ADVANTAGE_MODE } from '#lib/rules/dice.ts';
+import { LAYERS, OPS, SYSTEMS } from '#lib/rules/pipeline.ts';
+import { AUTO_OUTCOME } from '#lib/combat/roll.ts';
+import { EXHAUSTION_MAX } from '#lib/character/schema.ts';
 import {
 	AUDIENCE,
 	CLOSE_REASON,

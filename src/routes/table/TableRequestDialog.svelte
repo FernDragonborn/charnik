@@ -2,9 +2,9 @@
 	// What the GM asks, raised over whatever screen the player is on. The app is asking a question,
 	// so it wears the house dialog shell — and it has no way out but its two buttons: a stray click
 	// on the backdrop must neither take a hit nor turn a roll down.
-	import DialogShell from '$lib/components/DialogShell.svelte';
-	import { _ } from '$lib/i18n';
-	import { TABLE_REQUEST } from '$lib/table-link/types';
+	import DialogShell from '#lib/components/DialogShell.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import { TABLE_REQUEST } from '#lib/table-link/types.ts';
 	import { combat } from '../combat/combat-view-model.svelte';
 	import { table } from './table-view-model.svelte';
 	import TableRequestLine from './TableRequestLine.svelte';

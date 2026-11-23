@@ -1,12 +1,12 @@
 <script lang="ts">
 	// The headline numbers, in a row: what a DM asks for at the table. Every one of them is derived
 	// and carries its own provenance on hover — the sheet never shows a bare number (AGENTS.md).
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build } from '../build-view-model.svelte';
-	import { signed } from '$lib/util/format';
-	import { why } from '$lib/combat/effects-view';
-	import { provenance } from '$lib/actions/provenance';
-	import { metres } from '$lib/combat/constants';
+	import { signed } from '#lib/util/format.ts';
+	import { why } from '#lib/combat/effects-view.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { metres } from '#lib/combat/constants.ts';
 	const b = build;
 
 	const s = $derived(b.sheet);

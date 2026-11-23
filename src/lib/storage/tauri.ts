@@ -30,7 +30,7 @@ import { openUrl, revealItemInDir } from '@tauri-apps/plugin-opener';
 import type { Storage, FileEntry } from './types';
 import { sandboxRelative } from './path';
 import { errText } from '../util/format';
-import { logger } from '$lib/diag/logger';
+import { logger } from '#lib/diag/logger.ts';
 import {
 	copyFailures,
 	mergeCopyList,

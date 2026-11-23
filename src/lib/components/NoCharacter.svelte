@@ -5,10 +5,10 @@
 	// demo" (re-seeds the demo, then lands on Combat). Kept out of the sheet logic — the pages render
 	// this INSTEAD of the sheet via their existing top-level guard.
 	import { goto } from '$app/navigation';
-	import { base } from '$app/paths';
-	import { _ } from '$lib/i18n';
-	import { toastFailure } from '$lib/toast/toast';
-	import { recreateDemoCharacter } from '$lib/character/store.svelte';
+	import { resolve } from '$app/paths';
+	import { _ } from '#lib/i18n/index.ts';
+	import { toastFailure } from '#lib/toast/toast.ts';
+	import { recreateDemoCharacter } from '#lib/character/store.svelte.ts';
 
 	let busy = $state(false);
 	async function restoreDemo() {
@@ -18,7 +18,7 @@
 			// HARD navigate (not SPA goto): this empty state can itself be on /combat, and a client-side
 			// goto to the same route wouldn't re-run the page's load() → the view would stay on the empty
 			// state despite the demo now existing. A full load re-initializes the play view cleanly.
-			window.location.assign(`${base}/combat`);
+			window.location.assign(resolve(`combat`));
 		} catch (e) {
 			toastFailure($_('app.actionFailed'), e);
 		} finally {
@@ -32,12 +32,13 @@
 		<h2 class="nc-title">{$_('noCharacter.title')}</h2>
 		<p class="nc-body">{$_('noCharacter.body')}</p>
 		<div class="nc-actions">
-			<button class="btn primary" onclick={() => goto(`${base}/build`)} disabled={busy}>
-				{$_('noCharacter.create')}
-			</button>
-			<button class="btn ghost" onclick={restoreDemo} disabled={busy}>
-				{$_('noCharacter.restoreDemo')}
-			</button>
+			<button class="btn primary" onclick={() => goto(resolve(`build`))} disabled={busy}
+				>{$_('noCharacter.create')}</button
+			>
+
+			<button class="btn ghost" onclick={restoreDemo} disabled={busy}
+				>{$_('noCharacter.restoreDemo')}</button
+			>
 		</div>
 	</div>
 </div>

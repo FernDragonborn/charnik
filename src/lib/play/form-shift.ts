@@ -5,9 +5,9 @@
  * (`effects/facts.ts` ▸ `FormRules`) — so nothing here knows what a druid is. What ENDS a form
  * without being asked is `./settle`.
  */
-import { LOG_KIND } from '$lib/character/log-kind';
-import type { Character } from '$lib/character/schema';
-import { formStatTokens } from '$lib/character/forms';
+import { LOG_KIND } from '#lib/character/log-kind.ts';
+import type { Character } from '#lib/character/schema.ts';
+import { formStatTokens } from '#lib/character/forms.ts';
 import { effectInstanceOf } from './effects';
 import { leaveForm } from './form';
 import { chain, quietly, type PlayContext, type PlayOutcome } from './outcome';

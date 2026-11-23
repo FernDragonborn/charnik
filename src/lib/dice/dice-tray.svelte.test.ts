@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { DiceTray } from './dice-tray.svelte';
 import { rollerCandidates, type NamedRollSource } from './roller-vocabulary';
 import { ROLLER_ROLE, damageParts, testRoll, type RollerLine } from './roller';
-import { ADVANTAGE_MODE, CRIT_METHOD, DIE_ROLE, type Rng } from '$lib/rules/dice';
-import { app } from '$lib/stores/app.svelte';
+import { ADVANTAGE_MODE, CRIT_METHOD, DIE_ROLE, type Rng } from '#lib/rules/dice.ts';
+import { app } from '#lib/stores/app.svelte.ts';
 
 const SOURCES: NamedRollSource[] = [
 	{

@@ -1,9 +1,9 @@
-import type { CharacterSheet } from '$lib/character/derive';
-import { characterFeatures } from '$lib/character/features';
-import type { Character } from '$lib/character/schema';
-import type { ContentGraph } from '$lib/content/loader';
-import { evalExpression } from '$lib/effects/expression-evaluator';
-import { MAX_SLOT_LEVEL } from '$lib/rules/spellcasting';
+import type { CharacterSheet } from '#lib/character/derive.ts';
+import { characterFeatures } from '#lib/character/features.ts';
+import type { Character } from '#lib/character/schema.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
+import { evalExpression } from '#lib/effects/expression-evaluator.ts';
+import { MAX_SLOT_LEVEL } from '#lib/rules/spellcasting.ts';
 import { resourceLeft, resourceSpent } from './resources';
 
 export type SlotRecoveryPicks = Record<string, Record<string, number>>;

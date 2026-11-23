@@ -2,12 +2,12 @@
 	// The one allocator: how the six scores are generated, the scores themselves, and every boost
 	// layered on top of them (5.5e background choice, a 5e species' floating ASI). Each row shows its
 	// own provenance line, so a total that isn't what you typed says why.
-	import Icon from '$lib/components/Icon.svelte';
-	import { _ } from '$lib/i18n';
+	import Icon from '#lib/components/Icon.svelte';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build, rowName } from '../build-view-model.svelte';
-	import { ABILITIES } from '$lib/character/schema';
-	import { abilityShortLabel, signed } from '$lib/util/format';
-	import { POINT_BUY_BUDGET, type StatMethod } from '$lib/build/rules';
+	import { ABILITIES } from '#lib/character/schema.ts';
+	import { abilityShortLabel, signed } from '#lib/util/format.ts';
+	import { POINT_BUY_BUDGET, type StatMethod } from '#lib/build/rules.ts';
 	import { abilityProvenanceText } from '../ability-allocation.svelte';
 	const b = build;
 

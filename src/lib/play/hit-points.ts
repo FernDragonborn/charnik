@@ -9,9 +9,9 @@
  * An action that moves hit points, or what their maximum depends on, ends in `settled` (`./settle`),
  * so the rules that FOLLOW such a change hold wherever it came from.
  */
-import { LOG_KIND } from '$lib/character/log-kind';
-import { naturalOf, rollPool, type Rolled } from '$lib/rules/dice';
-import { effectiveHpMax } from '$lib/rules/core';
+import { LOG_KIND } from '#lib/character/log-kind.ts';
+import { naturalOf, rollPool, type Rolled } from '#lib/rules/dice.ts';
+import { effectiveHpMax } from '#lib/rules/core.ts';
 import {
 	applyDamageSensitivity,
 	netAdvantage,
@@ -20,9 +20,9 @@ import {
 	type RollEffects,
 	type RollName,
 	type SensitivityBucket,
-} from '$lib/combat/helpers';
-import type { Character, CharacterPlay, DeathCause } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
+} from '#lib/combat/helpers.ts';
+import type { Character, CharacterPlay, DeathCause } from '#lib/character/schema.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
 import { endConcentration } from './concentration';
 import { leaveForm } from './form';
 import { markDead } from './effect-endings';

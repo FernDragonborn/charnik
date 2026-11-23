@@ -7,8 +7,8 @@
  * files" shortcut, which is why the two halves stay neighbours: the guarantees a hand-edited file
  * gets from an update are the guarantees a re-install has to honour too.
  */
-import { getUserStorage } from '$lib/storage/provider';
-import { revokePackPlugins } from '$lib/effects/plugin-store.svelte';
+import { getUserStorage } from '#lib/storage/provider.ts';
+import { revokePackPlugins } from '#lib/effects/plugin-store.svelte.ts';
 import { content } from '../store.svelte';
 import {
 	bundledPacks,
@@ -54,7 +54,7 @@ import {
 } from './pack-update-state.svelte';
 import { tauriFetcher } from './tauri-fetch';
 import { type RemoteFetcher } from './types';
-import { logger } from '$lib/diag/logger';
+import { logger } from '#lib/diag/logger.ts';
 
 /**
  * Ask a pasted repo URL what packs it holds. Nothing is written and nothing is registered: this is

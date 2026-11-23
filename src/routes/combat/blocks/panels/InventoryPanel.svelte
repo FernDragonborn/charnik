@@ -4,21 +4,21 @@
 	// bar, which is the only place carrying capacity has ever been shown (it was computed and never
 	// rendered). Adding an item is still the builder's equipment pane: that is a search through
 	// hundreds of rows, not a play action.
-	import Icon from '$lib/components/Icon.svelte';
-	import { base } from '$app/paths';
+	import Icon from '#lib/components/Icon.svelte';
+	import { resolve } from '$app/paths';
 	import { combat } from '../../combat-view-model.svelte';
-	import { _ } from '$lib/i18n';
-	import { ATTUNEMENT_CAP } from '$lib/character/inventory';
-	import { kilograms } from '$lib/combat/constants';
-	import { why } from '$lib/combat/helpers';
-	import { asksWhichOne, type InstanceAnswers } from '$lib/content/item-instance';
+	import { _ } from '#lib/i18n/index.ts';
+	import { ATTUNEMENT_CAP } from '#lib/character/inventory.ts';
+	import { kilograms } from '#lib/combat/constants.ts';
+	import { why } from '#lib/combat/helpers.ts';
+	import { asksWhichOne, type InstanceAnswers } from '#lib/content/item-instance.ts';
 	import ItemInstanceAsk from '../../../build/blocks/ItemInstanceAsk.svelte';
 	import { rowName } from '../../../build/rows';
 	import { askAgain, type InstanceAsk } from '../../../build/item-instance-picking.svelte';
-	import { provenance } from '$lib/actions/provenance';
+	import { provenance } from '#lib/actions/provenance.ts';
 	import AddItemPopover from '../AddItemPopover.svelte';
 	import { dndzone } from 'svelte-dnd-action';
-	import { dragMotion, TOUCH_HOLD_MS } from '$lib/actions/dragMotion';
+	import { dragMotion, TOUCH_HOLD_MS } from '#lib/actions/dragMotion.ts';
 	import RowGrip from '../RowGrip.svelte';
 	import type { InventoryRow } from '../../inventory.svelte';
 
@@ -249,7 +249,7 @@
 	{:else}
 		<p class="note">
 			{$_('combat.inventory.empty')}
-			<a href="{base}/build">{$_('combat.inventory.openBuilder')}</a>
+			<a href={resolve('build')}>{$_('combat.inventory.openBuilder')}</a>
 		</p>
 	{/each}
 </div>

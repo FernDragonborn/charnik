@@ -13,7 +13,7 @@
 import 'fake-indexeddb/auto';
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 
-vi.mock('$lib/toast/toast', () => ({
+vi.mock('#lib/toast/toast.ts', () => ({
 	toast: Object.assign(() => {}, { success: () => {}, warning: () => {}, error: () => {} }),
 	toastRollCard: () => {},
 	toastFailure: () => {},
@@ -21,11 +21,11 @@ vi.mock('$lib/toast/toast', () => ({
 }));
 
 import { loadPacks } from '../../test-support/real-content';
-import { newCharacter, type Character, classRow } from '$lib/character/schema';
+import { newCharacter, type Character, classRow } from '#lib/character/schema.ts';
 import { combat } from './combat-view-model.svelte';
-import { startI18n, locale, waitLocale, _ } from '$lib/i18n';
+import { startI18n, locale, waitLocale, _ } from '#lib/i18n/index.ts';
 import { get } from 'svelte/store';
-import { whyHitPoints } from '$lib/combat/effects-view';
+import { whyHitPoints } from '#lib/combat/effects-view.ts';
 
 const EDITIONS = {
 	'5e': { pack: 'srd-2014', source: 'SRD 5.1' },

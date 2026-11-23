@@ -6,17 +6,17 @@
  * condition and a rage; a form ends with its effect, a state or a death. So they are stated once, here, and every action ends in `settled` — a rule
  * enforced by something that watches a screen holds only while that screen is mounted.
  */
-import { LOG_KIND } from '$lib/character/log-kind';
-import { effectiveHpMax } from '$lib/rules/core';
-import type { Character } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
+import { LOG_KIND } from '#lib/character/log-kind.ts';
+import { effectiveHpMax } from '#lib/rules/core.ts';
+import type { Character } from '#lib/character/schema.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
 import { endConcentration } from './concentration';
 import { leaveForm } from './form';
 import { quietly, type PlayContext, type PlayNotice, type PlayOutcome } from './outcome';
 import { isIncapacitated } from './conditions';
 import { effectRow, withoutEffects } from './effect-endings';
-import { evalExpression } from '$lib/effects/expression-evaluator';
-import type { ContentGraph } from '$lib/content/loader';
+import { evalExpression } from '#lib/effects/expression-evaluator.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
 
 /** One rule's consequence can be another's cause — concentration ending takes an `hp_max` effect
  *  down, which lowers the maximum. More passes than rules is a loop in the rules themselves. */

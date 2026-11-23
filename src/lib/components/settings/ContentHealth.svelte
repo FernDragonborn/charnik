@@ -6,24 +6,24 @@
 	// Two effect-token layers merge in (SPEC10): static authoring lint over every loaded row's
 	// tokens, and the OPEN character's derive-time issues published by the combat page.
 	import Icon from '../Icon.svelte';
-	import { _ } from '$lib/i18n';
-	import { toastFailure } from '$lib/toast/toast';
-	import { sayText } from '$lib/util/say';
-	import { content } from '$lib/content/store.svelte';
-	import { deriveHealth } from '$lib/character/health.svelte';
-	import { lintEffectTokens } from '$lib/effects/lint-effect-tokens';
-	import { tokensOf } from '$lib/content/loader';
-	import { resourceJoinIssues } from '$lib/content/resource-joins';
-	import { optionJoinIssues } from '$lib/content/options';
-	import { startingKitIssues } from '$lib/content/starting-equipment';
-	import { levelLadderIssues } from '$lib/content/level-gate';
-	import { TYPE_ASSIGNABLE_KEYS } from '$lib/content/issue-text';
-	import { CONTENT_TYPES, type ContentType } from '$lib/content/schemas';
-	import { assignFileType, releaseAdoptedFile } from '$lib/content/review.svelte';
-	import { retryPlugins } from '$lib/effects/plugin-store.svelte';
-	import { app } from '$lib/stores/app.svelte';
-	import { detectPlatform, Platform } from '$lib/storage/provider';
-	import Switch from '$lib/components/Switch.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import { toastFailure } from '#lib/toast/toast.ts';
+	import { sayText } from '#lib/util/say.ts';
+	import { content } from '#lib/content/store.svelte.ts';
+	import { deriveHealth } from '#lib/character/health.svelte.ts';
+	import { lintEffectTokens } from '#lib/effects/lint-effect-tokens.ts';
+	import { tokensOf } from '#lib/content/loader.ts';
+	import { resourceJoinIssues } from '#lib/content/resource-joins.ts';
+	import { optionJoinIssues } from '#lib/content/options.ts';
+	import { startingKitIssues } from '#lib/content/starting-equipment.ts';
+	import { levelLadderIssues } from '#lib/content/level-gate.ts';
+	import { TYPE_ASSIGNABLE_KEYS } from '#lib/content/issue-text.ts';
+	import { CONTENT_TYPES, type ContentType } from '#lib/content/schemas.ts';
+	import { assignFileType, releaseAdoptedFile } from '#lib/content/review.svelte.ts';
+	import { retryPlugins } from '#lib/effects/plugin-store.svelte.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import { detectPlatform, Platform } from '#lib/storage/provider.ts';
+	import Switch from '#lib/components/Switch.svelte';
 
 	const graph = $derived(content.graph);
 	const issues = $derived(graph?.issues ?? []);

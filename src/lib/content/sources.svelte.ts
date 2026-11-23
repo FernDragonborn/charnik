@@ -13,9 +13,9 @@
  * that overlap an edition, the user can keep just one source (keep-one) or show them all (keep-all).
  */
 import { rowName, type ContentGraph, type LoadedRow } from './loader';
-import { readStored } from '$lib/util/persist';
-import { getUserStorage } from '$lib/storage/provider';
-import { announceConfigWrite, onConfigWrittenElsewhere } from '$lib/storage/tab-sync';
+import { readStored } from '#lib/util/persist.ts';
+import { getUserStorage } from '#lib/storage/provider.ts';
+import { announceConfigWrite, onConfigWrittenElsewhere } from '#lib/storage/tab-sync.ts';
 
 /** The browse-config file in the data root (Tauri fs on desktop/mobile; IndexedDB on web). */
 const CONFIG_PATH = 'collisions.json';

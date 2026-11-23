@@ -1,4 +1,4 @@
-import type { Translate } from '$lib/i18n';
+import type { Translate } from '#lib/i18n/index.ts';
 
 /** Feet → "N m" (metric in parentheses next to imperial). */
 export const metres = (ft: number) => `${(ft * 0.3048).toFixed(1).replace(/\.0$/, '')} m`;

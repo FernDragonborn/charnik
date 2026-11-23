@@ -18,7 +18,7 @@ import { parseItemTags } from './item-tags';
 import { resolveItem, needsBaseItem } from './resolved-item';
 import { issueText, type IssueText } from './issue-text';
 import type { JoinIssue } from './resource-joins';
-import { COINS } from '$lib/rules/currency';
+import { COINS } from '#lib/rules/currency.ts';
 import { HOMEBREW_SOURCE } from './homebrew';
 
 export const KIT_SOURCE = { class: 'class', background: 'background' } as const;

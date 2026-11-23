@@ -4,7 +4,7 @@
 	// needs no hover-bridge to survive the trip and can never be the thing you try to scroll. Reading
 	// in full is the click, and that opens PickerCard.
 	import { placeCard, entryElement } from '../card-placement';
-	import { floatInBody } from '$lib/actions/floatInBody';
+	import { floatInBody } from '#lib/actions/floatInBody.ts';
 
 	let {
 		picker,

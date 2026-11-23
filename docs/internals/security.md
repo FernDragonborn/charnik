@@ -199,7 +199,7 @@ step.
    > config says `create: false`) with a new-window handler that refuses every request and hands an
    > http(s) one to the OS browser. Without it WebView2 answers a middle click or a
    > `target="_blank"` by opening the remote page in a window of its own. A per-renderer handler would be a rule with a
-   > hole in it; the policy itself is a pure function (`$lib/util/links.ts`) with tests. Desktop
+   > hole in it; the policy itself is a pure function (`#lib/util/links.ts`) with tests. Desktop
    > only — on the web the browser owns this. **Stated here from the start and only implemented
    > 2026-08-12**, which is why it is spelled out rather than assumed.
 6. **Image upload hardening.** Allowlist types (png/jpg/webp); size cap; **re-encode**

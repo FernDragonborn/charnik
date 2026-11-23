@@ -3,12 +3,12 @@
 	// title, an optional ability grid, and the generic key/value meta grid. Only the title is editable
 	// (translate); the meta cells are read-only. Play-mode `actions` (Spellbook) render in the
 	// dispatcher below the title, not here.
-	import { abilityShortLabel } from '$lib/util/format';
-	import { _ } from '$lib/i18n';
-	import { say, sayText } from '$lib/util/say';
-	import type { DetailModel } from '$lib/content/detail';
-	import { describedRules } from '$lib/content/overrides.svelte';
-	import { provenance } from '$lib/actions/provenance';
+	import { abilityShortLabel } from '#lib/util/format.ts';
+	import { _ } from '#lib/i18n/index.ts';
+	import { say, sayText } from '#lib/util/say.ts';
+	import type { DetailModel } from '#lib/content/detail.ts';
+	import { describedRules } from '#lib/content/overrides.svelte.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
 	import type { WikiEditDraft } from './wikiEdit';
 	import EditableTitle from './EditableTitle.svelte';
 

@@ -2,9 +2,9 @@
 	// The bottom of the sheet: what is still open, and the one button that turns a draft into a
 	// character. Each unfinished line is a LINK to the control that fixes it — a list of complaints
 	// you can't act on is just nagging.
-	import Icon from '$lib/components/Icon.svelte';
-	import PluginNeeds from '$lib/components/PluginNeeds.svelte';
-	import { _ } from '$lib/i18n';
+	import Icon from '#lib/components/Icon.svelte';
+	import PluginNeeds from '#lib/components/PluginNeeds.svelte';
+	import { _ } from '#lib/i18n/index.ts';
 	import { build } from '../build-view-model.svelte';
 	const b = build;
 

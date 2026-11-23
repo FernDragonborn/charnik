@@ -46,7 +46,7 @@ import { rowName } from '../content/loader';
 import { computed, SOURCE_KEY, type Computed } from '../rules/pipeline';
 
 // SKILL_ABILITY / SkillId live in the leaf `./skills` (so derive's sub-modules share them without a
-// cycle); re-exported here so existing `$lib/character/derive` importers keep working.
+// cycle); re-exported here so existing `#lib/character/derive.ts` importers keep working.
 import { SKILL_ABILITY, type SkillId } from './skills';
 export { SKILL_ABILITY, type SkillId };
 // B13 target validation moved to ./derive-targets (the closed-vocab check collectFacts runs).

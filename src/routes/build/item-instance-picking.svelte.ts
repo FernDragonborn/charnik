@@ -18,10 +18,10 @@ import {
 	type InstanceAnswers,
 	type InstanceQuestions,
 	type InstanceScope,
-} from '$lib/content/item-instance';
-import { localizedName } from '$lib/content/detail';
-import { parseBonusChoices } from '$lib/content/item-tags';
-import type { LoadedRow } from '$lib/content/loader';
+} from '#lib/content/item-instance.ts';
+import { localizedName } from '#lib/content/detail.ts';
+import { parseBonusChoices } from '#lib/content/item-tags.ts';
+import type { LoadedRow } from '#lib/content/loader.ts';
 
 /** What the pane taking items gives this: where to look, and what to do with what was taken. */
 export interface InstancePickingHost {

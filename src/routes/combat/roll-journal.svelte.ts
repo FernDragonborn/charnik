@@ -2,7 +2,7 @@
  * The dice-roll subsystem of the Combat view-model: the dice tray the overlay mounts, the roll log,
  * and the roll-execution methods. Split out of CombatVM so the roll concern is one cohesive unit;
  * CombatVM composes it as `combat.journal` and the higher-level actions (attack/cast/action) call into
- * it. Pure dice math lives in $lib/rules/dice, and the tray's own model in $lib/dice/roller.
+ * it. Pure dice math lives in #lib/rules/dice, and the tray's own model in #lib/dice/roller.
  *
  * The builder half used to live here as loose fields (`dice`, `rollMod`, `rollAdvantage`) plus a
  * `pendingDamage` queue that the tray could neither show nor edit — which is UBUG-21. It is now one
@@ -19,12 +19,12 @@ import {
 	type DieMods,
 	type Rolled,
 	naturalOf,
-} from '$lib/rules/dice';
-import { CRIT_THRESHOLD_MAX } from '$lib/rules/core';
-import { toastRoll } from '$lib/dice/roll-toast';
-import { DiceTray } from '$lib/dice/dice-tray.svelte';
-import type { SaidText, SaidValue } from '$lib/util/say';
-import type { LogKind } from '$lib/character/log-kind';
+} from '#lib/rules/dice.ts';
+import { CRIT_THRESHOLD_MAX } from '#lib/rules/core.ts';
+import { toastRoll } from '#lib/dice/roll-toast.ts';
+import { DiceTray } from '#lib/dice/dice-tray.svelte.ts';
+import type { SaidText, SaidValue } from '#lib/util/say.ts';
+import type { LogKind } from '#lib/character/log-kind.ts';
 import {
 	amendedAdvantage,
 	eventEntries,
@@ -36,7 +36,7 @@ import {
 	type RollName,
 	type TypedRoll,
 	type DamagePartSpec,
-} from '$lib/combat/helpers';
+} from '#lib/combat/helpers.ts';
 
 /** Cap on the retained roll log (newest kept). Matches `LOG_MAX_LINES` on disk on purpose: a
  *  deeper in-session log silently loses everything past the disk cap on the next reload. */

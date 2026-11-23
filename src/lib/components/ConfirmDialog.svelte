@@ -2,7 +2,7 @@
 	// The confirm dialog: an explicit yes before something that cannot be taken back. Built on the
 	// shared shell, so it says what is happening small and WHAT it happens to large.
 	import DialogShell from './DialogShell.svelte';
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 
 	let {
 		ask = '',

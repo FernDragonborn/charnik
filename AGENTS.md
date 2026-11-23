@@ -285,7 +285,7 @@ offer two or three **rendered** variants — they are picked from seeing them, n
 - Small local duplicates are worth extracting. They accumulate into a fifth of a codebase.
 - Discover by scanning a folder; let each artefact describe itself. No manifest sidecars.
 - Identify anything shareable with a GUID, not a local counter.
-- Shortcuts match the physical key (`e.code`), and every internal link carries `base`.
+- Shortcuts match the physical key (`e.code`), and every internal link goes through `resolve()`.
 - Imperial first, metric in parentheses. Ukrainian UI copy uses the formal «ви».
 - Accessible from the start: focus order, visible focus, ARIA, keyboard-navigable lists where Enter
   equals a left click.

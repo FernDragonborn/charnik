@@ -1,18 +1,18 @@
 <script lang="ts">
 	// Settings ▸ Table: which relay servers a table THIS app opens is reached through. A GM's
 	// choice — a player's app follows the invitation it was handed, and is asked first.
-	import { browser } from '$app/environment';
-	import { app } from '$lib/stores/app.svelte';
+	import { browser } from '$app/env';
+	import { app } from '#lib/stores/app.svelte.ts';
 
 	/** Inside a dialog that names the subject itself, the section's own heading is left out. */
 	let { embedded = false }: { embedded?: boolean } = $props();
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 	import {
 		ADDRESS_FAMILIES,
 		RELAY_MODE,
 		type AddressFamilies,
 		type RelayMode,
-	} from '$lib/table-link/types';
+	} from '#lib/table-link/types.ts';
 
 	const MODES: RelayMode[] = [RELAY_MODE.n0, RELAY_MODE.custom, RELAY_MODE.none];
 	const FAMILIES: AddressFamilies[] = [ADDRESS_FAMILIES.both, ADDRESS_FAMILIES.ipv4];
@@ -26,6 +26,7 @@
 	/** The typed address as it is kept across a switch to another mode and back. */
 	let typedUrl = $state(app.tableRelay.mode === RELAY_MODE.custom ? app.tableRelay.url : '');
 	const urlLooksWrong = $derived(url.trim() !== '' && !url.trim().startsWith(RELAY_SCHEME));
+
 	const addresses = $derived(
 		app.tableRelay.mode === RELAY_MODE.none
 			? (app.tableRelay.addresses ?? ADDRESS_FAMILIES.both)

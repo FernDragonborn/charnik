@@ -4,7 +4,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { rollToastModel } from './roll-toast';
-import { rehydrateLogEntry, type RollLogEntry } from '$lib/combat/roll';
+import { rehydrateLogEntry, type RollLogEntry } from '#lib/combat/roll.ts';
 
 /** A catalog that answers every key with it, so the model is asserted on WHICH sentence it asks for
  *  rather than on the English in it. */

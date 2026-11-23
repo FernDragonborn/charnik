@@ -2,8 +2,8 @@
 	// Full-view loading screen shown while the sheet/content is being loaded (the derive can take a
 	// beat). If `error` is set the load FAILED — show the reason instead of spinning forever, so a
 	// broken content bundle on an installed app is diagnosable rather than an endless "Loading…".
-	import { _ } from '$lib/i18n';
-	import { base } from '$app/paths';
+	import { _ } from '#lib/i18n/index.ts';
+	import { asset } from '$app/paths';
 	// the default is a CATALOG LOOKUP, not an English sentence: the builder passes no message, so an
 	// English default is the one loading screen that never translates
 	let { message, error = null }: { message?: string; error?: string | null } = $props();
@@ -18,7 +18,8 @@
 	</div>
 {:else}
 	<div class="loadscreen" role="status" aria-live="polite">
-		<img class="loadgif" src="{base}/loading-dice.gif" alt="" width="220" height="244" />
+		<img class="loadgif" src={asset('loading-dice.gif')} alt="" width="220" height="244" />
+
 		<p class="loadbig">{message ?? $_('loading.default')}</p>
 		<p class="loadsub">{$_('loading.patience')}</p>
 	</div>

@@ -5,9 +5,9 @@
  * Every one of them can change what the sheet says — a maximum, whether concentration can be held —
  * so every one ends in `settled`.
  */
-import type { Character, EffectInstance } from '$lib/character/schema';
-import type { ContentGraph } from '$lib/content/loader';
-import { remainingRounds } from '$lib/combat/effects-view';
+import type { Character, EffectInstance } from '#lib/character/schema.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
+import { remainingRounds } from '#lib/combat/effects-view.ts';
 import { dropEffects, endConcentration } from './concentration';
 import { effectRow, withExhaustion, withoutEffects } from './effect-endings';
 import { quietly, type PlayContext, type PlayOutcome } from './outcome';

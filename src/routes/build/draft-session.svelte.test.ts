@@ -1,16 +1,16 @@
 /** The unfinished build's session after Create: an autosave still pending must not write it back. */
 import { describe, expect, it, vi } from 'vitest';
-import type { Storage } from '$lib/storage/types';
+import type { Storage } from '#lib/storage/types.ts';
 
 const { storage } = await vi.hoisted(async () => {
-	const { MemoryStorage } = await import('$lib/storage/memory');
+	const { MemoryStorage } = await import('#lib/storage/memory.ts');
 	return { storage: new MemoryStorage() as Storage };
 });
-vi.mock('$lib/storage/provider', () => ({ getUserStorage: () => storage }));
+vi.mock('#lib/storage/provider.ts', () => ({ getUserStorage: () => storage }));
 
 const { DraftSession } = await import('./draft-session.svelte');
 const { blankDraft } = await import('./draft');
-const { listDrafts } = await import('$lib/character/draft-repository');
+const { listDrafts } = await import('#lib/character/draft-repository.ts');
 
 describe('DraftSession', () => {
 	it('writes nothing for a build that became a character, under any identity', async () => {

@@ -9,7 +9,7 @@
 	// click: inside a <summary>, a press on the handle would otherwise toggle the row.
 	import { tick } from 'svelte';
 	import { dragHandle } from 'svelte-dnd-action';
-	import { _ } from '$lib/i18n';
+	import { _ } from '#lib/i18n/index.ts';
 
 	let {
 		panel,

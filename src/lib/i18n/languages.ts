@@ -6,7 +6,7 @@
  * ACTIVE locales are still DISCOVERED from content + UI catalogs (i18n-is-data-driven), never from here.
  * Codes are ISO 639-1 where one exists, else ISO 639-2/3 (e.g. `crh`). Extend freely.
  */
-import { foldForSearch } from '$lib/util/search-fold';
+import { foldForSearch } from '#lib/util/search-fold.ts';
 
 interface Language {
 	/** shown in the picker — the language's own name in its own script. */

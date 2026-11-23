@@ -2,16 +2,16 @@
 	// The Table screen: no seat yet (open a table, or join one), a GM's seat, or a player's. A thin
 	// shell over `table` — what a seat keeps and does is `table-view-model.svelte.ts`.
 	import { onMount } from 'svelte';
-	import { base } from '$app/paths';
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-	import Icon from '$lib/components/Icon.svelte';
+	import { resolve } from '$app/paths';
+	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
+	import Icon from '#lib/components/Icon.svelte';
 	import TableRouteDialog from './TableRouteDialog.svelte';
-	import Switch from '$lib/components/Switch.svelte';
-	import { _ } from '$lib/i18n';
-	import { app } from '$lib/stores/app.svelte';
-	import { toast } from '$lib/toast/toast';
-	import { loadContentStore } from '$lib/content/store.svelte';
-	import { CONNECTION, RELAY_MODE, type RememberedTable } from '$lib/table-link/types';
+	import Switch from '#lib/components/Switch.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import { toast } from '#lib/toast/toast.ts';
+	import { loadContentStore } from '#lib/content/store.svelte.ts';
+	import { CONNECTION, RELAY_MODE, type RememberedTable } from '#lib/table-link/types.ts';
 	import { combat } from '../combat/combat-view-model.svelte';
 	import { ASK_STATUS, TABLE_ROLE, table, type AskedRow } from './table-view-model.svelte';
 	import { rollPassed } from './requested-roll';
@@ -235,7 +235,7 @@
 						{$_('table.host.relay')}: {$_(`table.host.relayName.${app.tableRelay.mode}`)}{relayHost
 							? ` — ${relayHost}`
 							: ''}.
-						<a href="{base}/settings?tab=table">{$_('table.host.changeRelay')}</a>
+						<a href={resolve('settings?tab=table')}>{$_('table.host.changeRelay')}</a>
 					</p>
 					<button
 						type="submit"

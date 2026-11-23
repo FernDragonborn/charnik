@@ -7,13 +7,13 @@
 	// ONE component for both keys a choice can hang off — a level's slot, and the background's granted
 	// origin feat. The questions a feat asks do not depend on how it arrived, and written twice they
 	// drift: the origin feat's copy did not exist at all, so Skilled granted nothing.
-	import { _ } from '$lib/i18n';
-	import { abilityShortLabel } from '$lib/util/format';
+	import { _ } from '#lib/i18n/index.ts';
+	import { abilityShortLabel } from '#lib/util/format.ts';
 	import { build, rowName, ASI } from '../build-view-model.svelte';
 	import { skillLabel } from '../rows';
-	import { SKILL_ABILITY } from '$lib/character/skills';
-	import { TOOL_PREFIX } from '$lib/character/granted-proficiency';
-	import { provenance } from '$lib/actions/provenance';
+	import { SKILL_ABILITY } from '#lib/character/skills.ts';
+	import { TOOL_PREFIX } from '#lib/character/granted-proficiency.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
 	const b = build;
 	const SKILLS = Object.keys(SKILL_ABILITY);
 

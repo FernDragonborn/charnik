@@ -3,7 +3,7 @@
 	// (first-run, data-move failures, drift…). They must NOT ship: adapter-static bundles every
 	// route into the desktop app AND the public GitHub Pages demo, so this layout hides them all
 	// behind the dev-server flag instead of gating each page.
-	import { dev } from '$app/environment';
+	import { dev } from '$app/env';
 	import type { Snippet } from 'svelte';
 	let { children }: { children: Snippet } = $props();
 </script>

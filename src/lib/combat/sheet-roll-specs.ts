@@ -6,10 +6,10 @@
  * panels, and a roll the GM asks for across the table — and two sites building it by hand is how
  * one of them rolls under another name or with no effects at all.
  */
-import type { CharacterSheet } from '$lib/character/derive';
-import { SKILL_IDS, type SkillId } from '$lib/character/skills';
-import { ABILITY_IDS, type Ability } from '$lib/rules/core';
-import { titleCase } from '$lib/util/format';
+import type { CharacterSheet } from '#lib/character/derive.ts';
+import { SKILL_IDS, type SkillId } from '#lib/character/skills.ts';
+import { ABILITY_IDS, type Ability } from '#lib/rules/core.ts';
+import { titleCase } from '#lib/util/format.ts';
 import { skillRollTarget, type RollName } from './roll';
 
 export interface SheetRollSpec {

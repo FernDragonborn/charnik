@@ -4,16 +4,16 @@
 	// `DiceTray` with a fixture vocabulary rather than rendering fixed markup. Every button below
 	// is a starting state; the roller itself is the same one the dice tray mounts.
 	// Not linked from the app; gated to dev builds by /dev/+layout.
-	import Roller from '$lib/components/Roller.svelte';
-	import { _ } from '$lib/i18n';
-	import RollRow from '$lib/components/RollRow.svelte';
-	import { rollToastModel } from '$lib/dice/roll-toast';
-	import { DiceTray } from '$lib/dice/dice-tray.svelte';
-	import { rollerCandidates, type NamedRollSource } from '$lib/dice/roller-vocabulary';
-	import { rollerSources } from '$lib/dice/roller-sources';
-	import { ROLLER_ROLE, addToken, emptyLine } from '$lib/dice/roller';
-	import { candidateResolver } from '$lib/dice/roller-vocabulary';
-	import type { RollLogEntry } from '$lib/combat/roll';
+	import Roller from '#lib/components/Roller.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import RollRow from '#lib/components/RollRow.svelte';
+	import { rollToastModel } from '#lib/dice/roll-toast.ts';
+	import { DiceTray } from '#lib/dice/dice-tray.svelte.ts';
+	import { rollerCandidates, type NamedRollSource } from '#lib/dice/roller-vocabulary.ts';
+	import { rollerSources } from '#lib/dice/roller-sources.ts';
+	import { ROLLER_ROLE, addToken, emptyLine } from '#lib/dice/roller.ts';
+	import { candidateResolver } from '#lib/dice/roller-vocabulary.ts';
+	import type { RollLogEntry } from '#lib/combat/roll.ts';
 
 	// a fixture stand-in for "what this character has on and what the compendium knows". Two of them
 	// are ACTIVE, which is what puts them above the rest with the dot.

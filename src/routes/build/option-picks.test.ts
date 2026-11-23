@@ -7,7 +7,7 @@
 import 'fake-indexeddb/auto';
 import { describe, it, expect } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
-import { OPTION_BLOCK } from '$lib/content/options';
+import { OPTION_BLOCK } from '#lib/content/options.ts';
 import { build } from './build-view-model.svelte';
 import { newClassRow } from './draft';
 import type { FeatureChoice } from './option-picks.svelte';

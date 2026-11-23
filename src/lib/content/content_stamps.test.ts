@@ -14,7 +14,7 @@ import { describe, it, expect } from 'vitest';
 import { readdirSync } from 'node:fs';
 import { fileHashState } from './hash';
 import { HASH_STATE, parseContentDirectives } from './meta';
-import { CONTENT_SEED_VERSION } from '$lib/schema/version';
+import { CONTENT_SEED_VERSION } from '#lib/schema/version.ts';
 import { contentPacks, packDir } from '../../../tools/content-repo.mjs';
 import { hasContentRepo, readPackFile } from '../../test-support/real-content';
 

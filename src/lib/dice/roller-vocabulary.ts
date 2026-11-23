@@ -13,11 +13,11 @@
  * is explicit that the menu stays open until a person picks (§6), which is the same rule as "never a
  * silently-wrong number", one floor up in the interaction.
  */
-import { foldForSearch } from '$lib/util/search-fold';
-import { localizedName } from '$lib/content/names';
-import { EFFECT_KIND, parseToken } from '$lib/effects/token-parser';
-import { ADVANTAGE_MODE, parseDiceTerm, type AdvantageMode } from '$lib/rules/dice';
-import { signed } from '$lib/util/format';
+import { foldForSearch } from '#lib/util/search-fold.ts';
+import { localizedName } from '#lib/content/names.ts';
+import { EFFECT_KIND, parseToken } from '#lib/effects/token-parser.ts';
+import { ADVANTAGE_MODE, parseDiceTerm, type AdvantageMode } from '#lib/rules/dice.ts';
+import { signed } from '#lib/util/format.ts';
 import { PILL_KIND, TOKEN_KIND, type ParsedRollerToken, type RollerResolver } from './roller';
 
 /** A named thing a line can be told about: an effect (active or merely known) or a damage type.

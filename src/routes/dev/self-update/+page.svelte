@@ -11,7 +11,7 @@
 	// where the answer is a refusal.
 	import { onMount } from 'svelte';
 	import { invokeRaw } from '../invoke-raw';
-	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
+	import { detectPlatform, getUserStorage, Platform } from '#lib/storage/provider.ts';
 
 	const REPORT = 'self-update-probe.txt';
 	/** Nothing listens here, so a check that honoured it could not reach the release endpoint. */

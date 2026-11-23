@@ -13,7 +13,7 @@
 import 'fake-indexeddb/auto'; // the VM saves on a rest
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 
-vi.mock('$lib/toast/toast', () => ({
+vi.mock('#lib/toast/toast.ts', () => ({
 	toast: Object.assign(() => {}, { success: () => {}, warning: () => {}, error: () => {} }),
 	toastRollCard: () => {},
 	toastFailure: () => {},
@@ -21,12 +21,12 @@ vi.mock('$lib/toast/toast', () => ({
 }));
 
 import { loadPacks } from '../../test-support/real-content';
-import type { ContentGraph } from '$lib/content/loader';
-import { newCharacter, type Character, classRow, inventoryRow } from '$lib/character/schema';
+import type { ContentGraph } from '#lib/content/loader.ts';
+import { newCharacter, type Character, classRow, inventoryRow } from '#lib/character/schema.ts';
 import { combat } from './combat-view-model.svelte';
-import { startI18n, locale, waitLocale } from '$lib/i18n';
-import { spellRow } from '$lib/combat/helpers';
-import { rollFormula as rollOf } from '$lib/rules/dice';
+import { startI18n, locale, waitLocale } from '#lib/i18n/index.ts';
+import { spellRow } from '#lib/combat/helpers.ts';
+import { rollFormula as rollOf } from '#lib/rules/dice.ts';
 
 const EDITIONS = [
 	{ system: '5.5e', pack: 'srd-2024', source: 'SRD 5.2.1' },

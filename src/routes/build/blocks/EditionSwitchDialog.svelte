@@ -2,9 +2,9 @@
 	// "Switching to 5.5e will drop these" — the confirmation the ruleset toggle owes, because the
 	// picks the other edition has no row for cannot survive the switch and cannot be seen after it.
 	// Presentation only: what is lost is computed by the view-model, and the switch is its method.
-	import { _ } from '$lib/i18n';
-	import DialogShell from '$lib/components/DialogShell.svelte';
-	import type { ContentType } from '$lib/content/schemas';
+	import { _ } from '#lib/i18n/index.ts';
+	import DialogShell from '#lib/components/DialogShell.svelte';
+	import type { ContentType } from '#lib/content/schemas.ts';
 
 	let {
 		system,

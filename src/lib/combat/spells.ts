@@ -3,19 +3,19 @@
  * spells, and the per-class prepared-spell accounting (which caster a spell is cast as, its cap).
  * Pure.
  */
-import { ordinal, titleCase } from '$lib/util/format';
-import { tokensOf, type ContentGraph } from '$lib/content/loader';
-import { localizedName } from '$lib/content/detail';
-import type { HealModifier, RowData } from '$lib/content/schemas';
-import type { Character } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
+import { ordinal, titleCase } from '#lib/util/format.ts';
+import { tokensOf, type ContentGraph } from '#lib/content/loader.ts';
+import { localizedName } from '#lib/content/detail.ts';
+import type { HealModifier, RowData } from '#lib/content/schemas.ts';
+import type { Character } from '#lib/character/schema.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
 import {
 	canCastAsRitual,
 	casterForSpell,
 	spellEntries,
 	type SpellcastingClass,
-} from '$lib/character/spellcasting';
-// re-exported so `$lib/combat/helpers` (barrel) + existing importers keep the same import site
+} from '#lib/character/spellcasting.ts';
+// re-exported so `#lib/combat/helpers.ts` (barrel) + existing importers keep the same import site
 export { casterForSpell };
 import { parseDamageParts, type DamagePart } from './attacks';
 import {
@@ -26,7 +26,7 @@ import {
 	PACT_SLOT_KEY,
 	type PrepareAttempt,
 	type PreparableSpell,
-} from '$lib/rules/spellcasting';
+} from '#lib/rules/spellcasting.ts';
 
 export const GROUP_MODES = ['level', 'prepared', 'school'] as const;
 export type GroupMode = (typeof GROUP_MODES)[number];

@@ -11,7 +11,7 @@
  * an `iid` is compared row by row, so dropping one arrow stack does not write the whole pack twice.
  */
 import { dequal } from 'dequal';
-import type { Character } from '$lib/character/schema';
+import type { Character } from '#lib/character/schema.ts';
 
 /** A path segment naming a row of a list by its `iid`. */
 const ROW_MARK = '#';

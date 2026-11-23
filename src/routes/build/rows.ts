@@ -5,22 +5,22 @@
  * in the view-model makes the two import each other. It re-exports everything here, so importing
  * either module works.
  */
-import { foldForSearch } from '$lib/util/search-fold';
-import { buildDetail, localizedName, type DetailModel } from '$lib/content/detail';
-import { contentLabel, entryMeta, RARITY_JOIN } from '$lib/content/entry-list';
-import { itemRarities } from '$lib/content/options';
-import { describedPlainProse } from '$lib/content/overrides.svelte';
-import { content } from '$lib/content/store.svelte';
-import { weaponPropertyRowsFor } from '$lib/content/weapon-properties';
-import type { Translate } from '$lib/i18n';
-import { app } from '$lib/stores/app.svelte';
-import { costSaid } from '$lib/rules/currency';
-import { say } from '$lib/util/say';
-import { splitList, type ContentType } from '$lib/content/schemas';
+import { foldForSearch } from '#lib/util/search-fold.ts';
+import { buildDetail, localizedName, type DetailModel } from '#lib/content/detail.ts';
+import { contentLabel, entryMeta, RARITY_JOIN } from '#lib/content/entry-list.ts';
+import { itemRarities } from '#lib/content/options.ts';
+import { describedPlainProse } from '#lib/content/overrides.svelte.ts';
+import { content } from '#lib/content/store.svelte.ts';
+import { weaponPropertyRowsFor } from '#lib/content/weapon-properties.ts';
+import type { Translate } from '#lib/i18n/index.ts';
+import { app } from '#lib/stores/app.svelte.ts';
+import { costSaid } from '#lib/rules/currency.ts';
+import { say } from '#lib/util/say.ts';
+import { splitList, type ContentType } from '#lib/content/schemas.ts';
 
-import { abilityShortLabel, titleCase } from '$lib/util/format';
-import { metres } from '$lib/combat/constants';
-import type { LoadedRow, LoadedRowByType } from '$lib/content/loader';
+import { abilityShortLabel, titleCase } from '#lib/util/format.ts';
+import { metres } from '#lib/combat/constants.ts';
+import type { LoadedRow, LoadedRowByType } from '#lib/content/loader.ts';
 
 /** Type guard: is this row of content type `T`? (A predicate is needed — TS won't narrow a union by
  *  a bare `row.type === type` comparison against a generic `T`.) */

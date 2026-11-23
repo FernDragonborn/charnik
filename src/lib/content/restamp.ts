@@ -13,8 +13,8 @@
  * homebrew is CRLF/BOM). A pack diff compares git blob SHAs, so normalising them would report the
  * whole file as changed against a repo where nothing moved.
  */
-import { CONTENT_SCHEMA_VERSION } from '$lib/schema/version';
-import type { Storage } from '$lib/storage/types';
+import { CONTENT_SCHEMA_VERSION } from '#lib/schema/version.ts';
+import type { Storage } from '#lib/storage/types.ts';
 import { fileHashState, stampWithHash } from './hash';
 import { HOMEBREW_ROOT } from './homebrew';
 import {

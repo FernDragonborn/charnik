@@ -4,18 +4,18 @@
 	// play-mode `actions` snippet (Spellbook) renders once under the head, type-independent — so it
 	// shows on spells too (it used to only render in the generic branch). Read-only by default;
 	// `editable` (translate) makes the title + prose editable via the bound `draft`.
-	import { sayText } from '$lib/util/say';
+	import { sayText } from '#lib/util/say.ts';
 	import type { Snippet } from 'svelte';
-	import { _ } from '$lib/i18n';
-	import type { DetailModel } from '$lib/content/detail';
+	import { _ } from '#lib/i18n/index.ts';
+	import type { DetailModel } from '#lib/content/detail.ts';
 	import type { WikiEditDraft } from './wikiEdit';
 	import SpellHead from './SpellHead.svelte';
 	import MonsterHead from './MonsterHead.svelte';
 	import GenericHead from './GenericHead.svelte';
 	import ArticleProse from './ArticleProse.svelte';
 	import OwnWords from './OwnWords.svelte';
-	import { app } from '$lib/stores/app.svelte';
-	import { overrides } from '$lib/content/overrides.svelte';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import { overrides } from '#lib/content/overrides.svelte.ts';
 
 	let {
 		detail,

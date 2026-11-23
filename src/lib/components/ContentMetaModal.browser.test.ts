@@ -2,8 +2,8 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { page } from 'vitest/browser';
 import ContentMetaModal from './ContentMetaModal.svelte';
-import { startI18n, locale, waitLocale } from '$lib/i18n';
-import { parseContentDirectives, checkFileMeta } from '$lib/content/meta';
+import { startI18n, locale, waitLocale } from '#lib/i18n/index.ts';
+import { parseContentDirectives, checkFileMeta } from '#lib/content/meta.ts';
 
 // Drive the modal with the SAME missing-meta the loader would derive from an underfilled homebrew CSV.
 const UNDERFILLED_CSV =

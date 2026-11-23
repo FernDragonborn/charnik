@@ -5,8 +5,8 @@
 	// files to write, a hand-edited file being kept, rows that would disappear with the characters
 	// that use them, and a pack that also ships plugins. Open /dev/packs.
 	import { onMount } from 'svelte';
-	import PackUpdatesSettings from '$lib/components/settings/PackUpdatesSettings.svelte';
-	import { loadContentStore } from '$lib/content/store.svelte';
+	import PackUpdatesSettings from '#lib/components/settings/PackUpdatesSettings.svelte';
+	import { loadContentStore } from '#lib/content/store.svelte.ts';
 	import { page } from '$app/state';
 	import {
 		bundledPacks,
@@ -14,10 +14,10 @@
 		packConfig,
 		SHIPPED_PACK_REPO,
 		UPDATE_MODE,
-	} from '$lib/content/packs.svelte';
-	import { updates } from '$lib/content/remote/updates.svelte';
-	import { FILE_CHANGE } from '$lib/content/remote/diff';
-	import { getUserStorage } from '$lib/storage/provider';
+	} from '#lib/content/packs.svelte.ts';
+	import { updates } from '#lib/content/remote/updates.svelte.ts';
+	import { FILE_CHANGE } from '#lib/content/remote/diff.ts';
+	import { getUserStorage } from '#lib/storage/provider.ts';
 
 	const REPO = SHIPPED_PACK_REPO;
 	const THIRD_PARTY = 'https://github.com/someone/dark-sun';

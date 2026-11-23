@@ -21,7 +21,7 @@ import { SYSTEMS } from '../rules/pipeline';
 export { SYSTEMS }; // one owner in rules/pipeline (AUDIT F7/D2)
 
 /** Bounded effect vocabulary — the only kinds the engine understands. Kept as its own list (not
- *  imported from `$lib/effects`) so content validation doesn't depend on the removable effects
+ *  imported from `#lib/effects`) so content validation doesn't depend on the removable effects
  *  module; a test (`effects.test.ts`) guards it against drifting from the engine's `EFFECT_KINDS`. */
 export const EFFECT_KINDS = [
 	'flat_bonus',

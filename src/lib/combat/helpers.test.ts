@@ -10,7 +10,7 @@ import {
 	type RollAmendment,
 	type RollLogEntry,
 } from './roll';
-import { describeAmendments, rollToastModel } from '$lib/dice/roll-toast';
+import { describeAmendments, rollToastModel } from '#lib/dice/roll-toast.ts';
 import {
 	ADVANTAGE_MODE,
 	DIE_ROLE,
@@ -18,7 +18,7 @@ import {
 	type AdvantageMode,
 	type Rolled,
 	type RolledDie,
-} from '$lib/rules/dice';
+} from '#lib/rules/dice.ts';
 import {
 	rollEffectsFor,
 	autoOutcome,
@@ -51,11 +51,11 @@ import {
 	canTogglePreparedFor,
 	type EffectInstance,
 } from './helpers';
-import { effectiveHpMax } from '$lib/rules/core';
-import { collectFacts } from '$lib/effects/apply';
-import { computed, type Translate } from '$lib/rules/pipeline';
-import type { CharacterSheet } from '$lib/character/derive';
-import type { SpellcastingClass } from '$lib/character/spellcasting';
+import { effectiveHpMax } from '#lib/rules/core.ts';
+import { collectFacts } from '#lib/effects/apply.ts';
+import { computed, type Translate } from '#lib/rules/pipeline.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
+import type { SpellcastingClass } from '#lib/character/spellcasting.ts';
 
 // rollEffectsFor reads the sheet's typed-facts object (D7), built from the RESOLVED effect list
 // (never raw play.effects — B21); collectFacts is that one conversion.

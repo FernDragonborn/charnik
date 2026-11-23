@@ -17,7 +17,7 @@ import globals from 'globals';
 const TOASTER_GATE = {
 	group: ['svelte-sonner'],
 	message:
-		'Toasts go through $lib/toast/toast — one action, one toast (docs/internals/ui.md rule 20). Only the gate and the <Toaster> in +layout.svelte import svelte-sonner.',
+		'Toasts go through #lib/toast/toast — one action, one toast (docs/internals/ui.md rule 20). Only the gate and the <Toaster> in +layout.svelte import svelte-sonner.',
 };
 
 export default ts.config(
@@ -144,7 +144,7 @@ export default ts.config(
 				{
 					patterns: [
 						{
-							group: ['$lib/effects', '$lib/effects/**', '**/effects/index*', '../effects/**'],
+							group: ['#lib/effects', '#lib/effects/**', '**/effects/index*', '../effects/**'],
 							message:
 								'The rules/build/character core must not import the effects module — it is an optional, removable layer composed on top (docs/PLAN.md invariant).',
 						},
@@ -181,7 +181,7 @@ export default ts.config(
 		},
 	},
 	{
-		// All app logging goes through the `$lib/diag` facade (DIAG-1), never raw `console` — so a bug
+		// All app logging goes through the `#lib/diag` facade (DIAG-1), never raw `console` — so a bug
 		// report actually captures something and the desktop file sink sees it. The facade itself is the
 		// one allowed console site (its dev/web mirror, already inline-disabled). Tests are exempt.
 		files: ['src/**'],

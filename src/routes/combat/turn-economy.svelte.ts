@@ -1,13 +1,13 @@
 /*
  * The action-economy subsystem of the Combat view-model: the turn's pips and movement as the panels
  * read them, and the names they and the other subsystems call to spend one. What each press DOES is
- * a pure action in `$lib/play/turn`.
+ * a pure action in `#lib/play/turn.ts`.
  */
-import type { ActionSlot, SpellRow } from '$lib/combat/helpers';
-import type { Character } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
-import { isIncapacitated } from '$lib/play/conditions';
-import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
+import type { ActionSlot, SpellRow } from '#lib/combat/helpers.ts';
+import type { Character } from '#lib/character/schema.ts';
+import type { CharacterSheet } from '#lib/character/derive.ts';
+import { isIncapacitated } from '#lib/play/conditions.ts';
+import type { PlayContext, PlayOutcome } from '#lib/play/outcome.ts';
 import {
 	advanceTime,
 	canSpendTurnSlot,
@@ -21,7 +21,7 @@ import {
 	toggleCombat,
 	toggleRollUsed,
 	turnSlotMax,
-} from '$lib/play/turn';
+} from '#lib/play/turn.ts';
 
 const NO_SLOTS: Record<ActionSlot, number> = { action: 0, bonus: 0, reaction: 0 };
 
@@ -46,7 +46,7 @@ export class TurnEconomy {
 		return !!c && !!sheet && isIncapacitated(c, sheet);
 	});
 
-	/** Pips per slot this turn (`$lib/play/turn` ▸ `turnSlotMax`). */
+	/** Pips per slot this turn (`#lib/play/turn` ▸ `turnSlotMax`). */
 	slotMax = $derived.by<Record<ActionSlot, number>>(() => {
 		const c = this.getCharacter();
 		const sheet = this.getSheet();

@@ -2,8 +2,8 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { page } from 'vitest/browser';
 import TableRequestLine from './TableRequestLine.svelte';
-import { startI18n, locale, waitLocale } from '$lib/i18n';
-import { TABLE_REQUEST } from '$lib/table-link/types';
+import { startI18n, locale, waitLocale } from '#lib/i18n/index.ts';
+import { TABLE_REQUEST } from '#lib/table-link/types.ts';
 
 beforeAll(async () => {
 	await startI18n('en');

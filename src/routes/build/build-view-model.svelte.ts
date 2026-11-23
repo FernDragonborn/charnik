@@ -9,29 +9,29 @@
  * let the player fix the rest — matching the app's "everything doable, nothing enforced to a
  * dead end" stance.
  */
-import { toast } from '$lib/toast/toast';
-import { t } from '$lib/i18n';
-import { content, loadContentStore } from '$lib/content/store.svelte';
-import { isRowActive } from '$lib/content/sources.svelte';
-import { deriveSheet, type CharacterSheet } from '$lib/character/derive';
-import { plugins } from '$lib/effects/plugin-store.svelte';
-import type { Character } from '$lib/character/schema';
-import { assembleCharacter } from '$lib/character/assemble';
-import { saveBuildToStore, openCharacter } from '$lib/character/store.svelte';
-import { uniqueCharacterId } from '$lib/character/repository';
-import { removeCharacterPhotos, writeCharacterPhoto } from '$lib/character/portrait-files';
+import { toast } from '#lib/toast/toast.ts';
+import { t } from '#lib/i18n/index.ts';
+import { content, loadContentStore } from '#lib/content/store.svelte.ts';
+import { isRowActive } from '#lib/content/sources.svelte.ts';
+import { deriveSheet, type CharacterSheet } from '#lib/character/derive.ts';
+import { plugins } from '#lib/effects/plugin-store.svelte.ts';
+import type { Character } from '#lib/character/schema.ts';
+import { assembleCharacter } from '#lib/character/assemble.ts';
+import { saveBuildToStore, openCharacter } from '#lib/character/store.svelte.ts';
+import { uniqueCharacterId } from '#lib/character/repository.ts';
+import { removeCharacterPhotos, writeCharacterPhoto } from '#lib/character/portrait-files.ts';
 import {
 	downscalePhoto,
 	type PickedPhoto,
 	type PortraitSource,
-} from '$lib/character/photo';
-import { getUserStorage } from '$lib/storage/provider';
-import type { LoadedRow, LoadedRowByType } from '$lib/content/loader';
+} from '#lib/character/photo.ts';
+import { getUserStorage } from '#lib/storage/provider.ts';
+import type { LoadedRow, LoadedRowByType } from '#lib/content/loader.ts';
 import {
 	buildTodos,
 	openSubclassChoices,
 	type BuildTodo,
-} from '$lib/build/derive';
+} from '#lib/build/derive.ts';
 import { Inspector, targetForTodo } from './inspector.svelte';
 import { ClassRows } from './class-rows.svelte';
 import { SkillPicks } from './skill-picks.svelte';
@@ -39,12 +39,12 @@ import { MasteryPicks } from './mastery-picks.svelte';
 import { FormPicks } from './form-picks.svelte';
 import { OptionPicks } from './option-picks.svelte';
 import { StartingKitPicks } from './starting-kit-picks.svelte';
-import { featureLanguages, NO_FEATURE_LANGUAGES } from '$lib/character/features';
-import { originCantripOptions } from '$lib/character/species-spells';
+import { featureLanguages, NO_FEATURE_LANGUAGES } from '#lib/character/features.ts';
+import { originCantripOptions } from '#lib/character/species-spells.ts';
 import { SpellPicks } from './spell-picks.svelte';
-import { splitList, TOOL_ITEM_CATEGORY, type ContentType } from '$lib/content/schemas';
-import type { SystemId } from '$lib/stores/app.svelte';
-import { slugify } from '$lib/util/slug';
+import { splitList, TOOL_ITEM_CATEGORY, type ContentType } from '#lib/content/schemas.ts';
+import type { SystemId } from '#lib/stores/app.svelte.ts';
+import { slugify } from '#lib/util/slug.ts';
 import { FeatSlots } from './feat-slots.svelte';
 import { AbilityAllocation } from './ability-allocation.svelte';
 import { ASI, rowName, rowOfType } from './rows';
@@ -63,7 +63,7 @@ import {
 	type EditContext,
 	copyPicks,
 } from './draft';
-import type { DraftRecord } from '$lib/character/draft-repository';
+import type { DraftRecord } from '#lib/character/draft-repository.ts';
 import { DraftSession } from './draft-session.svelte';
 import { DraftHistory } from './draft-history.svelte';
 import { parseClassPicks, switchClass, type ClassScopedPicks } from './class-picks-cache';

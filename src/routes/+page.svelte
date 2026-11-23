@@ -2,23 +2,23 @@
 	// Roster (home) — the saved characters. Open one into Combat, delete, or create a new one.
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { base } from '$app/paths';
-	import Icon from '$lib/components/Icon.svelte';
-	import { isDemo } from '$lib/config/demo';
-	import { DEMO_ID } from '$lib/demo/sheet';
-	import { sanitizeHtml } from '$lib/content/markdown';
-	import { _ } from '$lib/i18n';
+	import { resolve } from '$app/paths';
+	import Icon from '#lib/components/Icon.svelte';
+	import { isDemo } from '#lib/config/demo.ts';
+	import { DEMO_ID } from '#lib/demo/sheet.ts';
+	import { sanitizeHtml } from '#lib/content/markdown.ts';
+	import { _ } from '#lib/i18n/index.ts';
 	import {
 		characters,
 		loadRoster,
 		openCharacter,
 		removeCharacter,
-	} from '$lib/character/store.svelte';
-	import { listDrafts, deleteDraft, type DraftRecord } from '$lib/character/draft-repository';
-	import { getUserStorage } from '$lib/storage/provider';
-	import { systemShortLabel } from '$lib/rules/pipeline';
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
-	import { sayIfFails, toast } from '$lib/toast/toast';
+	} from '#lib/character/store.svelte.ts';
+	import { listDrafts, deleteDraft, type DraftRecord } from '#lib/character/draft-repository.ts';
+	import { getUserStorage } from '#lib/storage/provider.ts';
+	import { systemShortLabel } from '#lib/rules/pipeline.ts';
+	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
+	import { sayIfFails, toast } from '#lib/toast/toast.ts';
 
 	const demo = isDemo();
 
@@ -62,9 +62,10 @@
 			toast($_('roster.cannotOpen', { values: { name } }), {
 				description: $_('roster.cannotOpenBody'),
 			});
+
 			return;
 		}
-		void goto(`${base}/combat`);
+		void goto(resolve(`combat`));
 	}
 </script>
 
@@ -76,7 +77,7 @@
 			<p class="eyebrow">{$_('app.tagline')}</p>
 			<h1>{$_('nav.roster')}</h1>
 		</div>
-		<a class="new-btn" href="{base}/build">{$_('roster.newCharacter')}</a>
+		<a class="new-btn" href={resolve('build')}>{$_('roster.newCharacter')}</a>
 	</div>
 
 	{#if demo}
@@ -109,7 +110,7 @@
 			<!-- An unfinished character uses the same card; clicking it resumes the build. -->
 			{#each drafts as d (d.guid)}
 				<li class="card roster-card is-draft">
-					<a class="roster-open" href="{base}/build?draft={d.guid}">
+					<a class="roster-open" href={resolve(`build?draft=${d.guid}`)}>
 						<span class="roster-name">
 							{d.summary.name || $_('roster.draftUnnamed')}
 							<span class="roster-tag">{$_('roster.draft')}</span>

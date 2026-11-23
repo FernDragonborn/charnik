@@ -1,13 +1,13 @@
 /*
  * The resource/rest subsystem of the Combat view-model: spell-slot pips, named resource pips (rage,
  * ki, item N/day…), a day's boundaries and the rests. What each press DOES is a pure action in
- * `$lib/play/resources` and `$lib/play/rests`; this is the names the panels and the action executor
+ * `#lib/play/resources` and `#lib/play/rests`; this is the names the panels and the action executor
  * call, and the one thing only a screen has — noticing that an ability's window has opened.
  */
-import { saveCharacterGuarded } from '$lib/character/store.svelte';
-import type { Character } from '$lib/character/schema';
-import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
-import type { PlayContext, PlayNotice, PlayOutcome } from '$lib/play/outcome';
+import { saveCharacterGuarded } from '#lib/character/store.svelte.ts';
+import type { Character } from '#lib/character/schema.ts';
+import type { CharacterSheet, ResourceOption } from '#lib/character/derive.ts';
+import type { PlayContext, PlayNotice, PlayOutcome } from '#lib/play/outcome.ts';
 import {
 	canAfford,
 	gainSlot,
@@ -24,10 +24,10 @@ import {
 	spendResource,
 	useResource,
 	type DayBoundary,
-} from '$lib/play/resources';
-import { optionSpend } from '$lib/play/options';
-import { longRestHitDiceBudget, rest, type RestChoice, type RestKind } from '$lib/play/rests';
-import { titleCase } from '$lib/combat/helpers';
+} from '#lib/play/resources.ts';
+import { optionSpend } from '#lib/play/options.ts';
+import { longRestHitDiceBudget, rest, type RestChoice, type RestKind } from '#lib/play/rests.ts';
+import { titleCase } from '#lib/combat/helpers.ts';
 
 export type { RestChoice };
 
@@ -168,7 +168,7 @@ export class ResourceTracker {
 		return open ? longRestHitDiceBudget(open.c, open.sheet) : 0;
 	}
 
-	/** Take a rest (`$lib/play/rests`). */
+	/** Take a rest (`#lib/play/rests.ts`). */
 	rest = (kind: RestKind, choice: RestChoice = {}) => {
 		if (this.act((c, ctx) => rest(c, { kind, choice }, ctx))) this.saveNow();
 	};

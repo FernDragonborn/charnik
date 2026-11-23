@@ -1,6 +1,6 @@
 {
 	"$schema": "https://unpkg.com/knip@5/schema.json",
-	"entry": ["tools/**/*.mjs"],
+	"entry": ["tools/**/*.mjs", "src/env.ts"],
 	"project": ["src/**/*.{ts,svelte}", "tools/**/*.mjs"],
 	"ignoreDependencies": ["@tauri-apps/cli"],
 	"stylelint": {

@@ -1,14 +1,14 @@
 /*
  * Effects & conditions on the sheet: the quick-pick catalog, the forms that add one, and the presses
  * that put one on, take it off, or move its round timer. What each press DOES is a pure action in
- * `$lib/play/effects`.
+ * `#lib/play/effects.ts`.
  *
  * "Conditions are merged into the Effects panel" is a design decision, not a coincidence — a
  * condition IS an effect of kind `apply_condition`, so ONE list is the source of truth for what is
  * currently modifying the character, and ONE picker writes into it (docs/internals/content.md ▸
  * CONDEFF). That is why they are one module.
  */
-import type { Character, EffectInstance } from '$lib/character/schema';
+import type { Character, EffectInstance } from '#lib/character/schema.ts';
 import {
 	addEffect,
 	bumpEffectDuration,
@@ -17,23 +17,23 @@ import {
 	setEffectDuration,
 	setExhaustion,
 	type NewEffect,
-} from '$lib/play/effects';
-import { exhaustionLadder } from '$lib/play/effect-endings';
-import type { PlayContext, PlayOutcome } from '$lib/play/outcome';
-import type { ContentGraph } from '$lib/content/loader';
+} from '#lib/play/effects.ts';
+import { exhaustionLadder } from '#lib/play/effect-endings.ts';
+import type { PlayContext, PlayOutcome } from '#lib/play/outcome.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
 import {
 	addableStateRows,
 	conditionRow,
 	isConditionRow,
 	pickerConditionId,
 	isHarmful,
-} from '$lib/content/states';
-import { localizedName } from '$lib/content/detail';
-import { describedProse } from '$lib/content/overrides.svelte';
-import { translator } from '$lib/i18n';
-import { app } from '$lib/stores/app.svelte';
-import { modTargetLabel, type MenuKind } from '$lib/combat/helpers';
-import { conditionIdOf } from '$lib/combat/effects-view';
+} from '#lib/content/states.ts';
+import { localizedName } from '#lib/content/detail.ts';
+import { describedProse } from '#lib/content/overrides.svelte.ts';
+import { translator } from '#lib/i18n/index.ts';
+import { app } from '#lib/stores/app.svelte.ts';
+import { modTargetLabel, type MenuKind } from '#lib/combat/helpers.ts';
+import { conditionIdOf } from '#lib/combat/effects-view.ts';
 
 /** One row of the "+" picker. `conditionId` is what makes the two kinds behave differently once
  *  they are in one list: a condition toggles off again, anything else adds another instance. */

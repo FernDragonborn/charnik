@@ -8,8 +8,8 @@
  * preview drive the real tray with a fixture vocabulary, and it is why the same tray can be an
  * ad-hoc roll (an empty body) and a prefilled attack without a mode flag telling them apart.
  */
-import { app } from '$lib/stores/app.svelte';
-import { dealsDamage, type DamagePartSpec, type RollLogEntry } from '$lib/combat/roll';
+import { app } from '#lib/stores/app.svelte.ts';
+import { dealsDamage, type DamagePartSpec, type RollLogEntry } from '#lib/combat/roll.ts';
 import { damageSpecsOf, rollLines } from './roll-lines';
 import {
 	ADVANTAGE_MODE,
@@ -21,9 +21,9 @@ import {
 	type BonusDie,
 	type DieMods,
 	type Rng,
-} from '$lib/rules/dice';
-import { signed } from '$lib/util/format';
-import type { SaidValue } from '$lib/util/say';
+} from '#lib/rules/dice.ts';
+import { signed } from '#lib/util/format.ts';
+import type { SaidValue } from '#lib/util/say.ts';
 import {
 	PILL_KIND,
 	ROLLER_ROLE,

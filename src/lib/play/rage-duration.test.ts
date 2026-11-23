@@ -1,9 +1,9 @@
 /** How long a 5.5e Rage runs once entered: SRD 5.2.1 lets it be kept up for ten minutes. */
 import { beforeAll, describe, expect, it } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
-import { classRow, newCharacter, type Character } from '$lib/character/schema';
-import { deriveSheet } from '$lib/character/derive';
-import type { ContentGraph } from '$lib/content/loader';
+import { classRow, newCharacter, type Character } from '#lib/character/schema.ts';
+import { deriveSheet } from '#lib/character/derive.ts';
+import type { ContentGraph } from '#lib/content/loader.ts';
 import { activateOptionById } from './option-activation';
 import type { PlayContext } from './outcome';
 

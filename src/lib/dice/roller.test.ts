@@ -18,7 +18,7 @@ import {
 	type RollerPill,
 	type RollerResolver,
 } from './roller';
-import { ADVANTAGE_MODE, rollPool } from '$lib/rules/dice';
+import { ADVANTAGE_MODE, rollPool } from '#lib/rules/dice.ts';
 
 /* A stand-in vocabulary: one effect (a signed die with provenance) and one damage type. The real one
    reads the content graph and every locale's names; the LINE only ever sees this shape. */

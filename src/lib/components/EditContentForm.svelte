@@ -4,11 +4,11 @@
 	// page you were just reading. Binds a flat draft, validates + writes via the homebrew pipeline
 	// (schema-checked, UTF-8-BOM/CRLF, atomic), then hands the new id back to the caller.
 	import Icon from './Icon.svelte';
-	import { submitOnEnter } from '$lib/actions/submitOnEnter';
+	import { submitOnEnter } from '#lib/actions/submitOnEnter.ts';
 	import UpcastBuilder from './UpcastBuilder.svelte';
 	import { onMount } from 'svelte';
-	import { getUserStorage } from '$lib/storage/provider';
-	import { resetContentGraph } from '$lib/content/provider';
+	import { getUserStorage } from '#lib/storage/provider.ts';
+	import { resetContentGraph } from '#lib/content/provider.ts';
 	import {
 		fieldsFor,
 		blankDraft,
@@ -22,26 +22,26 @@
 		HOMEBREW_SOURCE,
 		UPSERT_MODE,
 		type TargetFile,
-	} from '$lib/content/homebrew';
-	import { slugify } from '$lib/util/slug';
-	import type { LoadedRow } from '$lib/content/loader';
-	import { content } from '$lib/content/store.svelte';
-	import { classCasts } from '$lib/character/spellcasting';
+	} from '#lib/content/homebrew.ts';
+	import { slugify } from '#lib/util/slug.ts';
+	import type { LoadedRow } from '#lib/content/loader.ts';
+	import { content } from '#lib/content/store.svelte.ts';
+	import { classCasts } from '#lib/character/spellcasting.ts';
 	import ClassPicker from './ClassPicker.svelte';
-	import { SYSTEMS, splitList, type ContentType } from '$lib/content/schemas';
-	import { systemShortLabel } from '$lib/rules/pipeline';
+	import { SYSTEMS, splitList, type ContentType } from '#lib/content/schemas.ts';
+	import { systemShortLabel } from '#lib/rules/pipeline.ts';
 	import {
 		writeDraft,
 		readDraft,
 		deleteDraft,
 		listDrafts,
 		type DraftTarget,
-	} from '$lib/drafts/store';
-	import { isReadOnlyContent } from '$lib/config/demo';
-	import { _ } from '$lib/i18n';
-	import { sayIfFails, toast, toastFailure } from '$lib/toast/toast';
-	import { app } from '$lib/stores/app.svelte';
-	import { localizedName } from '$lib/content/detail';
+	} from '#lib/drafts/store.ts';
+	import { isReadOnlyContent } from '#lib/config/demo.ts';
+	import { _ } from '#lib/i18n/index.ts';
+	import { sayIfFails, toast, toastFailure } from '#lib/toast/toast.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import { localizedName } from '#lib/content/detail.ts';
 
 	// Localised field label. A localizable column (name_<loc> / text_<loc>) shows the base label plus
 	// the locale tag when it isn't the current UI language (e.g. "Name (uk)" in an EN interface);

@@ -24,9 +24,9 @@ import {
 	type BonusDie,
 	type DieMods,
 	type FlatPart,
-} from '$lib/rules/dice';
-import { signed } from '$lib/util/format';
-import type { DamagePartSpec } from '$lib/combat/roll';
+} from '#lib/rules/dice.ts';
+import { signed } from '#lib/util/format.ts';
+import type { DamagePartSpec } from '#lib/combat/roll.ts';
 
 /** What a pill IS. A named member, not a bare string (AGENTS.md ▸ Taste (open enums, never booleans)): every renderer and every
  *  fold switches on it, so a new kind must fail to compile rather than fall through silently. The

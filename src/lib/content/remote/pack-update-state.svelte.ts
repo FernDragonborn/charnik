@@ -3,8 +3,8 @@
  * install/rename/uninstall: what is pending, what failed, the one-at-a-time queue, and how a check
  * result reads to a user. Everything is exported on purpose; nothing here talks to the network.
  */
-import { detectPlatform, Platform } from '$lib/storage/provider';
-import { logger } from '$lib/diag/logger';
+import { detectPlatform, Platform } from '#lib/storage/provider.ts';
+import { logger } from '#lib/diag/logger.ts';
 import { packConfig } from '../packs.svelte';
 import { parseGithubRepo, type CheckResult, type GithubRepo, type RemotePack } from './github';
 import type { PackDiff } from './diff';

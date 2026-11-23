@@ -3,11 +3,11 @@
  * ability names, the custom-modifier target list, and unit conversions. Split out of the old
  * combat/helpers.ts junk-drawer.
  */
-import { ABILITY_IDS, type Ability } from '$lib/rules/core';
-import { titleCase } from '$lib/util/format';
-import type { Translate } from '$lib/i18n';
-import { SKILL_ABILITY, type SkillId } from '$lib/character/derive';
-import type { DeathCause } from '$lib/character/schema';
+import { ABILITY_IDS, type Ability } from '#lib/rules/core.ts';
+import { titleCase } from '#lib/util/format.ts';
+import type { Translate } from '#lib/i18n/index.ts';
+import { SKILL_ABILITY, type SkillId } from '#lib/character/derive.ts';
+import type { DeathCause } from '#lib/character/schema.ts';
 
 /** The anchored dropdown menus the Combat view can open (overlay.kind). */
 export type MenuKind =
@@ -90,7 +90,7 @@ function fallbackTargetLabel(target: string): string {
 	return target.toUpperCase();
 }
 
-export { metres } from '$lib/util/format';
+export { metres } from '#lib/util/format.ts';
 
 /** Pounds → "N kg" (metric in parentheses next to imperial, mirroring `metres` — B7). */
 export const kilograms = (lb: number) => `${(lb * 0.4536).toFixed(1).replace(/\.0$/, '')} kg`;

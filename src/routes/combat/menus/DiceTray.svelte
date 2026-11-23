@@ -4,14 +4,14 @@
 	// modifier stepper, the read-only queued-damage line) is now the tray's two lines of pills, so
 	// this file is the mount and the wiring: give the roller what the sheet knows it can be told by
 	// name, and hand its completed rolls to the log.
-	import Roller from '$lib/components/Roller.svelte';
-	import { _ } from '$lib/i18n';
-	import RollRow from '$lib/components/RollRow.svelte';
-	import { rollToastModel } from '$lib/dice/roll-toast';
-	import { rollerSources } from '$lib/dice/roller-sources';
-	import { rollerCandidates } from '$lib/dice/roller-vocabulary';
-	import { app } from '$lib/stores/app.svelte';
-	import { content } from '$lib/content/store.svelte';
+	import Roller from '#lib/components/Roller.svelte';
+	import { _ } from '#lib/i18n/index.ts';
+	import RollRow from '#lib/components/RollRow.svelte';
+	import { rollToastModel } from '#lib/dice/roll-toast.ts';
+	import { rollerSources } from '#lib/dice/roller-sources.ts';
+	import { rollerCandidates } from '#lib/dice/roller-vocabulary.ts';
+	import { app } from '#lib/stores/app.svelte.ts';
+	import { content } from '#lib/content/store.svelte.ts';
 	import { onDestroy } from 'svelte';
 	import { combat } from '../combat-view-model.svelte';
 

@@ -7,12 +7,12 @@
 	// irregular silhouette it leaves is fine. An ad-hoc roll is this same tray with an empty body —
 	// not a second screen, and not a mode.
 	import RollerLine from './RollerLine.svelte';
-	import { provenance } from '$lib/actions/provenance';
-	import { DICE } from '$lib/combat/helpers';
-	import { _ } from '$lib/i18n';
-	import type { RollLogEntry } from '$lib/combat/roll';
-	import { ROLLER_ROLE } from '$lib/dice/roller';
-	import type { DiceTray } from '$lib/dice/dice-tray.svelte';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import { DICE } from '#lib/combat/helpers.ts';
+	import { _ } from '#lib/i18n/index.ts';
+	import type { RollLogEntry } from '#lib/combat/roll.ts';
+	import { ROLLER_ROLE } from '#lib/dice/roller.ts';
+	import type { DiceTray } from '#lib/dice/dice-tray.svelte.ts';
 
 	let {
 		diceTray,
