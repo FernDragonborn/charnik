@@ -158,10 +158,15 @@
   holds: the drag library adds no stops of its own (`NO_LIBRARY_TAB_STOPS`), each panel is a
   landmark named by its title, and removing an item or an effect puts the focus on the same control
   in the row that takes its place (`removeKeepingFocus`).
-  **Open, the maintainer's:** F6 / Shift+F6 between the top bar, the hero and each panel (a desktop
-  convention, not a W3C one); per-row controls (prepare · cast · pin) as grid cells reached by ←/→,
-  or one stop per row; the combat menus as true modals, or popups that take the focus and close when
-  it leaves. Reordering by Alt+↑/↓ on the row itself (as in VS Code) takes the grip out of the Tab
+  **Decided, the maintainer's calls, to build:**
+  - **F6 / Shift+F6** walks the top bar, the hero and each panel, a desktop convention rather than a
+    W3C one; more region shortcuts may join it later.
+  - **A row is ONE Tab stop**; its controls (prepare · cast · pin · …) are cells reached by ←/→, ↑/↓
+    walks the rows, and the list remembers its last row (roving tabindex).
+  - **A combat menu is a popup that takes the focus and closes when the focus leaves it** — not a
+    modal that holds it; Escape closes it and hands the focus back to its trigger. Tried first;
+    a modal is the fallback if it reads wrong.
+  Open: reordering by Alt+↑/↓ on the row itself (as in VS Code) would take the grip out of the Tab
   order.
 
 - [ ] **ONBOARD · First-run onboarding — needs its own design session, and it comes LATE.** Not because
