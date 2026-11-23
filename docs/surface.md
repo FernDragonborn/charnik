@@ -334,7 +334,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **PackUndoDialog** | `pack`, `onChoose`, `onCancel` | "Undo this update" asks what becomes of what the player changed in the pack since the update |
 | **PackUpdatesSettings** | — | Settings ▸ Updates — content packs (docs/plan.md · REL-4). |
 | **Pin** | `on`, `title`, `onclick` | Pin toggle: a filled star is pinned to the quick bar, an outline one is not. |
-| **PluginConsentDialog** | `plugin`, `codeChanged`, `onAccept`, `onCancel` |  |
+| **PluginConsentDialog** | `plugin`, `codeChanged`, `neededFor`, `onAccept`, `onCancel` | Plugin consent: asked before a plugin is FIRST enabled, and again whenever its code hash changed |
 | **PluginNeeds** | `issues` | The plugins a sheet counts on and is not getting, said where the sheet is read. |
 | **PluginsSettings** | — | Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/internals/plugins.md §6): discovered plugin list |
 | **Portrait** | `source`, `size`, `alt` | A character's face, wherever a character is shown. |
@@ -1924,6 +1924,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/effects/plugin-host.ts`
 
 - `const pluginManifestSchema` — Strict manifest schema (§2): unknown keys REJECTED, every field capped, url https-only.
+- `function pluginDescription` — What a plugin gives, in the reader's locale where its author wrote one, else in the one they did.
 - `const LOCAL_ORIGIN` — Where a plugin folder was found.
 - `interface DiscoveredPlugin` — One discovered plugin folder.
 - `function consentHash` — `sha256(len(mainJs) ‖ mainJs ‖ len(manifestRaw) ‖ manifestRaw)` as lowercase hex.
@@ -2733,4 +2734,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_50 tokens · 103 global classes · 63 components · 1683 exports across 230 modules · 119 duplicate suspects._
+_50 tokens · 103 global classes · 63 components · 1684 exports across 230 modules · 119 duplicate suspects._

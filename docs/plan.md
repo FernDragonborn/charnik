@@ -265,7 +265,9 @@ position and are given per wave, because most of them were learned the hard way.
      controls' native `title`s move onto the popover, which then owns the timing.
   3. **SYSTEM-QUESTION-STYLE** — `ui.md`. The flags and the left line leave the dialogs, the
      system's questions get a look of their own, and the table's question window fits its words.
-  4. **FAVICON** — `ui.md`. The app's own mark, for the web demo's tab and in place of Tauri's
+  4. **TABLE-REQUEST-PLAYBAR** — `ui.md`. A GM's request waits in the playbar, which widens for it,
+     instead of a dialog over the whole sheet.
+  5. **FAVICON** — `ui.md`. The app's own mark, for the web demo's tab and in place of Tauri's
      stock icon. Drawn next: a pencil stub, then a miniature on its base; the brief and what was
      turned down are in the item.
 

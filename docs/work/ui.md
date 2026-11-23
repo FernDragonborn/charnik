@@ -105,10 +105,13 @@
   (`design-preview/system-questions.html`, variant C1): the question small, the thing to recognise
   large, a code larger still, the consequence as a paragraph, no on one edge and yes on the other,
   the brand colour only on what cannot be undone. **Built** for the table's window
-  (`static/table-question.html`), which is now as tall as its words in either locale. **Left:** the
-  same shape for every dialog on `DialogShell` — content health, packs, diagnostics, the
-  character conflict, the edition switch (`design-preview/service-dialogs-and-requests.html`) —
-  and the table's window seen on the real desktop app.
+  (`static/table-question.html`), which is now as tall as its words in either locale, and for every
+  dialog on `DialogShell` (`design-preview/service-dialogs-all.html`): content health, packs, the
+  bug report as one field and one button, the character conflict, the edition switch, a folder
+  about to be merged and files changed outside the app compared side by side, a move that left the
+  old folder, the plugin question. **Left:** the orphan draft (`OrphanDialog`) as rendered — when
+  it was last edited and its fields and prose beside the row it would be tied to, with *keep as a
+  new entry* among the answers; and the table's window seen on the real desktop app.
 - [ ] **FAVICON · the web demo's tab has no icon of its own — 0.9.0.** `static/` holds no favicon
       and `app.html` names none, so a browser tab shows its blank default. The desktop app's icon
       set (`src-tauri/icons/`) is still Tauri's stock mark, so this is the app's mark and not only
@@ -206,7 +209,7 @@
   character, return to the table they sat at — and whether the menu item stays beside it. Decided
   with rendered variants, not names.
 
-- [ ] **RELAY-CHOICE · how players reach a table, asked the way a person thinks of it.** The
+- [~] **RELAY-CHOICE · how players reach a table, asked the way a person thinks of it.** The
   maintainer's playtest: nobody knew what a relay is, and the choice read as a privacy setting —
   which half of it is. Rendered in `design-preview/service-dialogs-all.html` (the first table's
   dialog): one sentence saying what the go-between is; the options named for WHO the go-between
@@ -215,6 +218,18 @@
   ▸ the UX pattern contract, 24). Settings ▸ Table says the same, and the choice stays there — the
   maintainer's call, over a Settings ▸ Privacy and security section gathering everything that
   decides what leaves the machine.
+  **Built:** the first table opened on a device asks once, the public relay chosen
+  (`TableRouteDialog`, over Settings ▸ Table's own choices). **Left:** the explanation follows
+  pointer and keyboard — today it describes only the chosen option.
+
+- [ ] **TABLE-REQUEST-PLAYBAR · a GM's request waits in the playbar, not over the whole screen.**
+  Today `TableRequestDialog` covers whatever screen the player is on (`../internals/table-link.md`),
+  so the sheet the answer depends on is hidden behind the question. Rendered in
+  `design-preview/service-dialogs-and-requests.html`, variant H2: while a request waits the playbar
+  widens, animated, so Decline, Roll and the log all fit; the bar marks the arrival with one pulse,
+  not a repeating one. The dialog's guarantees stay: no answer by Escape or a click elsewhere, the
+  hit after defenses, the count waiting behind it, a blocked Roll with its reason. On a screen with
+  no playbar the request still needs a place — decided with the build.
 
 - [ ] **ONBOARD · First-run onboarding — needs its own design session, and it comes LATE.** Not because
   it is unimportant: the UI is moving under it right now (the a11y picker rework), and onboarding
