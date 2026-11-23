@@ -21,8 +21,11 @@ only the fields that moved, from and to, read off the character before and after
 play state and the inventory, a row of a list named by its `iid`. The log says it under the line
 (`HP 38 → 73 · d10 spent 2 → 0`), and what followed from the act folds away beneath it. **Undo
 applies a delta in reverse** (`#lib/play/undo.ts`), all or nothing, and refuses when anything the act
-changed has moved since. A rest, dawn, dusk and a dropped inventory row offer it on their toast;
-reversing a level-up is a build change and not part of it.
+changed has moved since. A rest, dawn, dusk and a dropped inventory row offer it on their toast,
+and every line of the log that changed something offers it on the line: an older line takes back
+everything after it too, newest first and all or nothing (`rewindActs`), and a taking-back is a
+line of its own that can be taken back in turn. A level-up is a build change, so the log does not
+reverse it and nothing older than one can be reached.
 
 There is no database. Writes are atomic and durable — a temp file flushed to the disk, then renamed
 (`write_file_durable`, `src-tauri/src/durable.rs`) — with a debounced autosave and

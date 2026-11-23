@@ -2304,6 +2304,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/play/undo.ts`
 
 - `function undoAct`
+- `function rewindActs` — * Take back several acts, newest first — a rewind through the log to before the oldest of them.
+- `function deltasBackTo` — * What taking the log back to `line` reverses, newest first: the delta of every line from the newest * down to it.
 
 ### `src/lib/rules/advancement.ts`
 
@@ -2774,4 +2776,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_51 tokens · 108 global classes · 63 components · 1696 exports across 235 modules · 123 duplicate suspects._
+_51 tokens · 108 global classes · 63 components · 1698 exports across 235 modules · 123 duplicate suspects._

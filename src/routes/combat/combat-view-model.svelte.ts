@@ -257,6 +257,7 @@ class CombatVM {
 			return rollEffectsFor(deriveSheet(next, graph, isRowActive).facts, 'attack', scopes);
 	};
 	enact = (...a: Parameters<PlayOutcomes['enact']>) => this.outcomes.enact(...a);
+	takeBackTo = (...a: Parameters<PlayOutcomes['takeBackTo']>) => this.outcomes.takeBackTo(...a);
 	notify = (...a: Parameters<PlayOutcomes['notify']>) => this.outcomes.notify(...a);
 
 	// the clock is the PERSISTED play.round — no VM copy to drift; effect expiry reads it

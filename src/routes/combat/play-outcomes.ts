@@ -12,7 +12,8 @@ import { say, type Said } from '#lib/util/say.ts';
 import { LOG_KIND } from '#lib/character/log-kind.ts';
 import { playChanges } from '#lib/play/changes.ts';
 import { playDelta } from '#lib/play/delta.ts';
-import { undoAct } from '#lib/play/undo.ts';
+import { deltasBackTo, rewindActs, undoAct } from '#lib/play/undo.ts';
+import type { RollLogEntry } from '#lib/combat/roll.ts';
 import { resourceName } from '#lib/play/resources.ts';
 import { localizedName } from '#lib/content/detail.ts';
 import { isRowActive } from '#lib/content/sources.svelte.ts';
@@ -80,6 +81,13 @@ export class PlayOutcomes {
 	 * this is for a sheet that changed under an untouched character — content reloaded, a source
 	 * switched — and it is what the combat page runs reactively.
 	 */
+	/** Take every act from the newest line back to `line` (`#lib/play/undo` ▸ deltasBackTo). False when
+	 *  there is nothing to take back to there, or the rewind was refused. */
+	takeBackTo = (line: RollLogEntry): boolean => {
+		const deltas = deltasBackTo(this.host().journal.log, line);
+		return deltas ? this.act((c) => rewindActs(c, { deltas })) : false;
+	};
+
 	settle = (): void => {
 		const { character, sheet, graph } = this.host();
 		if (character && sheet && graph)

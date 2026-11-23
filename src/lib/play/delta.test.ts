@@ -88,3 +88,64 @@ describe('the Undo act', () => {
 		expect(undoAct(c, { delta }).character.play.hp.current).toBe(3);
 	});
 });
+
+describe('rewinding through the log', () => {
+	it('takes several acts back newest first, to the state before the oldest', async () => {
+		const { rewindActs } = await import('./undo');
+		const c = newCharacter('probe', 'Probe', '5.5e');
+		c.play.hp.current = 4;
+		c.play.hp.temp = 5;
+		// oldest: hp 9 → 6; then temp 0 → 5; then hp 6 → 4
+		const deltas = [
+			[{ path: ['play', 'hp', 'current'], from: 6, to: 4 }],
+			[{ path: ['play', 'hp', 'temp'], from: 0, to: 5 }],
+			[{ path: ['play', 'hp', 'current'], from: 9, to: 6 }],
+		];
+		const outcome = rewindActs(c, { deltas });
+		expect(outcome.refused).toBeUndefined();
+		expect(outcome.character.play.hp).toMatchObject({ current: 9, temp: 0 });
+		expect(outcome.notices[0]?.text).toEqual({
+			key: 'combat.notice.rewound',
+			values: { count: 3 },
+		});
+	});
+
+	it('takes none back when one on the way changed something that moved since', async () => {
+		const { rewindActs } = await import('./undo');
+		const c = newCharacter('probe', 'Probe', '5.5e');
+		c.play.hp.current = 4;
+		c.play.hp.temp = 2; // the act said 0 → 5; something spent three since
+		const outcome = rewindActs(c, {
+			deltas: [
+				[{ path: ['play', 'hp', 'current'], from: 6, to: 4 }],
+				[{ path: ['play', 'hp', 'temp'], from: 0, to: 5 }],
+			],
+		});
+		expect(outcome.refused).toBe(true);
+		expect(outcome.character).toBe(c);
+	});
+});
+
+describe('which acts a take-back reaches', () => {
+	const hurt = [{ path: ['play', 'hp', 'current'], from: 9, to: 6 }];
+	const spent = [{ path: ['play', 'hp', 'temp'], from: 0, to: 5 }];
+
+	it('every line from the newest down to the one taken back that changed something', async () => {
+		const { deltasBackTo } = await import('./undo');
+		const newest = { delta: spent };
+		const said = { kind: 'notice' as const };
+		const oldest = { delta: hurt };
+		const log = [newest, said, oldest];
+		expect(deltasBackTo(log, oldest)).toEqual([spent, hurt]);
+		expect(deltasBackTo(log, newest)).toEqual([spent]);
+		expect(deltasBackTo(log, said)).toBeNull(); // nothing to take back on a line that moved nothing
+	});
+
+	it('stops at a level-up, a build change the log does not take back', async () => {
+		const { deltasBackTo } = await import('./undo');
+		const oldest = { delta: hurt };
+		const log = [{ delta: spent }, { kind: 'level' as const }, oldest];
+		expect(deltasBackTo(log, oldest)).toBeNull();
+		expect(deltasBackTo(log, log[0] ?? oldest)).toEqual([spent]);
+	});
+});

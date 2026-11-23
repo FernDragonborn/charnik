@@ -21,6 +21,9 @@
 	import { resourceName } from '#lib/play/resources.ts';
 	import RollRow from '#lib/components/RollRow.svelte';
 	import { deltaPhrases } from '../delta-text';
+	import { deltasBackTo } from '#lib/play/undo.ts';
+	import { provenance } from '#lib/actions/provenance.ts';
+	import Icon from '#lib/components/Icon.svelte';
 	import { table } from '../../table/table-view-model.svelte';
 	import TableRequestLine from '../../table/TableRequestLine.svelte';
 	import TableRequestAnswers from '../../table/TableRequestAnswers.svelte';
@@ -37,6 +40,10 @@
 		run.some(isAct) && run.some((line) => !isAct(line)) ? run.filter(isAct) : run;
 	const foldedOf = (run: RollLogEntry[]): RollLogEntry[] =>
 		run.some(isAct) ? run.filter((line) => !isAct(line)) : [];
+
+	/** How many acts a take-back to this line reverses; 0 when there is none to take back to it. */
+	const actsBackTo = (line: RollLogEntry): number =>
+		deltasBackTo(combat.journal.log, line)?.length ?? 0;
 
 	const phrasesOf = (line: RollLogEntry): string[] =>
 		line.delta
@@ -96,7 +103,22 @@
 						: undefined}
 				/>
 				{@const phrases = phrasesOf(l)}
-				{#if phrases.length}<p class="delta">{phrases.join(' · ')}</p>{/if}
+				{@const back = actsBackTo(l)}
+				{#if phrases.length || back}
+					<div class="delta-line">
+						{#if phrases.length}<p class="delta">{phrases.join(' · ')}</p>{/if}
+						<!-- any act on the log can be taken back, and an older one takes back everything after
+						     it too, newest first (work/ui.md ▸ LOG-REWIND) -->
+						{#if back}
+							<button
+								class="icon-button take-back"
+								aria-label={$_('combat.log.takeBack', { values: { count: back } })}
+								use:provenance={$_('combat.log.takeBack', { values: { count: back } })}
+								onclick={() => combat.takeBackTo(l)}><Icon name="undo-2" size={12} /></button
+							>
+						{/if}
+					</div>
+				{/if}
 			{/each}
 			{#if foldedOf(run).length && shownOf(run).length < run.length}
 				<details class="folded">
@@ -140,6 +162,17 @@
 		display: flex;
 		justify-content: flex-end;
 		gap: var(--space-1-5);
+	}
+	.delta-line {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-1-5);
+	}
+	.delta-line .delta {
+		flex: 1;
+	}
+	.take-back {
+		margin-inline-start: auto;
 	}
 	.log-head .menu-title {
 		font-size: var(--font-size-micro);
