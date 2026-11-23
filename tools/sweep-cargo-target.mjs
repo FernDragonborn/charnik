@@ -3,12 +3,13 @@
  * uses: every dependency bump and every feature set (`--features table-link`, `cargo test`) leaves
  * another hashed copy beside the old ones, and the folder reaches tens of gigabytes.
  *
- * A profile over the cap is cleaned whole by `cargo clean`, never pruned file by file: a pruned
- * folder keeps fingerprints whose `.rmeta` is gone, and the next build fails with "extern location
- * for <crate> does not exist" — which `cargo sweep --maxsize` did here. The cap sits above the
- * working set (the default build, `--features table-link` and `cargo test` each keep a copy of the
- * app crate, about 15 GiB together), so a clean is rare rather than every start.
- * Runs before `tauri dev` / `tauri build` (`src-tauri/tauri.conf.json`).
+ * Before `tauri dev` / `tauri build` (`src-tauri/tauri.conf.json`) it only SAYS a profile is over
+ * the cap: cleaning costs a full Rust rebuild, which is the person's to schedule, not a surprise at
+ * the start of a session. `pnpm sweep:rust` (`--clean`) cleans each profile over the cap whole.
+ * Never file by file, `cargo sweep` included: an artifact every build uses but none rebuilds looks
+ * as old as one nothing uses, and a pruned folder keeps fingerprints whose `.rmeta` is gone — every
+ * build after fails with "extern location for <crate> does not exist". The cap sits above the
+ * working set (the default build, `--features table-link` and `cargo test`, about 15 GiB together).
  */
 import { spawnSync } from 'node:child_process';
 import { readdirSync, statSync } from 'node:fs';
@@ -44,15 +45,20 @@ function folderBytes(path) {
 	return total;
 }
 
-function cleanWholeProfiles() {
-	for (const { folder, flags } of PROFILES) {
-		const bytes = folderBytes(join(TARGET_DIR, folder));
-		if (bytes <= CAP_GIB * GIB) continue;
-		console.log(`sweep: target/${folder} is ${(bytes / GIB).toFixed(1)} GiB — cleaning it whole.`);
-		// best-effort: a running app.exe locks its own binary on Windows; the next start tries again
-		if (cargo(['clean', ...flags]).status !== 0)
-			console.warn(`sweep: cargo clean ${flags.join(' ')} failed; close the app and run it again`);
-	}
-}
+const clean = process.argv.includes('--clean');
 
-cleanWholeProfiles();
+for (const { folder, flags } of PROFILES) {
+	const bytes = folderBytes(join(TARGET_DIR, folder));
+	if (bytes <= CAP_GIB * GIB) continue;
+	const size = `target/${folder} is ${(bytes / GIB).toFixed(1)} GiB, over the ${CAP_GIB} GiB cap`;
+	if (!clean) {
+		console.warn(
+			`sweep: ${size} — \`pnpm sweep:rust\` cleans it, and the next build is a full one`,
+		);
+		continue;
+	}
+	console.log(`sweep: ${size} — cleaning it whole`);
+	// a running app.exe locks its own binary on Windows
+	if (cargo(['clean', ...flags]).status !== 0)
+		console.warn(`sweep: cargo clean ${flags.join(' ')} failed; close the app and run it again`);
+}

@@ -301,15 +301,17 @@ read the report. `/dev/packs-write` is the worked example.
   no handler answers it, and the call is refused either way.
 - **A `cargo` build in `src-tauri/` while `pnpm tauri dev` runs reloads the app's page**, so a
   probe mid-run starts over. Build first, then run the test binary `--no-run` names.
-- **`src-tauri/target` is capped at 30 GiB** by `tools/sweep-cargo-target.mjs`, which runs before
-  every `tauri dev` and `tauri build` — except under a `--config` overlay that sets
-  `beforeDevCommand`, as the live table drive does: cargo never deletes an artifact, and every
-  dependency bump and feature set leaves another copy. A profile over the cap is `cargo clean`ed
-  whole. Never prune it file by file, `cargo sweep --maxsize` included: a pruned folder keeps
-  fingerprints whose `.rmeta` is gone, and every build after fails with "extern location for
+- **`src-tauri/target` is capped at 30 GiB, and only `pnpm sweep:rust` cleans it.** Cargo never
+  deletes an artifact, and every dependency bump and feature set leaves another copy.
+  `tools/sweep-cargo-target.mjs` runs before every `tauri dev` and `tauri build` — except under a
+  `--config` overlay that sets `beforeDevCommand`, as the live table drive does — and there only
+  says a profile is over the cap: cleaning costs a full Rust rebuild, so it is run when there is
+  time for one. It cleans a profile whole, never file by file, `cargo sweep` included: an
+  artifact every build uses but none rebuilds looks as old as one nothing uses, and a pruned folder
+  keeps fingerprints whose `.rmeta` is gone, so every build after fails with "extern location for
   <crate> does not exist" until the profile is cleaned. The working set is about 15 GiB — the
   default build, `--features table-link` and `cargo test` each keep their own copy of the app
-  crate — so the cap sits well above it and a clean is rare.
+  crate.
 - **A debugging port on the webview breaks the table's question window.** Playwright reaches the
   desktop webview only through `--remote-debugging-port`, which Tauri takes from the window's
   `additionalBrowserArgs` in a `--config` overlay (it passes its own arguments, so

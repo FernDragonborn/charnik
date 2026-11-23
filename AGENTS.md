@@ -200,7 +200,8 @@ Content edits are commits in the content repo. App code is commits here. A build
 ## Working on it
 
 `pnpm dev` · `pnpm test` · `pnpm lint` · `pnpm build` · `pnpm check` · `pnpm lint:typed:changed` ·
-`pnpm tauri dev` (needs Rust) · `pnpm restamp <file>` · `pnpm loc` · `node tools/surface.mjs`.
+`pnpm tauri dev` (needs Rust) · `pnpm sweep:rust` · `pnpm restamp <file>` · `pnpm loc` ·
+`node tools/surface.mjs`.
 Full tool notes: `docs/internals/tooling.md`.
 
 **Reuse before you write.** Before writing any code in `src/`, regenerate `docs/surface.md`
