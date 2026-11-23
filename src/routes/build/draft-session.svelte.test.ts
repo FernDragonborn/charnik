@@ -1,10 +1,9 @@
 /** The unfinished build's session after Create: an autosave still pending must not write it back. */
 import { describe, expect, it, vi } from 'vitest';
-import type { Storage } from '#lib/storage/types.ts';
 
 const { storage } = await vi.hoisted(async () => {
 	const { MemoryStorage } = await import('#lib/storage/memory.ts');
-	return { storage: new MemoryStorage() as Storage };
+	return { storage: new MemoryStorage() };
 });
 vi.mock('#lib/storage/provider.ts', () => ({ getUserStorage: () => storage }));
 
