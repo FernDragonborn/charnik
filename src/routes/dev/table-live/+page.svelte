@@ -17,7 +17,8 @@
 	import { demoCharacter } from '$lib/demo/sheet';
 	import { app } from '$lib/stores/app.svelte';
 	import { detectPlatform, getUserStorage, Platform } from '$lib/storage/provider';
-	import { REQUESTED_ROLL, RELAY_MODE, TABLE_REQUEST } from '$lib/table-link/types';
+	import { rehydrateLogEntry } from '$lib/combat/roll';
+	import { AUDIENCE, REQUESTED_ROLL, RELAY_MODE, TABLE_REQUEST } from '$lib/table-link/types';
 	import { tableViewOf } from '$lib/table-link/view';
 	import {
 		ASK_STATUS,
@@ -34,6 +35,8 @@
 	const TABLE_NAME = 'Probe table';
 	/** How long the other end has to do its part of a step. */
 	const STEP_WAIT_MS = 120_000;
+	/** The roll the player writes once the GM's kept roll reached it shown and never kept. */
+	const SAW_THE_REVEAL_TOTAL = 20;
 	const POLL_MS = 250;
 
 	let lines = $state<string[]>([]);
@@ -156,6 +159,38 @@
 		await table.ask([player.id], { kind: TABLE_REQUEST.damage, amount: 9, type: 'fire' });
 		const hit = () => table.asked.find((row) => row.request.kind === TABLE_REQUEST.damage);
 		await until('a hit the player declines says so', () => hit()?.status === ASK_STATUS.declined);
+
+		// --- the log on protocol 5: a roll kept to the GM can be shown the table afterwards ----------
+		// the player shows theirs the moment it is written, so what the GM holds is the shown one
+		const theirs = () => table.log.shown.filter((line) => line.name === player.name);
+		const theirShown = () => theirs().find((line) => line.record.body.reveals !== undefined);
+		await until('a roll the player kept to the GM and then showed reaches the GM', () =>
+			Boolean(theirShown()),
+		);
+		const shown = theirShown();
+		check(
+			'…shown the table, in the place of the kept one',
+			shown?.record.body.to === AUDIENCE.table &&
+				!theirs().some((line) => line.record.seq === shown.record.body.reveals),
+		);
+		table.log.share(
+			[rehydrateLogEntry({ label: 'Probe GM roll', expr: 'd20(9)', total: 9, natural: 9 })],
+			AUDIENCE.gm,
+		);
+		const ownKept = () =>
+			table.log.shown.find((line) => line.mine && line.record.body.to === AUDIENCE.gm);
+		await until("the GM's roll kept to the GM is in the GM's log", () => !!ownKept());
+		const own = ownKept();
+		if (own) table.log.reveal(own);
+		await until(
+			'…and shown the table, stands in its place',
+			() =>
+				!ownKept() &&
+				table.log.shown.some((line) => line.mine && line.record.body.reveals === own?.record.seq),
+		);
+		await until('the player was handed the shown roll and never the kept one', () =>
+			theirs().some((line) => line.record.body.lines[0]?.roll.total === SAW_THE_REVEAL_TOTAL),
+		);
 
 		// --- 5. the door, and the way out -------------------------------------------------------------
 		await table.setDoor(false);

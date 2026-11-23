@@ -483,12 +483,14 @@ them would be the thing they exist to refuse.
 The probe (`routes/dev/table-live`) opens a table with NO relay, so nothing leaves the machine,
 writes the invitation and a sheet into `.table-live`, and waits. The test is a player in a
 process of its own (`session.rs`): it follows that invitation, shows that sheet, answers a roll
-with a roll and a hit with a no, writes its roll into the table's log, and leaves when the table
-closes. The probe checks that the sheet arrived whole, that a page loading again — a view-model
+with a roll and a hit with a no, writes its roll into the table's log, keeps a roll to the GM and
+shows it the table, and leaves when the table closes. The probe checks that the sheet arrived whole, that a page loading again — a view-model
 that knows nothing — is handed the same table with the player and their sheet, that each answer
 landed on the ask it answers, that the player's roll reaches the log under their name and the
-GM's hide takes it away, that the door makes a new invitation, and that the table closes; it puts the relay setting back and
-deletes nothing it did not write.
+GM's hide takes it away, that a roll each side kept to the GM and then showed the table stands in
+the kept one's place — the player saying, with a roll of its own, that it was handed the GM's shown
+roll and never the kept one — that the door makes a new invitation, and that the table closes; it
+puts the relay setting back and deletes nothing it did not write.
 
 `/dev/table-link?expect=on|off` is the smaller probe beside it: it asks the running webview
 whether the commands are there and whether each one refuses what it should, and raises no

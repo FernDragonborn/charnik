@@ -2209,6 +2209,8 @@ mod tests {
         .await
         .expect("a seat");
         let mut answered = 0;
+        let mut saw_the_reveal = false;
+        let mut showed_ours = false;
         loop {
             let event = timeout(LIVE_WAIT, events.recv())
                 .await
@@ -2246,8 +2248,41 @@ mod tests {
                             Delivery::Delivered
                         );
                     }
+                    // after the hit, a roll kept to the GM, shown the table once it is ours
+                    if !rolled {
+                        assert_eq!(seat.record(roll_to(Audience::Gm, 12)), Delivery::Delivered);
+                    }
                     answered += 1;
                 }
+                TableEvent::Record { record, mine, .. } => match record.body {
+                    Body::Roll {
+                        to: Audience::Gm,
+                        reveals: None,
+                        ..
+                    } if mine && !showed_ours => {
+                        showed_ours = true;
+                        let reveal = Body::Roll {
+                            lines: Vec::new(),
+                            to: Audience::Gm,
+                            reveals: Some(record.seq),
+                        };
+                        assert_eq!(seat.record(reveal), Delivery::Delivered);
+                    }
+                    Body::Roll {
+                        to: Audience::Gm, ..
+                    } if !mine => panic!("a roll the GM kept to themselves reached a player"),
+                    Body::Roll {
+                        reveals: Some(_), ..
+                    } if !mine && !saw_the_reveal => {
+                        saw_the_reveal = true;
+                        // the probe reads this roll as "handed the shown roll, never the kept one"
+                        assert_eq!(
+                            seat.record(roll_to(Audience::Table, 20)),
+                            Delivery::Delivered
+                        );
+                    }
+                    _ => {}
+                },
                 TableEvent::Connection {
                     state: ConnectionState::Closed,
                     reason,
@@ -2260,6 +2295,10 @@ mod tests {
             }
         }
         assert_eq!(answered, 2, "a roll and a hit were asked for");
+        assert!(
+            saw_the_reveal,
+            "the GM's roll shown the table reached this seat"
+        );
         seat.leave().await;
     }
 
@@ -2376,7 +2415,11 @@ mod tests {
             (lines, *to, *reveals, name.as_deref()),
             (kept, Audience::Table, Some(private.seq), Some("Lira"))
         );
-        assert_eq!(lira.record(reveal), Delivery::NotDelivered, "a roll is shown once");
+        assert_eq!(
+            lira.record(reveal),
+            Delivery::NotDelivered,
+            "a roll is shown once"
+        );
 
         // a player hides only their own; the GM hides anyone's, and every seat hears it
         let hide_lira = Body::Hide {
