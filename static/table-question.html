@@ -13,12 +13,11 @@
 		<style>
 			:root {
 				--color-bg: #0f1116;
-				--color-border: #272c37;
 				--color-border-strong: #333a47;
 				--color-text: #e6e8ec;
 				--color-text-muted: #878f9d;
 				--color-text-body: #c7cbd2;
-				--color-accent: #cf2b40;
+				--color-focus-halo: rgba(230, 232, 236, 0.28);
 				--font-display: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
 				--font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 				--font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
@@ -27,12 +26,11 @@
 			@media (prefers-color-scheme: light) {
 				:root {
 					--color-bg: #eef0ee;
-					--color-border: #d9ddd6;
 					--color-border-strong: #c3c9bd;
 					--color-text: #1b2024;
 					--color-text-muted: #5a6570;
 					--color-text-body: #2c343b;
-					--color-accent: #b3243a;
+					--color-focus-halo: rgba(27, 32, 36, 0.22);
 					color-scheme: light;
 				}
 			}
@@ -91,14 +89,19 @@
 			#question-body {
 				color: var(--color-text-body);
 			}
-			/* no on one edge, yes on the other, so the two are not mistaken for each other */
+			/* no on one edge, yes on the other, so the two are not mistaken for each other; the room
+			   below is the key's caption */
 			footer {
+				position: relative;
 				display: flex;
 				justify-content: space-between;
 				gap: 8px;
 				margin-top: 18px;
+				padding-bottom: 22px;
 			}
 			button {
+				position: relative;
+				z-index: 1;
 				min-width: 96px;
 				padding: 8px 18px;
 				border-radius: 4px;
@@ -107,20 +110,51 @@
 				color: var(--color-text);
 				font: 600 13px var(--font-body);
 				cursor: pointer;
+				outline: none;
 			}
 			button.allow {
 				background: var(--color-text);
 				border-color: var(--color-text);
 				color: var(--color-bg);
 			}
-			/* the ring appears once the keyboard moves focus, as Windows' own dialogs do: the
-			   focus the window opens with is there for Enter, not to be looked at */
-			button:focus-visible {
-				outline: none;
+			/* the focus is shown from the start, because it says where Enter goes, and the safe answer
+			   holds it. A halo that TRAVELS between the answers reads as "you are here" where a still
+			   ring reads as the button's own look, and the key under it says what that means */
+			.focus-halo {
+				position: absolute;
+				top: 0;
+				height: 34px;
+				border-radius: 4px;
+				box-shadow: 0 0 0 3px var(--color-focus-halo);
+				pointer-events: none;
+				opacity: 0;
+				transition:
+					left 0.22s ease,
+					width 0.22s ease,
+					opacity 0.3s ease;
 			}
-			:root[data-keyboard] button:focus-visible {
-				outline: 2px solid var(--color-accent);
-				outline-offset: 2px;
+			.focus-key {
+				position: absolute;
+				bottom: 0;
+				color: var(--color-text-muted);
+				font: 500 11px var(--font-body);
+				text-align: center;
+				pointer-events: none;
+				opacity: 0;
+				transition:
+					left 0.22s ease,
+					width 0.22s ease,
+					opacity 0.3s ease;
+			}
+			footer[data-focus-shown] .focus-halo,
+			footer[data-focus-shown] .focus-key {
+				opacity: 1;
+			}
+			@media (prefers-reduced-motion: reduce) {
+				.focus-halo,
+				.focus-key {
+					transition: none;
+				}
 			}
 			button:disabled {
 				opacity: 0.5;
@@ -139,6 +173,8 @@
 			<div class="code" id="question-code" hidden><span></span><strong></strong></div>
 			<p id="question-body"></p>
 			<footer>
+				<span class="focus-halo" aria-hidden="true"></span>
+				<span class="focus-key" aria-hidden="true"></span>
 				<button type="button" class="deny" id="question-deny" disabled></button>
 				<button type="button" class="allow" id="question-allow" disabled></button>
 			</footer>

@@ -10,7 +10,12 @@
 	const body = document.getElementById('question-body');
 	const allow = document.getElementById('question-allow');
 	const deny = document.getElementById('question-deny');
+	const footer = document.querySelector('footer');
+	const halo = footer.querySelector('.focus-halo');
+	const key = footer.querySelector('.focus-key');
 	const ARROWS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+	// the key a Mac's keyboard prints is Return
+	key.textContent = /Mac/.test(navigator.platform) ? '↩ Return' : '↵ Enter';
 	let answered = false;
 	const answer = (yes) => {
 		if (answered) return;
@@ -37,6 +42,7 @@
 		deny.disabled = false;
 		// the safe answer has the focus, so an Enter pressed by habit says no
 		deny.focus();
+		showFocus();
 		// the window is as tall as its words, in whichever locale they came
 		requestAnimationFrame(() =>
 			ipc.invoke('table_question_fit', {
@@ -48,13 +54,26 @@
 	deny.addEventListener('click', () => answer(false));
 	document.addEventListener('keydown', (event) => {
 		if (event.code === 'Escape') answer(false);
-		if (event.code === 'Tab') document.documentElement.dataset.keyboard = '';
-		// two answers, so any arrow goes to the other one, whichever way the words run
-		if (ARROWS.includes(event.code)) {
+		// two answers, so any arrow — and Tab, which has nowhere else to go — moves to the other one
+		if (ARROWS.includes(event.code) || event.code === 'Tab') {
 			event.preventDefault();
-			document.documentElement.dataset.keyboard = '';
 			(document.activeElement === deny ? allow : deny).focus();
 		}
 	});
-	document.addEventListener('pointerdown', () => delete document.documentElement.dataset.keyboard);
+	/** The halo and the key stand under whichever answer has the focus, and are gone when none has. */
+	const showFocus = () => {
+		const focused = document.activeElement;
+		if (focused !== allow && focused !== deny) {
+			delete footer.dataset.focusShown;
+			return;
+		}
+		for (const mark of [halo, key]) {
+			mark.style.left = `${focused.offsetLeft}px`;
+			mark.style.width = `${focused.offsetWidth}px`;
+		}
+		halo.style.height = `${focused.offsetHeight}px`;
+		footer.dataset.focusShown = '';
+	};
+	footer.addEventListener('focusin', showFocus);
+	footer.addEventListener('focusout', () => requestAnimationFrame(showFocus));
 })();
