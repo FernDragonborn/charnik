@@ -53,9 +53,18 @@ function sayOf(given: Explanation): Said {
 const GAP_PX = 6;
 /** Room kept from the viewport edge, so a value at the far right is still read in full. */
 const EDGE_PX = 8;
+/** How long the pointer rests on a CONTROL before its hint opens, so a pointer crossing a toolbar
+ *  on its way elsewhere flashes nothing. A value opens at once: its popover is the answer to
+ *  pointing at it. */
+export const CONTROL_HINT_DWELL_MS = 400;
+/** While a hint is up, or this soon after one closed, the next opens with no dwell — what every
+ *  toolbar does once the reader is reading its hints one after another. */
+export const HINT_WARM_MS = 300;
 
 let popover: HTMLDivElement | null = null;
 let openFor: HTMLElement | null = null;
+/** When the last popover closed, for the warm window. */
+let closedAt = Number.NEGATIVE_INFINITY;
 /** The trigger whose popover is PINNED, or null. While one is, nothing else opens over it. */
 let pinnedFor: HTMLElement | null = null;
 let described = 0;
@@ -116,6 +125,7 @@ function place(node: HTMLElement, tip: HTMLDivElement): void {
 }
 
 function hide(): void {
+	if (openFor) closedAt = performance.now();
 	popover?.classList.remove('is-open', 'is-pinned');
 	if (pinnedFor) {
 		pinnedFor.setAttribute('aria-expanded', 'false');
@@ -152,6 +162,33 @@ function show(node: HTMLElement, said: Said): void {
 	openFor = node;
 }
 
+/** An icon control's hint IS its name: described by it too, a screen reader says it twice. */
+function describeUnlessNamed(node: HTMLElement, label: HTMLElement): void {
+	if (label.textContent === node.getAttribute('aria-label'))
+		node.removeAttribute('aria-describedby');
+	else node.setAttribute('aria-describedby', label.id);
+}
+
+/** The pointer's way into a hint. A pointer on a control waits out the dwell unless a hint is already
+ *  being read; anything else opens at once. Focus never comes through here: a keyboard arriving on a
+ *  control has stopped on it. */
+function pointerDwell(open: () => void): {
+	start: (isControl: boolean) => void;
+	cancel: () => void;
+} {
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const cancel = () => {
+		clearTimeout(timer);
+		timer = undefined;
+	};
+	const start = (isControl: boolean) => {
+		const isWarm = openFor !== null || performance.now() - closedAt < HINT_WARM_MS;
+		if (isControl && !isWarm) timer = setTimeout(open, CONTROL_HINT_DWELL_MS);
+		else open();
+	};
+	return { start, cancel };
+}
+
 export const provenance: Action<HTMLElement, Explanation> = (node, initial) => {
 	// the description travels with the VALUE, not with the shared popover: a screen reader reads it
 	// on focus whether or not the popover is what showed it
@@ -177,7 +214,6 @@ export const provenance: Action<HTMLElement, Explanation> = (node, initial) => {
 		else node.removeAttribute('aria-expanded');
 		if (next && !label.isConnected) {
 			node.append(label);
-			node.setAttribute('aria-describedby', label.id);
 			node.classList.add('has-provenance');
 			// a control is already reachable, and a disabled one cannot be made reachable at all
 			if (!node.matches(FOCUSABLE) && !node.matches(':disabled')) {
@@ -191,13 +227,19 @@ export const provenance: Action<HTMLElement, Explanation> = (node, initial) => {
 			if (ownsTabStop) node.removeAttribute('tabindex');
 			ownsTabStop = false;
 		}
+		if (next) describeUnlessNamed(node, label);
 	};
 
 	const open = () => {
+		dwell.cancel();
 		// a pinned popover is being read; another value passing under the pointer does not take it
 		if (said.text && (!pinnedFor || pinnedFor === node)) show(node, said);
 	};
+	const dwell = pointerDwell(open);
+	// a pinning ⓘ is an explanation first, so it opens like a value
+	const openOnPointer = () => dwell.start(!ownsTabStop && !said.pins);
 	const close = () => {
+		dwell.cancel();
 		if (openFor === node && pinnedFor !== node) hide();
 	};
 	// A CONTROL's press does something — often opens a menu exactly where the popover stands — so
@@ -205,6 +247,7 @@ export const provenance: Action<HTMLElement, Explanation> = (node, initial) => {
 	// the only way to open its popover at all, so that one stays. A trigger that PINS is the third
 	// case: its press is what keeps the popover, and a second press lets it go.
 	const onClick = () => {
+		dwell.cancel();
 		if (!said.pins) {
 			if (!ownsTabStop) close();
 		} else if (pinnedFor === node) hide();
@@ -223,12 +266,14 @@ export const provenance: Action<HTMLElement, Explanation> = (node, initial) => {
 	};
 
 	describe(initial);
-	node.addEventListener('pointerenter', open);
-	node.addEventListener('pointerleave', close);
-	node.addEventListener('focusin', open);
-	node.addEventListener('focusout', close);
-	node.addEventListener('click', onClick);
-	node.addEventListener('keydown', onKeydown);
+	const listening = new AbortController();
+	const { signal } = listening;
+	node.addEventListener('pointerenter', openOnPointer, { signal });
+	node.addEventListener('pointerleave', close, { signal });
+	node.addEventListener('focusin', open, { signal });
+	node.addEventListener('focusout', close, { signal });
+	node.addEventListener('click', onClick, { signal });
+	node.addEventListener('keydown', onKeydown, { signal });
 
 	return {
 		update(next: Explanation) {
@@ -238,13 +283,9 @@ export const provenance: Action<HTMLElement, Explanation> = (node, initial) => {
 			else hide();
 		},
 		destroy() {
+			dwell.cancel();
 			if (openFor === node) hide();
-			node.removeEventListener('pointerenter', open);
-			node.removeEventListener('pointerleave', close);
-			node.removeEventListener('focusin', open);
-			node.removeEventListener('focusout', close);
-			node.removeEventListener('click', onClick);
-			node.removeEventListener('keydown', onKeydown);
+			listening.abort();
 			describe('');
 		},
 	};

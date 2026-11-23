@@ -171,8 +171,7 @@
 					class="icon-button"
 					class:is-blocked={removeBlocked}
 					aria-disabled={removeBlocked ? true : undefined}
-					title={removeBlocked ? undefined : $_('build.classes.removeClass')}
-					use:provenance={removeBlocked ? $_('build.strictSettled') : ''}
+					use:provenance={removeBlocked ? $_('build.strictSettled') : $_('build.classes.removeClass')}
 					aria-label={$_('build.classes.removeClass')}
 					onclick={() => b.classRows.removeClass(i)}><Icon name="x" size={12} /></button
 				>
@@ -192,7 +191,7 @@
 					class="feature readable"
 					class:reading={f.row.effectiveId === readingId}
 					data-entry={f.row.effectiveId}
-					title={$_('build.picker.readMore')}
+					use:provenance={$_('build.picker.readMore')}
 					onclick={() => readFeature(f.row.effectiveId)}
 				>
 					<span class="lvl" class:sub={f.fromSubclass}>{f.level}</span>

@@ -109,7 +109,7 @@
 				<button
 					class="conc-end"
 					onclick={combat.endConcentrationByHand}
-					title={$_('combat.hp.endConcentration', { values: { spell: conc.label } })}
+					use:provenance={$_('combat.hp.endConcentration', { values: { spell: conc.label } })}
 					aria-label={$_('combat.hp.endConcentration', { values: { spell: conc.label } })}
 					><Icon name="x" size={12} /></button
 				>
@@ -134,7 +134,7 @@
 				<button
 					class="conc-end"
 					onclick={combat.forms.revert}
-					title={$_('combat.controls.formLeave', { values: { name: form.name } })}
+					use:provenance={$_('combat.controls.formLeave', { values: { name: form.name } })}
 					aria-label={$_('combat.controls.formLeave', { values: { name: form.name } })}
 					><Icon name="x" size={12} /></button
 				>
@@ -174,7 +174,8 @@
 	<button
 		class="toggle rest"
 		onclick={(e) => combat.rests.startLongRest(e)}
-		title={$_('combat.controls.longHint')}><Icon name="tent" /> {$_('combat.controls.long')}</button
+		use:provenance={$_('combat.controls.longHint')}
+		><Icon name="tent" /> {$_('combat.controls.long')}</button
 	>
 	<button class="toggle dice" onclick={openDice}
 		><DiceIcon /> {$_('combat.controls.diceTray')}</button

@@ -58,7 +58,7 @@
 		<span class="table-seat-spacer"></span>
 		<button
 			class="icon-button"
-			title={$_('table.seat.dismiss', { values: { name: player.name } })}
+			use:provenance={$_('table.seat.dismiss', { values: { name: player.name } })}
 			aria-label={$_('table.seat.dismiss', { values: { name: player.name } })}
 			onclick={ondismiss}><Icon name="x" size={14} /></button
 		>

@@ -7,6 +7,7 @@
 	// the last time this shape was built — and INSIDE one that is not, so that a row which expands
 	// anchors the handle to its header rather than to everything the header opens. Hence the swallowed
 	// click: inside a <summary>, a press on the handle would otherwise toggle the row.
+	import { provenance } from '#lib/actions/provenance.ts';
 	import { tick } from 'svelte';
 	import { dragHandle } from 'svelte-dnd-action';
 	import { _ } from '#lib/i18n/index.ts';
@@ -46,7 +47,7 @@
 	role="button"
 	tabindex="0"
 	aria-label={label}
-	title={label}
+	use:provenance={label}
 	onkeydown={moveOnArrow}
 ></span>
 

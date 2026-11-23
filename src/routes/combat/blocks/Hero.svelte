@@ -2,6 +2,7 @@
 	// Character header: eyebrow (class · species), name, the level/system/proficiency subline with
 	// the Level-up button, and the HP panel alongside. Reads the `combat` view-model; character +
 	// sheet come in as props.
+	import { provenance } from '#lib/actions/provenance.ts';
 	import Portrait from '#lib/components/Portrait.svelte';
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
@@ -45,7 +46,7 @@
 					<button
 						class="levelup"
 						class:due={xp?.levelDue}
-						title={$_(xp?.levelDue ? 'combat.hero.levelEarned' : 'combat.hero.levelUpTo', {
+						use:provenance={$_(xp?.levelDue ? 'combat.hero.levelEarned' : 'combat.hero.levelUpTo', {
 							values: { level: s.level + 1 },
 						})}
 						onclick={async () => {

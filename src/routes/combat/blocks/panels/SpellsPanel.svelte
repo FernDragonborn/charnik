@@ -30,6 +30,8 @@
 	 *  it does; failing that, the one word left for a spell whose row states neither. */
 	const says = (r: Row): string =>
 		r.summary || combat.casting.caption(r, $_) || $_('combat.spells.utility');
+	const prepLabel = (state: Row['prepState']): string =>
+		$_(state === 'always' ? 'combat.spells.alwaysPrepared' : 'combat.spells.togglePrepared');
 </script>
 
 {#if s.spellcasting.classes.length}
@@ -107,11 +109,8 @@
 								class="prep"
 								class:on={r.prepState === 'on'}
 								class:always={r.prepState === 'always'}
-								title={$_(
-									r.prepState === 'always'
-										? 'combat.spells.alwaysPrepared'
-										: 'combat.spells.togglePrepared',
-								)}
+								use:provenance={prepLabel(r.prepState)}
+								aria-label={prepLabel(r.prepState)}
 								aria-pressed={r.prepState === 'on' || r.prepState === 'always'}
 								onclick={() => togglePrepared(r)}
 							></button>
@@ -124,7 +123,7 @@
 							<button
 								class="pin-star"
 								class:on={pinned[r.ref]}
-								title={$_('combat.spells.pinToTop')}
+								use:provenance={$_('combat.spells.pinToTop')}
 								aria-pressed={!!pinned[r.ref]}
 								onclick={() => combat.togglePin(r.ref)}
 								><Icon
@@ -139,8 +138,7 @@
 								<button
 									class="ritual-cast"
 									aria-disabled={!!blockedReason}
-									use:provenance={blockedReason}
-									title={$_('combat.spells.castRitual')}
+									use:provenance={blockedReason || $_('combat.spells.castRitual')}
 									onclick={(e) => cast(r, e, { ritual: true })}>R</button
 								>
 							{/if}
@@ -162,7 +160,7 @@
 										: 'combat.spells.bonusAction',
 								)}<button
 									class="cast-icon"
-									title={when}
+									use:provenance={when}
 									aria-label={when}
 									onclick={() => toast($_('combat.notice.castingTime', { values: { when } }))}
 									><Icon

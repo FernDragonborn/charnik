@@ -100,7 +100,11 @@
 	{:else if pid === 'spells' && s.spellcasting.classes.length}
 		<span class="prepared-count"><PreparedCaps tallies={combat.preparedTallies} /></span>
 
-		<button class="pill-btn" onclick={cycleGroupBy} title={$_('combat.panel.changeGrouping')}>
+		<button
+			class="pill-btn"
+			onclick={cycleGroupBy}
+			use:provenance={$_('combat.panel.changeGrouping')}
+		>
 			{$_(groupByLabel)}
 			<Icon name="chevron-down" size={12} />
 		</button>
@@ -131,7 +135,7 @@
 		role="button"
 		tabindex="0"
 		aria-label={moveLabel}
-		title={moveLabel}
+		use:provenance={moveLabel}
 		onkeydown={moveOnArrow}><Icon name="grip-vertical" size={15} /></span
 	>
 </div>

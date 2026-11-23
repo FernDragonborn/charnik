@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (121)
+## Duplicate suspects (122)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -132,6 +132,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
 - `WALK` ×2 — src/lib/character/forms.ts · src/routes/dev/storage-edges/+page.svelte
 - `when` ×2 — src/lib/components/settings/DataConflictDialog.svelte · src/lib/components/settings/PackTranslationBackups.svelte
+- `wordsOf` ×2 — src/lib/drafts/orphan-view.ts · src/routes/dev/table-question/+page.svelte
 
 **Identical one-liner body, different names:**
 
@@ -357,7 +358,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **SourceManager** | — | Two-dimensional source filtering (PLAN invariant): a row shows iff its FILE is enabled AND its |
 | **SpellHead** | `detail`, `spell`, `editable`, `draft` | The "shapka" of a spell article: eyebrow (level · school · edition), title (+ ritual/concentration |
 | **StorageSettings** | — | Where Charnik keeps your data (characters + content). |
-| **Switch** | `on`, `lock`, `title`, `onclick` | Toggle switch (d-spellmgr `.tg`). |
+| **Switch** | `on`, `lock`, `title`, `onclick` |  |
 | **TableSettings** | `embedded` | Settings ▸ Table: which relay servers a table THIS app opens is reached through. |
 | **ThemesSettings** | — | Settings ▸ Themes — author custom colour themes without a rebuild. |
 | **UpcastBuilder** | `value` | The `upcast` cell, built rather than typed. |
@@ -567,7 +568,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate` — Download + install the update the last check found, reporting progress; Rust restarts into the * new version when it …
 
-## Library functions & types (215 modules)
+## Library functions & types (216 modules)
 
 ### `src/lib/actions/anchored.ts`
 
@@ -599,6 +600,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/actions/provenance.ts`
 
 - `type Explanation` — * What a popover says: a line of the app's own text, or a content row's PROSE — which is Markdown, * so it is said as…
+- `const CONTROL_HINT_DWELL_MS` — How long the pointer rests on a CONTROL before its hint opens, so a pointer crossing a toolbar * on its way elsewhere…
+- `const HINT_WARM_MS` — While a hint is up, or this soon after one closed, the next opens with no dwell — what every * toolbar does once the …
 - `const provenance`
 
 ### `src/lib/actions/submitOnEnter.ts`
@@ -1813,6 +1816,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function rollerIssues` — Everything wrong with a set of lines, in reading order.
 - `const canRoll` — Can these lines be rolled at all?
 
+### `src/lib/drafts/orphan-view.ts`
+
+- `interface DraftField`
+- `function draftFields` — The draft's readable fields, in its own column order, the empty ones left out.
+- `function closeness` — How many words a candidate shares with what the draft was editing — its old id and its name.
+- `function byCloseness` — Candidates, closest first; ties keep the order they came in.
+
 ### `src/lib/drafts/store.ts`
 
 - `type DraftTarget` — What a draft is editing.
@@ -2751,4 +2761,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_51 tokens · 105 global classes · 63 components · 1687 exports across 232 modules · 121 duplicate suspects._
+_51 tokens · 105 global classes · 63 components · 1693 exports across 233 modules · 122 duplicate suspects._

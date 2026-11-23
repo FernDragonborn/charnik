@@ -11,6 +11,7 @@
 	// The row is NOT wrapped in a button: the log cue is its own control. That keeps the roll's own
 	// pills free to become controls (UX-3's retroactive advantage) without nesting a button in a
 	// button — the constraint that shaped the toast.
+	import { provenance } from '#lib/actions/provenance.ts';
 	import Icon from '#lib/components/Icon.svelte';
 	import { _ } from '#lib/i18n/index.ts';
 	import DiceIcon from '#lib/components/DiceIcon.svelte';
@@ -51,7 +52,10 @@
 		{:else}
 			<span class="no-roll">{$_('combat.log.noRolls')}</span>
 		{/if}
-		<button class="log-cue" onclick={(e) => openMenu('log', e)} title={$_('combat.log.rollLog')}
+		<button
+			class="log-cue"
+			onclick={(e) => openMenu('log', e)}
+			use:provenance={$_('combat.log.rollLog')}
 			><DiceIcon size={15} />
 			{$_('combat.log.logCue')}
 			<Icon name="chevron-right" size={12} /></button

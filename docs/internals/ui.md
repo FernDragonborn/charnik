@@ -236,7 +236,13 @@ good", so they are pinned here and every component follows them.
    The same action carries any other hover-and-focus explanation, so there is one popover on the
    sheet rather than two lookalikes — the upcast ⇡ hands it the whole slot ladder, which is why the
    popover renders one line per newline (`white-space: pre-line`). A hint on a button, a blocked
-   row's reason and a resource's recharge are all this popover. **Pressing a CONTROL closes it**: a
+   row's reason and a resource's recharge are all this popover, and so is an icon control's NAME — beside
+   the same `aria-label`, where it is not also the description, or a screen reader says it twice.
+   **A hint on a CONTROL waits for the pointer to rest** (`CONTROL_HINT_DWELL_MS`, 400 ms), so a
+   pointer crossing a toolbar on its way elsewhere flashes nothing; while one hint is up, or within
+   `HINT_WARM_MS` (300 ms) of one closing, the next opens at once, which is what reading a row of
+   icons one after another needs. Focus never waits, and a value never waits: its popover is the
+   answer to pointing at it. **Pressing a CONTROL closes it**: a
    press does something, often opening a menu exactly where the popover stands. A plain value's
    stays open through a tap, because on touch a tap is the only way to open it.
    **Prose somebody wants to keep is PINNED by a press** (`{ markdown, pin: true }` — an effect's
@@ -262,8 +268,9 @@ good", so they are pinned here and every component follows them.
    there costs one tab stop per row to say the same sentence eighteen times, so the mark carries
    an accessible name instead (`aria-label`, an `Icon`'s `label`, or `.visually-hidden` text inside
    a control whose name is its content), and its `title` stays as that same name for a pointer.
-   **What a `title` may still be:** the NAME of an icon-only control (beside the same `aria-label`),
-   and a value's own text where the box truncates it (a path). Never an explanation — and never a
+   **What a `title` may still be:** a mark's name (above), a value's own text where the box
+   truncates it (a path), and the roller's own surfaces, which wait on a roller decision
+   (`work/ui.md` ▸ TITLE-POPOVER). Never on a control. Never an explanation — and never a
    popover on a `disabled` control, which takes neither hover nor focus (rule 10 says what to use).
 4. **Any value is click-to-edit** — a manual override is available at any time, independent of
    whether auto-calculation is on.

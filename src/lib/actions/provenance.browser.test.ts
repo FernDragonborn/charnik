@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { provenance } from './provenance';
+import { provenance, CONTROL_HINT_DWELL_MS, HINT_WARM_MS } from './provenance';
 
 /** A value on the page, as any sheet renders one: a plain element, not a control. */
 function mountValue(): HTMLElement {
@@ -204,6 +204,71 @@ describe('provenance (ui.md ▸ UX pattern contract, rule 3)', () => {
 			enter(other);
 			expect(popover()?.textContent).toBe('Armor +11');
 			otherCleanup?.();
+		});
+	});
+
+	describe('a hint on a CONTROL waits for the pointer to rest, then the next opens at once', () => {
+		const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+		const mountButton = (name: string) => {
+			const button = document.createElement('button');
+			button.setAttribute('aria-label', name);
+			document.body.append(button);
+			return button;
+		};
+		// the warm window is the page's, not a test's: the popover an earlier test closed still counts
+		beforeEach(() => wait(HINT_WARM_MS + 50));
+
+		it('a pointer crossing a control opens nothing; resting on it opens its hint', async () => {
+			const theme = mountButton('Theme');
+			cleanup = provenance(theme, 'Theme')?.destroy;
+			enter(theme);
+			expect(isOpen()).toBe(false);
+			leave(theme);
+			await wait(CONTROL_HINT_DWELL_MS + 50);
+			expect(isOpen()).toBe(false); // it left before the dwell ran out
+
+			enter(theme);
+			await wait(CONTROL_HINT_DWELL_MS + 50);
+			expect(isOpen()).toBe(true);
+		});
+
+		it('while one hint is up, or just gone, the neighbour opens with no dwell', async () => {
+			const theme = mountButton('Theme');
+			const language = mountButton('Language');
+			const themeCleanup = provenance(theme, 'Theme')?.destroy;
+			cleanup = provenance(language, 'Language')?.destroy;
+			enter(theme);
+			await wait(CONTROL_HINT_DWELL_MS + 50);
+			leave(theme);
+			enter(language);
+			expect(popover()?.textContent).toBe('Language');
+			expect(isOpen()).toBe(true);
+
+			leave(language);
+			await wait(HINT_WARM_MS + 100);
+			enter(theme);
+			expect(isOpen()).toBe(false); // cold again: the dwell is back
+			themeCleanup?.();
+		});
+
+		it('focus never waits, and a value never waits', () => {
+			const theme = mountButton('Theme');
+			const themeCleanup = provenance(theme, 'Theme')?.destroy;
+			theme.focus();
+			expect(isOpen()).toBe(true);
+			theme.blur();
+			themeCleanup?.();
+
+			const node = mountValue();
+			cleanup = provenance(node, 'Armor +11')?.destroy;
+			enter(node);
+			expect(isOpen()).toBe(true);
+		});
+
+		it('a hint that is the control’s own name is not also its description', () => {
+			const theme = mountButton('Theme');
+			cleanup = provenance(theme, 'Theme')?.destroy;
+			expect(theme.hasAttribute('aria-describedby')).toBe(false);
 		});
 	});
 

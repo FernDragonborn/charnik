@@ -3,6 +3,7 @@
 	// dice tray (via the openDiceTray CONTRACT, not a concrete tray) prefilled with the same formula.
 	// Every dice roll in the app routes through here, so the modifier convention + the tray hook live in one
 	// place. Content (the label/emoji) is the caller's; `variant` picks the look.
+	import { provenance } from '#lib/actions/provenance.ts';
 	import type { Snippet } from 'svelte';
 	import { rollFormulaEntry, wantsTray } from '#lib/combat/roll.ts';
 	import { toastRoll } from '#lib/dice/roll-toast.ts';
@@ -35,7 +36,12 @@
 	}
 </script>
 
-<button class="roll {variant}" {title} onclick={onClick}>{@render children?.()}</button>
+<button
+	class="roll {variant}"
+	use:provenance={title}
+	aria-label={variant === 'icon' ? title : undefined}
+	onclick={onClick}>{@render children?.()}</button
+>
 
 <style>
 	.roll.pill {

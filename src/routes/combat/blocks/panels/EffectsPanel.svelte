@@ -68,7 +68,7 @@
 				     reads as a "Concentration" marker, not a blank buff. Tap to drop it. -->
 				<button
 					class="conc-badge"
-					title={$_('combat.effects.concentrating')}
+					use:provenance={$_('combat.effects.concentrating')}
 					onclick={combat.endConcentrationByHand}
 					><Icon name="target" size={13} /> {$_('combat.effects.concentration')}</button
 				>
@@ -101,16 +101,16 @@
 			{/if}
 			<button
 				class="duration-select"
-				title={$_('combat.effects.setDuration')}
+				use:provenance={$_('combat.effects.setDuration')}
 				onclick={(ev) => (durationMenu = { iid: e.iid, anchor: ev.currentTarget })}
 				>{durationLabel(remainingRounds(e, combat.round))}
 				<Icon name="chevron-down" size={12} /></button
 			>
 			<button
 				class="icon-button effect-remove"
-				title={$_('combat.effects.remove')}
-				onclick={() => combat.effects.removeEffect(e.iid)}
-				><Icon name="x" size={13} label={$_('combat.effects.remove')} /></button
+				use:provenance={$_('combat.effects.remove')}
+				aria-label={$_('combat.effects.remove')}
+				onclick={() => combat.effects.removeEffect(e.iid)}><Icon name="x" size={13} /></button
 			>
 		</span>
 	</div>
@@ -196,7 +196,7 @@
 				<div class="resource-row">
 					<button
 						class="resource-use"
-						title={$_('combat.resource.useOne', { values: { name: r.name } })}
+						use:provenance={$_('combat.resource.useOne', { values: { name: r.name } })}
 						onclick={() => combat.useResourceOrEnter(r.id, r.max)}
 					>
 						<span class="resource-name">{r.name}</span>
@@ -207,7 +207,7 @@
 								<button
 									class="resource-pip"
 									class:off={i >= r.max - spent}
-									title="{r.name} {i + 1}"
+									use:provenance={`${r.name} ${i + 1}`}
 									aria-label="{r.name} {i + 1}"
 									onclick={() => combat.resources.resourceClick(r.id, r.max, i)}
 								></button>
@@ -224,9 +224,9 @@
 					<span class="recharge-chip">{sayText(rechargeLabel(r.recharge), $_)}</span>
 					<button
 						class="icon-button effect-remove"
-						title={$_('combat.effects.remove')}
-						onclick={() => combat.effects.removeEffect(r.iid)}
-						><Icon name="x" size={12} label={$_('combat.effects.remove')} /></button
+						use:provenance={$_('combat.effects.remove')}
+						aria-label={$_('combat.effects.remove')}
+						onclick={() => combat.effects.removeEffect(r.iid)}><Icon name="x" size={12} /></button
 					>
 				</div>
 			{/each}

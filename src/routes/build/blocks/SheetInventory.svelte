@@ -91,7 +91,7 @@
 							type="button"
 							class="iname name-button"
 							aria-haspopup="dialog"
-							title={$_('combat.inventory.reask', { values: { name } })}
+							use:provenance={$_('combat.inventory.reask', { values: { name } })}
 							onclick={(e) =>
 								reask(entry, rowName(b.row(entry.item)) || name, questions, e.currentTarget)}
 							>{name}</button

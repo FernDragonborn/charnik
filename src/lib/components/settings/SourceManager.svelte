@@ -3,6 +3,7 @@
 	// SOURCE tag is enabled. Lists every loaded source with its files + row counts; each has an
 	// independent toggle. Config is persisted + live (isRowActive re-filters the compendium with no
 	// reload). Disabling never drops data — re-enabling brings rows straight back.
+	import { provenance } from '#lib/actions/provenance.ts';
 	import { _ } from '#lib/i18n/index.ts';
 	import { content } from '#lib/content/store.svelte.ts';
 	import { sourceLabel } from '#lib/content/detail.ts';
@@ -104,7 +105,7 @@
 					>
 					<button
 						class="source-tag as-toggle"
-						title={$_('settings.sources.turnOff', { values: { source: g.source } })}
+						use:provenance={$_('settings.sources.turnOff', { values: { source: g.source } })}
 						aria-pressed={sourceOff(g.source)}
 						onclick={() => toggleSource(g.source)}
 					>

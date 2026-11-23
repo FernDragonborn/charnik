@@ -42,7 +42,7 @@
 				type="button"
 				class="slot-spend"
 				onclick={() => combat.economy.trySpend(slot)}
-				title={$_('combat.turn.spendOne', { values: { label } })}
+				use:provenance={$_('combat.turn.spendOne', { values: { label } })}
 				aria-label={$_('combat.turn.spendOne', { values: { label } })}
 			>
 				<span class="slot-label">{label}</span>
@@ -56,7 +56,7 @@
 						class:used
 						tabindex="-1"
 						onclick={() => combat.economy.usePip(slot, i)}
-						title={$_(used ? 'combat.turn.pipUsed' : 'combat.turn.pipAvailable', {
+						use:provenance={$_(used ? 'combat.turn.pipUsed' : 'combat.turn.pipAvailable', {
 							values: { label },
 						})}
 						aria-label={$_('combat.turn.pip', { values: { label, n: i + 1 } })}
@@ -80,8 +80,8 @@
 		type="button"
 		class="action-economy-reset"
 		onclick={combat.economy.resetMove}
-		title={$_('combat.turn.resetMove')}
-		><Icon name="rotate-ccw" size={13} label={$_('combat.turn.resetMove')} /></button
+		use:provenance={$_('combat.turn.resetMove')}
+		aria-label={$_('combat.turn.resetMove')}><Icon name="rotate-ccw" size={13} /></button
 	>
 	<span class="spacer"></span>
 	<button
@@ -89,7 +89,7 @@
 		class="nextturn"
 		onclick={combat.nextTurn}
 		aria-label={$_('combat.turn.nextTurn')}
-		title={$_('combat.turn.nextTurn')}
+		use:provenance={$_('combat.turn.nextTurn')}
 		><span class="slot-label">{$_('combat.turn.nextTurn')}</span>
 		<Icon name="chevron-right" size={13} /></button
 	>

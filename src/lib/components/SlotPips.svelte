@@ -2,6 +2,7 @@
 	// A spell-slot pool as pips: the ones left lit, the spent ones dim. With `onpick` each pip is a
 	// button (the Combat panel's click-to-set); without it they are only read (the Spellbook header,
 	// where a cast is seen to take one).
+	import { provenance } from '#lib/actions/provenance.ts';
 	import { range } from '#lib/combat/helpers.ts';
 
 	let {
@@ -18,7 +19,8 @@
 				class="slot-pip"
 				class:full={i < full - spent}
 				class:spent={i >= full - spent}
-				{title}
+				use:provenance={title}
+				aria-label={title}
 				onclick={() => onpick(i)}
 			></button>{:else}<span
 				class="slot-pip"

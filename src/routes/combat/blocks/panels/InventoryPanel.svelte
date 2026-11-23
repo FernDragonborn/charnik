@@ -105,7 +105,7 @@
 		bind:this={addControl}
 		aria-expanded={adding}
 		onclick={() => (adding = !adding)}
-		title={$_('combat.inventory.addItem')}
+		use:provenance={$_('combat.inventory.addItem')}
 		aria-label={$_('combat.inventory.addItem')}
 	>
 		<Icon name="plus" size={14} />
@@ -153,7 +153,7 @@
 						type="button"
 						class="nm name-button"
 						aria-haspopup="dialog"
-						title={$_('combat.inventory.reask', { values: { name: row.name } })}
+						use:provenance={$_('combat.inventory.reask', { values: { name: row.name } })}
 						onclick={(e) => reask(row, e.currentTarget)}>{row.name}</button
 					>
 				{:else}
@@ -200,7 +200,7 @@
 							class="pill-btn"
 							class:accent={row.entry.equipped}
 							onclick={() => inv.equip(row.entry.iid)}
-							title={$_(
+							use:provenance={$_(
 								row.entry.equipped ? 'combat.inventory.unequipHint' : 'combat.inventory.equipHint',
 							)}
 						>
@@ -217,7 +217,9 @@
 							class:accent={worn}
 							aria-pressed={worn}
 							onclick={() => combat.forms.setWorn(row.entry.iid, !worn)}
-							title={$_(worn ? 'combat.inventory.formWornHint' : 'combat.inventory.formMergedHint')}
+							use:provenance={$_(
+								worn ? 'combat.inventory.formWornHint' : 'combat.inventory.formMergedHint',
+							)}
 						>
 							{$_(worn ? 'combat.inventory.formWorn' : 'combat.inventory.formMerged')}
 						</button>
@@ -227,7 +229,7 @@
 							class="pill-btn"
 							class:accent={row.entry.attuned}
 							onclick={() => inv.attune(row.entry.iid)}
-							title={$_(
+							use:provenance={$_(
 								row.entry.attuned ? 'combat.inventory.unattuneHint' : 'combat.inventory.attuneHint',
 							)}
 						>
@@ -241,7 +243,7 @@
 					class="row-remove"
 					onclick={() => inv.remove(row.entry.iid)}
 					aria-label={$_('combat.inventory.remove', { values: { name: row.name } })}
-					title={$_('combat.inventory.remove', { values: { name: row.name } })}
+					use:provenance={$_('combat.inventory.remove', { values: { name: row.name } })}
 					><Icon name="trash-2" size={12} /></button
 				>
 			</div>

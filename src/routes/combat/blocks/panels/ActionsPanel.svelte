@@ -129,7 +129,7 @@
 							class="used-mark"
 							class:on={used}
 							aria-pressed={used}
-							title={$_('combat.panel.usedThisTurn')}
+							use:provenance={$_('combat.panel.usedThisTurn')}
 							onclick={() => combat.economy.toggleRollUsed(r.id)}
 						>
 							{$_('combat.panel.usedThisTurn')}

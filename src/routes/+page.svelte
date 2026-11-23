@@ -1,5 +1,6 @@
 <script lang="ts">
 	// Roster (home) — the saved characters. Open one into Combat, delete, or create a new one.
+	import { provenance } from '#lib/actions/provenance.ts';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -122,7 +123,8 @@
 					</a>
 					<button
 						class="roster-delete"
-						title={$_('roster.discardDraft')}
+						use:provenance={$_('roster.discardDraft')}
+						aria-label={$_('roster.discardDraft')}
 						onclick={() => {
 							const name = d.summary.name || $_('roster.draftUnnamed');
 							confirming = {
@@ -134,7 +136,7 @@
 							};
 						}}
 					>
-						<Icon name="x" label={$_('roster.discardDraft')} />
+						<Icon name="x" />
 					</button>
 				</li>
 			{/each}
@@ -156,7 +158,8 @@
 					</button>
 					<button
 						class="roster-delete"
-						title={$_('roster.delete', { values: { name: c.name } })}
+						use:provenance={$_('roster.delete', { values: { name: c.name } })}
+						aria-label={$_('roster.delete', { values: { name: c.name } })}
 						onclick={() => {
 							confirming = {
 								ask: $_('roster.deleteAsk'),
@@ -167,7 +170,7 @@
 							};
 						}}
 					>
-						<Icon name="x" label={$_('roster.delete', { values: { name: c.name } })} />
+						<Icon name="x" />
 					</button>
 				</li>
 			{/each}

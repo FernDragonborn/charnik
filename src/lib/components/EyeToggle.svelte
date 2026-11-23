@@ -1,5 +1,6 @@
 <script lang="ts">
 	// Show-on-sheet toggle (d-spellmgr `.ic.eye`): open eye = on the sheet, closed = hidden.
+	import { provenance } from '#lib/actions/provenance.ts';
 	import EyeIcon from './EyeIcon.svelte';
 	let {
 		on = false,
@@ -8,7 +9,15 @@
 	}: { on?: boolean; title?: string; onclick?: () => void } = $props();
 </script>
 
-<button class="icon-toggle eye" class:on type="button" {title} aria-pressed={on} {onclick}>
+<button
+	class="icon-toggle eye"
+	class:on
+	type="button"
+	use:provenance={title}
+	aria-label={title}
+	aria-pressed={on}
+	{onclick}
+>
 	<EyeIcon {on} />
 </button>
 

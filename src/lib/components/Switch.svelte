@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { provenance } from '#lib/actions/provenance.ts';
 	// Toggle switch (d-spellmgr `.tg`). `lock` = always-on/disabled (e.g. always-prepared).
 	let {
 		on = false,
@@ -13,10 +14,11 @@
 	class:on
 	class:lock
 	type="button"
-	{title}
-	disabled={lock}
+	use:provenance={title}
+	aria-label={title}
+	aria-disabled={lock || undefined}
 	aria-pressed={on}
-	{onclick}
+	onclick={lock ? undefined : onclick}
 ></button>
 
 <style>

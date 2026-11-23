@@ -1,6 +1,7 @@
 <script lang="ts">
 	// The Table screen: no seat yet (open a table, or join one), a GM's seat, or a player's. A thin
 	// shell over `table` — what a seat keeps and does is `table-view-model.svelte.ts`.
+	import { provenance } from '#lib/actions/provenance.ts';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
@@ -300,7 +301,7 @@
 									class="icon-button"
 									class:is-blocked={table.busy}
 									aria-disabled={table.busy}
-									title={$_('table.remembered.forget')}
+									use:provenance={$_('table.remembered.forget')}
 									aria-label={$_('table.remembered.forget')}
 									onclick={() => (confirmForget = kept)}><Icon name="x" size={12} /></button
 								>

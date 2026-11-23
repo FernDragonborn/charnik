@@ -14,6 +14,7 @@
 	// and do not repeat below — a row in two places is two answers to where it is. Everything else
 	// keeps its section, because a section IS the grouping; what a player may now override is the
 	// order INSIDE one.
+	import { provenance } from '#lib/actions/provenance.ts';
 	import { _ } from '#lib/i18n/index.ts';
 	import { app } from '#lib/stores/app.svelte.ts';
 	import { combat } from '../../combat-view-model.svelte';
@@ -156,7 +157,7 @@
 								class="feature-pin"
 								class:on={combat.featureView.isPinned(id)}
 								aria-pressed={combat.featureView.isPinned(id)}
-								title={$_(
+								use:provenance={$_(
 									combat.featureView.isPinned(id) ? 'combat.features.unpin' : 'combat.features.pin',
 								)}
 								aria-label={$_(

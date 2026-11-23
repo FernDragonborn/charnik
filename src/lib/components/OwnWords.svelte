@@ -6,6 +6,7 @@
 	// Scope is the one real choice: a rewrite belongs to the character you are playing by default, and
 	// can be promoted to the whole install. The toggle only appears when a character is open, because
 	// with none there is nothing for "just this one" to mean.
+	import { provenance } from '#lib/actions/provenance.ts';
 	import { _ } from '#lib/i18n/index.ts';
 	import { app } from '#lib/stores/app.svelte.ts';
 	import { overrides, OVERRIDE_SCOPE, type OverrideScope } from '#lib/content/overrides.svelte.ts';
@@ -93,7 +94,7 @@
 			{#if mine}
 				<button
 					class="icon-button"
-					title={$_('ownWords.restore')}
+					use:provenance={$_('ownWords.restore')}
 					aria-label={$_('ownWords.restore')}
 					onclick={() => {
 						overrides.restore(rowId, locale);
@@ -103,13 +104,13 @@
 			{/if}
 			<button
 				class="icon-button"
-				title={$_('app.cancel')}
+				use:provenance={$_('app.cancel')}
 				aria-label={$_('app.cancel')}
 				onclick={() => (rewriting = false)}><Icon name="x" size={14} /></button
 			>
 			<button
 				class="icon-button accent"
-				title={$_('ownWords.save')}
+				use:provenance={$_('ownWords.save')}
 				aria-label={$_('ownWords.save')}
 				onclick={save}><Icon name="save" size={14} /></button
 			>
@@ -123,7 +124,7 @@
 			class="icon-button own-pencil"
 			class:accent={!!mine}
 			onclick={open}
-			title={ownWordsLabel}
+			use:provenance={ownWordsLabel}
 			aria-label={ownWordsLabel}><Icon name="pencil" size={13} /></button
 		>
 	{/if}

@@ -109,9 +109,8 @@
 								<button
 									class="pick-chip on"
 									aria-disabled={sp.granted ? true : undefined}
-									use:provenance={sp.granted ? $_('build.spells.granted') : ''}
-									title={sp.granted
-										? undefined
+									use:provenance={sp.granted
+										? $_('build.spells.granted')
 										: $_('build.spells.remove', { values: { name: sp.name } })}
 									onclick={() => b.spellPicks.remove(sp.id)}
 								>

@@ -50,7 +50,7 @@
 	<div class="portrait-slot">
 		<button
 			class="portrait-button"
-			title={b.portraitSource ? $_('build.portrait.replace') : $_('build.portrait.add')}
+			use:provenance={b.portraitSource ? $_('build.portrait.replace') : $_('build.portrait.add')}
 			aria-label={b.portraitSource ? $_('build.portrait.replace') : $_('build.portrait.add')}
 			onclick={() => photoInput?.click()}
 		>
@@ -59,7 +59,7 @@
 		{#if b.portraitSource}
 			<button
 				class="portrait-clear"
-				title={$_('build.portrait.remove')}
+				use:provenance={$_('build.portrait.remove')}
 				aria-label={$_('build.portrait.remove')}
 				onclick={b.clearPhoto}><Icon name="x" size={11} /></button
 			>
@@ -89,14 +89,14 @@
 		<button
 			class="icon-button"
 			disabled={!b.history.canUndo}
-			title={$_('build.undo')}
+			use:provenance={$_('build.undo')}
 			aria-label={$_('build.undo')}
 			onclick={build.history.undo}><Icon name="rotate-ccw" size={14} /></button
 		>
 		<button
 			class="icon-button"
 			disabled={!b.history.canRedo}
-			title={$_('build.redo')}
+			use:provenance={$_('build.redo')}
 			aria-label={$_('build.redo')}
 			onclick={build.history.redo}><Icon name="rotate-cw" size={14} /></button
 		>

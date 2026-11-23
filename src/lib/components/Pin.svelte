@@ -1,5 +1,6 @@
 <script lang="ts">
 	// Pin toggle: a filled star is pinned to the quick bar, an outline one is not.
+	import { provenance } from '#lib/actions/provenance.ts';
 	import Icon from './Icon.svelte';
 
 	let {
@@ -9,7 +10,15 @@
 	}: { on?: boolean; title?: string; onclick?: () => void } = $props();
 </script>
 
-<button class="icon-toggle pin" class:on type="button" {title} aria-pressed={on} {onclick}>
+<button
+	class="icon-toggle pin"
+	class:on
+	type="button"
+	use:provenance={title}
+	aria-label={title}
+	aria-pressed={on}
+	{onclick}
+>
 	<Icon name="star" size={13} fill={on ? 'currentColor' : 'none'} />
 </button>
 

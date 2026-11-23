@@ -135,7 +135,7 @@
 						<button
 							class="finesse-swap"
 							onclick={() => combat.inventory.setFinesseAbility(fin.kindId, other)}
-							title={$_('combat.attacks.finesseSwap', {
+							use:provenance={$_('combat.attacks.finesseSwap', {
 								values: { other: $_(`abilityName.${other}`) },
 							})}
 							aria-label={$_('combat.attacks.finesseSwap', {

@@ -83,22 +83,6 @@
       toast that is gone in seconds and inside a line whose keyboard model is a caret walking
       tokens. That is a decision about the roller, taken with it.
 
-- [ ] **HINT-WARMUP · once one hint is being read, the next opens at once — 0.9.0.** What every
-      toolbar does: the first hint waits for the pointer to rest, and while one is up, or just
-      gone, moving to the neighbouring control shows its hint with no wait. Charnik has two hint
-      mechanisms and neither does this. The provenance popover opens the instant the pointer
-      arrives, with no dwell at all; a native `title` waits the system's delay EVERY time, and that
-      is what a row of icon controls still uses — the top bar's language, theme and refresh chips
-      are where it is felt, each asking for its own half second. About 110 `title` attributes are
-      left in `src/` after TITLE-POPOVER.
-      So: the names of icon controls move onto the popover like every other hint
-      (`internals/ui.md` ▸ rule 3 already says a hint on a button is that popover), and the timing
-      is decided in the one place that then owns it, `actions/provenance.ts` — whether a hint on a
-      CONTROL gets a short dwell so it does not flash under a pointer crossing the screen, with the
-      warm window (open at once while a hint is up or within a moment of one closing) beside it. A
-      value's popover stays instant: it is the answer to pointing at a number. The refresh chip's
-      own note stands where its hint opens, so the two are placed together.
-
 - [~] **SYSTEM-QUESTION-STYLE · the system's questions get a style of their own — 0.9.0.** The
   maintainer's call: before 0.9.0 the flags and the accent line on the left of a dialog go, and the
   questions the system asks get another look. Picked from rendered variants

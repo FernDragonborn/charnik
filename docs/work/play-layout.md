@@ -73,7 +73,7 @@ of NARROW-DESKTOP are built, because a column card with tabs is exactly a region
     Effects (concentration, bonus action and reaction marked; an action carries no mark), Items
     beside Features (a count opens under its ×N; twenty features fit while closed).
   - **D4 · the mouse in combat.** The strip is the turn; a number explains itself at the pointer
-    (HINT-WARMUP's popover); a feature opens in place.
+    (the provenance popover, `internals/ui.md` ▸ rule 3); a feature opens in place.
   - **D5 · clicking the hit points** opens damage, healing and temporary hit points in one popover;
     exhaustion lives there too and becomes a chip in the top block once above 0.
   - **D6 · half the screen, 768px: three columns**, the six tabs dealt into three groups; the

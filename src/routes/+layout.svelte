@@ -429,8 +429,14 @@
 	</button>
 	<div class="chips">
 		<LangSwitcher />
-		<button type="button" class="chip" onclick={toggleTheme} title={$_('settings.theme')}>
-			<Icon name={app.theme === 'dark' ? 'moon' : 'sun'} label={$_('settings.theme')} />
+		<button
+			type="button"
+			class="chip"
+			onclick={toggleTheme}
+			use:provenance={$_('settings.theme')}
+			aria-label={$_('settings.theme')}
+		>
+			<Icon name={app.theme === 'dark' ? 'moon' : 'sun'} />
 		</button>
 		<button
 			type="button"
@@ -438,9 +444,11 @@
 			bind:this={refreshChip}
 			onclick={() => void softRefresh()}
 			disabled={refreshing}
-			title={isDesktop
-				? `${$_('refresh.title')} (F5)\n${$_('refresh.reload')} (Ctrl+Shift+R)`
-				: $_('refresh.title')}
+			use:provenance={chipNote
+				? '' /* its note stands where the hint would open, and says more */
+				: isDesktop
+					? `${$_('refresh.title')} (F5)\n${$_('refresh.reload')} (Ctrl+Shift+R)`
+					: $_('refresh.title')}
 			aria-label={isDesktop ? `${$_('refresh.title')} (F5)` : $_('refresh.title')}
 			><Icon name="rotate-cw" /></button
 		>
@@ -452,7 +460,7 @@
 			<a
 				class="chip chip-packs"
 				href={resolve('settings?tab=sources')}
-				title={$_('settings.packs.chipTitle', { values: { count: pendingPacks } })}
+				use:provenance={$_('settings.packs.chipTitle', { values: { count: pendingPacks } })}
 				aria-label={$_('settings.packs.chipTitle', { values: { count: pendingPacks } })}
 			>
 				<Icon name="download" size={13} />
@@ -466,7 +474,7 @@
 				class:is-busy={updateBusy}
 				onclick={() => void installUpdate()}
 				disabled={updateBusy}
-				title={updateTitle}
+				use:provenance={updateTitle}
 				aria-label={updateTitle}><Icon name="download" size={13} /> {updateLabel}</button
 			>
 		{/if}
@@ -474,7 +482,7 @@
 			type="button"
 			class="chip search-chip"
 			onclick={() => (ui.commandPaletteOpen = true)}
-			title={$_('nav.openCommandPalette')}
+			use:provenance={$_('nav.openCommandPalette')}
 			aria-label={$_('nav.openCommandPalette')}
 		>
 			<Icon name="search" size={13} />

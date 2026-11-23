@@ -322,7 +322,7 @@
 						class="modifier-sign"
 						onclick={() =>
 							(combat.effects.customModSign = combat.effects.customModSign === '+' ? '-' : '+')}
-						title={$_('combat.menu.toggleSign')}>{combat.effects.customModSign}</button
+						use:provenance={$_('combat.menu.toggleSign')}>{combat.effects.customModSign}</button
 					>
 					<input
 						class="modifier-amount"
@@ -355,7 +355,7 @@
 					<button
 						class="dur-inf"
 						class:on={combat.effects.newEffectDuration === 0}
-						title={$_('combat.menu.untilRemovedTitle')}
+						use:provenance={$_('combat.menu.untilRemovedTitle')}
 						onclick={() => (combat.effects.newEffectDuration = 0)}
 						><Icon name="infinity" size={13} label={$_('combat.menu.untilRemoved')} /></button
 					>
