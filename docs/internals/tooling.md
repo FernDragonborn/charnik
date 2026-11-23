@@ -301,11 +301,11 @@ read the report. `/dev/packs-write` is the worked example.
   no handler answers it, and the call is refused either way.
 - **A `cargo` build in `src-tauri/` while `pnpm tauri dev` runs reloads the app's page**, so a
   probe mid-run starts over. Build first, then run the test binary `--no-run` names.
-- **`pnpm sweep:rust` removes from `src-tauri/target` what no build of ours uses.** Cargo never
-  deletes an artifact, and every dependency bump and feature set leaves another copy.
+- **`src-tauri/target` sheds what no build of ours uses, on its own once it passes 20 GiB.** Cargo
+  never deletes an artifact, and every dependency bump and feature set leaves another copy.
   `tools/sweep-cargo-target.mjs` runs before every `tauri dev` and `tauri build` — except under a
-  `--config` overlay that sets `beforeDevCommand`, as the live table drive does — and there only
-  says `target/debug` is over its 30 GiB cap. `pnpm sweep:rust` (`-- --dry-run` lists instead)
+  `--config` overlay that sets `beforeDevCommand`, as the live table drive does — and prunes once
+  `target/debug` is over 20 GiB; `pnpm sweep:rust` prunes at any size (`-- --dry-run` lists). It
   asks Cargo what is in use: it runs the four debug builds (`build` and `test --no-run`, each with
   and without `table-link`) with `--message-format=json`, which names every unit's files, fresh
   ones included, and with Cargo's fingerprint log on, which names every `.fingerprint/` folder —

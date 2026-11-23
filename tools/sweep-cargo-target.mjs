@@ -3,9 +3,9 @@
  * uses: every dependency bump and every feature set leaves another hashed copy beside the old ones,
  * and the folder reaches tens of gigabytes.
  *
- * Before `tauri dev` / `tauri build` (`src-tauri/tauri.conf.json`) it only SAYS the debug profile
- * is over the cap. `pnpm sweep:rust` (`--prune`, `--dry-run` to only list) removes what no build of
- * ours uses, and asks Cargo which that is rather than guessing. Every build below runs with
+ * Before `tauri dev` / `tauri build` (`src-tauri/tauri.conf.json`) once the debug profile is over
+ * the cap, and whenever `pnpm sweep:rust` is run (`-- --dry-run` to only list), it removes what no
+ * build of ours uses, and asks Cargo which that is rather than guessing. Every build below runs with
  * `--message-format=json`, which names the files of EVERY unit, fresh ones included — that covers
  * `deps/` and `build/` — and with Cargo's fingerprint log on, which names every `.fingerprint/`
  * folder it checks: a fingerprint folder is not always named with its files' hash, so it cannot be
@@ -26,7 +26,7 @@ const TAURI_DIR = fileURLToPath(new URL('../src-tauri/', import.meta.url));
 const TARGET_DIR = join(TAURI_DIR, 'target');
 const DEBUG_DIR = join(TARGET_DIR, 'debug');
 const RELEASE_DIR = join(TARGET_DIR, 'release');
-const CAP_GIB = 30;
+const CAP_GIB = 20;
 const GIB = 1024 ** 3;
 /** Every build of the debug profile we run: the app, the app with the table, and their tests
  *  (`tauri dev` adds `--no-default-features`, which changes nothing while there are none). */
@@ -128,25 +128,23 @@ function pruneDebug() {
 	return true;
 }
 
-const prune = process.argv.includes('--prune');
+// `pnpm sweep:rust` prunes now; before `tauri dev` / `tauri build` it prunes once over the cap
+const asked = process.argv.includes('--prune');
 const debugBytes = folderBytes(DEBUG_DIR);
 const releaseBytes = folderBytes(RELEASE_DIR);
 
-if (!prune) {
-	if (debugBytes > CAP_GIB * GIB)
-		console.warn(
-			`sweep: target/debug is ${gib(debugBytes)}, over the ${CAP_GIB} GiB cap — \`pnpm sweep:rust\` removes what no build uses`,
+if (asked || debugBytes > CAP_GIB * GIB) {
+	if (!asked)
+		console.log(
+			`sweep: target/debug is ${gib(debugBytes)}, over the ${CAP_GIB} GiB cap — removing what no build uses`,
 		);
-} else {
-	if (!pruneDebug()) process.exitCode = 1;
-	if (releaseBytes > CAP_GIB * GIB) {
-		console.log(`sweep: target/release is ${gib(releaseBytes)} — cleaning it whole`);
-		// a running app.exe locks its own binary on Windows
-		const cleaned = spawnSync('cargo', ['clean', '--release'], {
-			cwd: TAURI_DIR,
-			stdio: 'inherit',
-		});
-		if (cleaned.status !== 0)
-			console.warn('sweep: cargo clean --release failed; close the app and run it again');
-	}
+	// a failed prune removes nothing; before `tauri dev` it must not stop the session either
+	if (!pruneDebug() && asked) process.exitCode = 1;
+}
+if (releaseBytes > CAP_GIB * GIB) {
+	console.log(`sweep: target/release is ${gib(releaseBytes)} — cleaning it whole`);
+	// a running app.exe locks its own binary on Windows
+	const cleaned = spawnSync('cargo', ['clean', '--release'], { cwd: TAURI_DIR, stdio: 'inherit' });
+	if (cleaned.status !== 0)
+		console.warn('sweep: cargo clean --release failed; close the app and run it again');
 }

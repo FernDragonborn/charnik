@@ -89,3 +89,9 @@ dbus-secret-service-keyring-store = { version = "1.0.1", features = ["crypto-rus
 
 [target.'cfg(target_os = "macos")'.dependencies]
 apple-native-keyring-store = { version = "1.0.2", features = ["keychain"], optional = true }
+
+# Dependencies keep line tables only: a panic's backtrace still names file and line, and nobody
+# steps through iroh or tokio in a debugger. The full debug info they carried was most of
+# target/'s size and much of the link time. Our own crate keeps its full debug info.
+[profile.dev.package."*"]
+debug = "line-tables-only"
