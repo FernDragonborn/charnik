@@ -47,5 +47,7 @@
 	deny.addEventListener('click', () => answer(false));
 	document.addEventListener('keydown', (event) => {
 		if (event.code === 'Escape') answer(false);
+		if (event.code === 'Tab') document.documentElement.dataset.keyboard = '';
 	});
+	document.addEventListener('pointerdown', () => delete document.documentElement.dataset.keyboard);
 })();
