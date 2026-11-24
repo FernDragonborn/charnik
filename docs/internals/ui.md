@@ -205,9 +205,10 @@ strip both at 640px): that number is a fact about the box's min-content, never a
 
 - **`main` is the only scroll region, so everything above it must FIT.** Horizontal overflow at the
   document level scrolls the page sideways and drags every `position: fixed` overlay off-side with
-  it. The topbar therefore wraps below the threshold — nav on a row of its own, a labelled control
-  collapsed to its icon. Collapsing keeps the `aria-label` and never removes the control: the bug
-  chip is the only entrance to the diagnostics bundle.
+  it. The topbar therefore stays ONE row below the threshold: the navigation slides sideways if it
+  must, the search keeps its place, and every other control waits behind ⋯ (`nav.more`), named
+  again there. Moving keeps the `aria-label` and never removes the control: the bug chip is the
+  only entrance to the diagnostics bundle.
 - **Chrome wraps; a status strip scrolls.** A `.combat-bar` never becomes two rows (see its own note
   in `components.css`), so when it runs out of room it scrolls sideways. Same for the settings tab
   strip, whose active underline belongs on the strip's own border and not floating mid-panel.

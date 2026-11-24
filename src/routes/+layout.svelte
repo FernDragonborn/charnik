@@ -2,6 +2,10 @@
 	import { cycleRegion } from '#lib/util/region-cycle.ts';
 	import '#lib/styles/app.css';
 	import { anchored } from '#lib/actions/anchored.ts';
+	import { floatInBody } from '#lib/actions/floatInBody.ts';
+	import { dismissOnEscape } from '#lib/actions/dismissOnEscape.ts';
+	import { MediaQuery } from 'svelte/reactivity';
+	import { NARROW_WINDOW_QUERY } from '#lib/config/narrow-window.ts';
 	import { provenance } from '#lib/actions/provenance.ts';
 	import favicon from '#lib/assets/favicon.svg';
 	import { browser } from '$app/env';
@@ -107,6 +111,10 @@
 	// held nothing new, so it says that it ran.
 	let refreshing = $state(false);
 	let refreshChip = $state<HTMLButtonElement>();
+	/** A narrow window keeps the bar to one row: everything but the search sits behind ⋯. */
+	const narrowBar = new MediaQuery(NARROW_WINDOW_QUERY);
+	let moreOpen = $state(false);
+	let moreButton = $state<HTMLButtonElement>();
 	const CHIP_NOTE = { refreshed: 'refresh.done', reloaded: 'refresh.reloaded' } as const;
 	/** What the note under the chip says, as its catalog key, or null while it is down. It is said
 	 *  at the control, where the eye already is, rather than as a toast across the screen. */
@@ -419,17 +427,21 @@
 			</a>
 		{/each}
 	</nav>
-	<button
-		type="button"
-		class="feedback"
-		onclick={() => (showDiagnostics = true)}
-		use:provenance={$_('feedback.title')}
-		aria-label={$_('feedback.link')}
-	>
-		<Icon name="bug" size={13} />
-		<span class="control-label">{$_('feedback.link')}</span>
-	</button>
-	<div class="chips">
+	<!-- the controls beside the navigation, said once: in the bar on a wide window, and behind ⋯ in a
+	     narrow one, where the bar stays ONE row (work/play-layout.md ▸ NARROW-DESKTOP's appbar) -->
+	{#snippet feedbackButton()}
+		<button
+			type="button"
+			class="feedback"
+			onclick={() => (showDiagnostics = true)}
+			use:provenance={$_('feedback.title')}
+			aria-label={$_('feedback.link')}
+		>
+			<Icon name="bug" size={13} />
+			<span class="control-label">{$_('feedback.link')}</span>
+		</button>
+	{/snippet}
+	{#snippet barChips()}
 		<LangSwitcher />
 		<button
 			type="button"
@@ -480,17 +492,61 @@
 				aria-label={updateTitle}><Icon name="download" size={13} /> {updateLabel}</button
 			>
 		{/if}
-		<button
-			type="button"
-			class="chip search-chip"
-			onclick={() => (ui.commandPaletteOpen = true)}
-			use:provenance={$_('nav.openCommandPalette')}
-			aria-label={$_('nav.openCommandPalette')}
-		>
-			<Icon name="search" size={13} />
-			<span class="control-label">Ctrl K</span>
-		</button>
-	</div>
+	{/snippet}
+	{#if narrowBar.current}
+		<div class="chips">
+			<button
+				type="button"
+				class="chip search-chip"
+				onclick={() => (ui.commandPaletteOpen = true)}
+				use:provenance={$_('nav.openCommandPalette')}
+				aria-label={$_('nav.openCommandPalette')}
+			>
+				<Icon name="search" size={13} />
+				<span class="control-label">Ctrl K</span>
+			</button>
+			<button
+				type="button"
+				class="chip"
+				bind:this={moreButton}
+				aria-expanded={moreOpen}
+				aria-label={$_('nav.more')}
+				use:provenance={$_('nav.more')}
+				onclick={() => (moreOpen = !moreOpen)}><Icon name="ellipsis" /></button
+			>
+		</div>
+		{#if moreOpen && moreButton}
+			<div
+				class="topbar-more"
+				role="dialog"
+				aria-label={$_('nav.more')}
+				use:floatInBody
+				use:anchored={{ anchor: moreButton, onclose: () => (moreOpen = false) }}
+				use:dismissOnEscape={() => {
+					moreOpen = false;
+					moreButton?.focus();
+				}}
+			>
+				{@render feedbackButton()}
+				<div class="chips">{@render barChips()}</div>
+			</div>
+		{/if}
+	{:else}
+		{@render feedbackButton()}
+		<div class="chips">
+			{@render barChips()}
+			<button
+				type="button"
+				class="chip search-chip"
+				onclick={() => (ui.commandPaletteOpen = true)}
+				use:provenance={$_('nav.openCommandPalette')}
+				aria-label={$_('nav.openCommandPalette')}
+			>
+				<Icon name="search" size={13} />
+				<span class="control-label">Ctrl K</span>
+			</button>
+		</div>
+	{/if}
 </header>
 
 <!-- Translate + the compendium editor (3-column views) need the full viewport width; other routes stay
@@ -691,15 +747,15 @@
 	   ONLY way into the diagnostics bundle: it may shrink, never disappear. The threshold matches
 	   MobileWarning's own, so the banner and the layout agree on where narrow starts. */
 	@media (max-width: 800px) {
+		/* ONE row, as the narrow desktop mock draws it: the navigation slides sideways if it must, and
+		   every control but the search waits behind ⋯ */
 		.topbar {
-			flex-wrap: wrap;
 			gap: var(--space-2);
-			padding-inline: var(--space-3);
+			padding: var(--space-1-5) var(--space-3);
 		}
 		.nav {
-			/* last in visual order, so the wrap puts it on a row of its own below the controls */
-			order: 1;
-			flex: 1 0 100%;
+			flex: 1;
+			min-width: 0;
 			overflow-x: auto;
 		}
 		/* the primary control on a phone, and a finger is not a mouse pointer */
@@ -726,6 +782,31 @@
 		main.full-bleed {
 			padding-inline: var(--space-3);
 		}
+	}
+	/* what ⋯ opens in a narrow window: the bar's own controls, one under another */
+	.topbar-more {
+		position: fixed;
+		z-index: 61;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-2);
+		padding: var(--space-2-5);
+		background: var(--color-surface);
+		border: 1px solid var(--color-border-strong);
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-2);
+	}
+	.topbar-more .chips {
+		flex-wrap: wrap;
+	}
+	/* the menu has the room the bar did not: a control says its name again */
+	.topbar-more .control-label {
+		display: inline;
+	}
+	.topbar-more .feedback {
+		gap: var(--space-1-5);
+		padding-inline: var(--space-2-5);
 	}
 	:global(body) {
 		height: 100dvh;
