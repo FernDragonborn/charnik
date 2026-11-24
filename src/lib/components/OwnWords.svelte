@@ -13,14 +13,18 @@
 	import Icon from './Icon.svelte';
 	import { growToFit } from '#lib/actions/growToFit.ts';
 	import { dismissOnEscape } from '#lib/actions/dismissOnEscape.ts';
+	import { takeFocus } from '#lib/actions/takeFocus.ts';
+	import { tick } from 'svelte';
 
 	let {
 		rowId,
 		original,
+		inMenu = false,
 		rewriting = $bindable(false),
 	}: {
 		rowId: string;
 		original: string;
+		inMenu?: boolean;
 		/** Whether the editor is open, bound OUT so the surface can drop the rendered copy of this
 		 *  prose while it is. Otherwise the same words stand twice — once read, once in the box. */
 		rewriting?: boolean;
@@ -31,6 +35,7 @@
 	const scope = $derived(overrides.scopeOf(rowId, locale));
 
 	let text = $state('');
+	let editButton = $state<HTMLButtonElement>();
 	/** Where a SAVE will put it. Seeded from where the words already live, so re-saving an install-wide
 	 *  rewrite does not quietly demote it to this character. */
 	let target = $state<OverrideScope>(OVERRIDE_SCOPE.character);
@@ -52,11 +57,15 @@
 	function save() {
 		// identical to the shipped words is not a rewrite — it is a restore that happens to be typed
 		overrides.write(rowId, locale, text.trim() === original.trim() ? '' : text, target);
+		close();
+	}
+	function close() {
 		rewriting = false;
+		void tick().then(() => editButton?.focus());
 	}
 </script>
 
-<div class="own-words">
+<div class="own-words" class:menu-editor={inMenu}>
 	{#if rewriting}
 		<!-- Escape leaves the editor the way Cancel does; the action is mounted with the editor, so it
 		     listens for exactly as long as there is something to dismiss. -->
@@ -64,8 +73,10 @@
 			class="text-field own-body"
 			bind:value={text}
 			placeholder={original}
+			aria-label={$_('ownWords.write')}
+			use:takeFocus={false}
 			use:growToFit
-			use:dismissOnEscape={() => (rewriting = false)}></textarea>
+			use:dismissOnEscape={close}></textarea>
 		<div class="row">
 			{#if overrides.hasCharacter}
 				<!-- `accent` is the app's ONE "this control is on" modifier (components.css). `on` was
@@ -98,7 +109,7 @@
 					aria-label={$_('ownWords.restore')}
 					onclick={() => {
 						overrides.restore(rowId, locale);
-						rewriting = false;
+						close();
 					}}><Icon name="rotate-ccw" size={14} /></button
 				>
 			{/if}
@@ -106,7 +117,7 @@
 				class="icon-button"
 				use:provenance={$_('app.cancel')}
 				aria-label={$_('app.cancel')}
-				onclick={() => (rewriting = false)}><Icon name="x" size={14} /></button
+				onclick={close}><Icon name="x" size={14} /></button
 			>
 			<button
 				class="icon-button accent"
@@ -115,6 +126,11 @@
 				onclick={save}><Icon name="save" size={14} /></button
 			>
 		</div>
+	{:else if inMenu}
+		<button class="menu-row" bind:this={editButton} onclick={open}>
+			<Icon name="pencil" size={13} />
+			{ownWordsLabel}
+		</button>
 	{:else}
 		<!-- one pencil at rest. The scope pills and the restore live INSIDE the editor: at rest they
 		     were three controls and a sentence standing under every article for a thing most readers
@@ -123,6 +139,7 @@
 		<button
 			class="icon-button own-pencil"
 			class:accent={!!mine}
+			bind:this={editButton}
 			onclick={open}
 			use:provenance={ownWordsLabel}
 			aria-label={ownWordsLabel}><Icon name="pencil" size={13} /></button
@@ -160,13 +177,19 @@
 	}
 	.own-body {
 		width: 100%;
-		min-height: 6rem;
+		min-height: calc(var(--space-8) * 2);
 		resize: vertical;
 		font-family: var(--font-body);
 		font-size: var(--font-size-body);
 		line-height: 1.5;
 		padding: var(--space-2-5) var(--space-3);
 		margin-bottom: var(--space-2);
+	}
+	.menu-editor:has(textarea) {
+		padding: var(--space-2) var(--space-3);
+	}
+	.menu-editor .own-body {
+		max-block-size: min(30dvh, calc(var(--space-8) * 4));
 	}
 	.own-body:focus {
 		outline: none;

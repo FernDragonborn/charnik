@@ -6,7 +6,7 @@
  * satisfies (docs/internals/roller.md).
  */
 import { toast } from '#lib/toast/toast.ts';
-import type { RollSwing } from '#lib/combat/row-menu.ts';
+import { ROLL_SWING, type RollSwing } from '#lib/combat/row-menu.ts';
 import { t, translator } from '#lib/i18n/index.ts';
 import { attackRollName, extraAttackMark, extraAttackRollName } from '#lib/combat/attack-names.ts';
 import type { ExtraAttackRow } from '#lib/combat/attacks.ts';
@@ -236,9 +236,9 @@ export class SheetRolls {
 	 *  rolls the to-hit (picks up attack advantage/flat/dice effects) THEN the weapon damage (with
 	 *  `damage`-keyed effects — Rage +2, sneak/hemocraft dice); Shift-click opens the roll tray.
 	 *  False when the turn could not pay for it, so what rides on the shot (its ammunition) waits. */
-	attackRoll = (at: Attack, e: Event): boolean => {
+	attackRoll = (at: Attack, e: Event | null, swing: RollSwing = ROLL_SWING.straight): boolean => {
 		if (!this.host().economy.trySpendStrike()) return false;
-		this.rollStrike(at, attackRollName(at, t), e);
+		this.rollStrike(at, attackRollName(at, t), e, swing);
 		return true;
 	};
 
@@ -248,7 +248,12 @@ export class SheetRolls {
 	 * the Attack action. Once per turn, which the turn remembers; a second press says so rather than
 	 * rolling. False when it could not be paid for, so what rides on the shot waits.
 	 */
-	extraAttackRoll = (at: Attack, extra: ExtraAttackRow, e: Event): boolean => {
+	extraAttackRoll = (
+		at: Attack,
+		extra: ExtraAttackRow,
+		e: Event | null,
+		swing: RollSwing = ROLL_SWING.straight,
+	): boolean => {
 		const economy = this.host().economy;
 		const mark = extraAttackMark(at, extra);
 		if (economy.isRollUsed(mark)) {
@@ -264,14 +269,15 @@ export class SheetRolls {
 			{ ...at, damageParts: extra.damageParts },
 			extraAttackRollName(at, extra, t),
 			e,
+			swing,
 		);
 		return true;
 	};
 
 	/** One strike, already paid for: a tap rolls it, Shift-click opens the tray on its to-hit. */
-	private rollStrike(at: Attack, name: RollName, e: Event): void {
+	private rollStrike(at: Attack, name: RollName, e: Event | null, swing: RollSwing): void {
 		const { fx, parts, hasDmg, scopes } = this.attackSpec(at);
-		if (wantsTray(e)) {
+		if (e && wantsTray(e)) {
 			const later = this.host().attackAfterFirst(scopes);
 			// tray on the TO-HIT (pick advantage), then Roll fires the damage as one combined entry
 			this.openRoll(
@@ -292,7 +298,7 @@ export class SheetRolls {
 			);
 			return;
 		}
-		this.rollAttackNow(at, name);
+		this.rollAttacks(at, [name], true, swing);
 	}
 
 	/**
@@ -313,14 +319,23 @@ export class SheetRolls {
 	 * strikes made in the same millisecond shared it, so re-reading one rewrote both and only one line
 	 * on disk.
 	 */
-	rollAttacks = (at: Attack, names: RollName[], ownTurn = true) => {
+	rollAttacks = (
+		at: Attack,
+		names: RollName[],
+		ownTurn = true,
+		swing: RollSwing = ROLL_SWING.straight,
+	) => {
 		const firstAttack = this.attackSpec(at, ownTurn);
 		const { parts } = firstAttack;
 		const stamp = Date.now();
 		// instant: to-hit (with effect advantage/flat/dice) + per-type damage → one combined entry each
 		const entries = names.map((name, i) => {
 			const { fx, hasDmg, parts } = i ? this.attackSpec(at, ownTurn) : firstAttack;
-			const toHit = rollPool({ 20: 1 }, { ...fx, mod: at.toHit, advantage: netAdvantage(fx) });
+			const advantage = netAdvantage({
+				advantage: fx.advantage || swing === ROLL_SWING.advantage,
+				disadvantage: fx.disadvantage || swing === ROLL_SWING.disadvantage,
+			});
+			const toHit = rollPool({ 20: 1 }, { ...fx, mod: at.toHit, advantage });
 			this.host().consumeAttack();
 			const crit = this.critFaceShown(toHit);
 			const damage = rollDamageParts(crit ? parts.map((part) => ({ ...part, crit })) : parts);

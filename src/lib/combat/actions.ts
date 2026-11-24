@@ -38,6 +38,7 @@ export interface StandardAction {
 }
 
 export const ACTION_COST = { action: 'action', free: 'free' } as const;
+export const ATTACK_ACTION_ID = 'attack';
 export type ActionCost = (typeof ACTION_COST)[keyof typeof ACTION_COST];
 export const ACTION_DEFAULT = { shown: 'shown', hidden: 'hidden' } as const;
 export type ActionDefault = (typeof ACTION_DEFAULT)[keyof typeof ACTION_DEFAULT];
@@ -62,7 +63,7 @@ const ROWS: {
 	system?: System;
 	byDefault?: ActionDefault;
 }[] = [
-	{ id: 'attack', marker: 'attacks' },
+	{ id: ATTACK_ACTION_ID, marker: 'attacks' },
 	{ id: 'dash', marker: 'action' },
 	{ id: 'disengage', marker: 'action' },
 	{ id: 'dodge', marker: 'action' },

@@ -98,6 +98,7 @@ export interface Attack {
 	 *  token names when it fires this attack, so the match survives translation and re-sourcing.
 	 *  `name` is what a person reads; it is not an identity. */
 	id: string;
+	weaponRef?: string;
 	/** The weapon row's name in the READER's language. Empty for the one attack that has no row —
 	 *  see `nameKey`. */
 	name: string;
@@ -519,6 +520,7 @@ export function computeAttacks(
 		const damageParts = [...baseParts, ...(own.extraParts ?? [])];
 		out.push({
 			id: row.id,
+			weaponRef: row.effectiveId,
 			// the same name the compendium, the inventory and every other row on the sheet print — the
 			// instance's ("Longsword +2") for a +N weapon, never the book's heading
 			name: instanceName({ graph, locale }, row, inv) ?? localizedName(row, locale),

@@ -200,9 +200,11 @@ and a panel's rows share one Tab stop with their controls on the arrows.
   menu's place — the maintainer's call.
   **Built** (`../internals/ui.md` ▸ Accessibility): the right click, the context-menu key and
   Shift+F10 open it on a skill (its parts and the check with a swing), a spell and a feature (the
-  pin, the article) and an item (the article, Remove). **Left:** the HOLD on a finger, which today is
-  how a row is dragged — it arrives with PHONE-PLAY, once dragging is ARRANGE-MODE's; the attack and
-  action rows; a spell's parts; the own-words editor in the menu.
+  pin, the article) and an item (the article, Remove). Attack and action rows open the same menu,
+  spells show their casting parts, and a feature opens its own-words editor in the menu. [to audit]
+  **Left:** the hold on a finger, once dragging is ARRANGE-MODE's.
+  **Open:** Should dismissing the own-words editor save with Undo as in P45–P45b, or keep the shared
+  editor's explicit Save and Cancel controls?
 
 - [ ] **RESOURCE-PIN · pin ANY trackable thing to the play surface, not only spells.** Asked for in
   feedback. Today `ui.spellsPinned` pins spells to the top of the combat spell list and nothing else

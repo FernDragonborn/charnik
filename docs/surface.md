@@ -26,6 +26,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `place` ×6 — src/lib/actions/provenance.ts · src/routes/build/blocks/PickerCard.svelte · src/routes/build/blocks/PickerPeek.svelte · src/routes/build/blocks/RarityRange.svelte · src/routes/combat/CombatMenus.svelte · src/routes/dev/storage-edges/+page.svelte
 - `label` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/blocks/RarityRange.svelte · src/routes/build/rows.ts
 - `add` ×4 — src/lib/components/UpcastBuilder.svelte · src/routes/build/ability-allocation.svelte.ts · src/routes/build/blocks/ItemInstanceAsk.svelte · src/routes/build/blocks/OwnEntries.svelte
+- `close` ×4 — src/lib/actions/provenance.ts · src/lib/components/OwnWords.svelte · src/lib/dice/roller.ts · src/routes/combat/narrow/NarrowHead.svelte
 - `files` ×4 — src/lib/character/draft-repository.ts · src/lib/components/settings/PackTranslationBackups.svelte · src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts
 - `nameOf` ×4 — src/routes/build/blocks/OptionsPane.svelte · src/routes/combat/blocks/panels/ActionsPanel.svelte · src/routes/combat/blocks/panels/FeaturesPanel.svelte · src/routes/combat/play-outcomes.ts
 - `num` ×4 — src/lib/build/sheet-diff.ts · src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
@@ -38,7 +39,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `cell` ×3 — src/lib/components/UpcastBuilder.svelte · src/lib/content/locale-merge.ts · src/lib/content/migrations.ts
 - `choose` ×3 — src/lib/components/FirstRunModal.svelte · src/lib/components/LanguagePicker.svelte · src/lib/components/settings/TableSettings.svelte
 - `cleanup` ×3 — src/routes/dev/characters-write/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/storage-edges/+page.svelte
-- `close` ×3 — src/lib/actions/provenance.ts · src/lib/dice/roller.ts · src/routes/combat/narrow/NarrowHead.svelte
 - `fieldLabel` ×3 — src/lib/components/EditContentForm.svelte · src/lib/components/OrphanDialog.svelte · src/lib/content/detail.ts
 - `fileOf` ×3 — src/lib/character/draft-repository.ts · src/lib/character/repository.ts · src/lib/styles/themeFiles.ts
 - `has` ×3 — src/lib/components/ClassPicker.svelte · src/lib/content/translate.ts · src/routes/dev/plugin-consent/+page.svelte
@@ -346,7 +346,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **MonsterHead** | `detail`, `monster`, `editable`, `draft` | The "shapka" of a monster stat block: eyebrow, title, the vitals + abilities panels, and the |
 | **NoCharacter** | — | Shared empty state for the play views (Combat / Spellbook) when there's no active character — |
 | **OrphanDialog** | `orphans`, `startAt`, `graph`, `onDone` | A draft whose entry is gone — deleted, renamed, or its source switched off. |
-| **OwnWords** | `rowId`, `original`, `rewriting` | "Say it the way your table says it." Any article's description can be replaced with the |
+| **OwnWords** | `rowId`, `original`, `inMenu`, `rewriting` | "Say it the way your table says it." Any article's description can be replaced with the |
 | **PackTranslationBackups** | `pack`, `backups`, `onRestored` | The way back out of `content-backups/`, under the pack whose files a run copied aside before it |
 | **PackUndoDialog** | `pack`, `onChoose`, `onCancel` | "Undo this update" asks what becomes of what the player changed in the pack since the update |
 | **PackUpdatesSettings** | — | Settings ▸ Updates — content packs (docs/plan.md · REL-4). |
@@ -1002,6 +1002,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface StandardAction`
 - `const ACTION_COST`
+- `const ATTACK_ACTION_ID`
 - `type ActionCost`
 - `const ACTION_DEFAULT`
 - `type ActionDefault`
@@ -2804,4 +2805,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_51 tokens · 108 global classes · 63 components · 1710 exports across 239 modules · 127 duplicate suspects._
+_51 tokens · 108 global classes · 63 components · 1711 exports across 239 modules · 127 duplicate suspects._

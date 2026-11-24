@@ -143,6 +143,7 @@
 								toggle: () => combat.featureView.togglePinned(id),
 							},
 							compendium: articleHref(f.row.effectiveId),
+							words: { rowId: id, original: localizedProse(f.row, 'text', app.activeLocale) },
 						},
 						e,
 					)}

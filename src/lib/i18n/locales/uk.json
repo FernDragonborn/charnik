@@ -580,6 +580,7 @@
 			"advancement": "Розвиток"
 		},
 		"rowMenu": {
+			"useAction": "Виконати дію",
 			"swing": "Кинути з",
 			"disadvantage": "Завада",
 			"roll": "Кинути",

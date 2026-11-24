@@ -12,7 +12,7 @@ export type RollSwing = (typeof ROLL_SWING)[keyof typeof ROLL_SWING];
 
 export interface RowMenuAct {
 	label: string;
-	run: () => void;
+	run: (event: MouseEvent) => void;
 	/** Something gone for good — framed as the irreversible answer. */
 	gone?: boolean;
 }
@@ -27,6 +27,7 @@ export interface RowMenuSpec {
 	pin?: { on: boolean; toggle: () => void };
 	/** The row's own article. */
 	compendium?: string | undefined;
+	words?: { rowId: string; original: string };
 	acts?: RowMenuAct[];
 }
 

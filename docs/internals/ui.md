@@ -998,7 +998,8 @@ a region joins by being marked.
 right click — which takes the browser's own context menu's place on that row — the context-menu key
 or Shift+F10 opens what the row has of: what its number is made of, the check with a swing (the
 player's advantage or disadvantage joining the sheet's, one of each cancelling), its pin, its
-article and its own acts. A row says what it has; the menu shows only that.
+article and its own acts. Spells show the casting profile's parts and a feature opens the shared
+own-words editor. Escape leaves the editor first, then returns from the row menu to its trigger.
 
 **`Ctrl+K` opens the command palette** — all content and every character. Views switch by tab bar
 or from the palette. A local search of the active character (`Ctrl+Shift+K`) and `Ctrl+1..4` between

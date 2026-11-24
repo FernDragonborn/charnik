@@ -13,6 +13,7 @@
 	import { submitOnEnter } from '#lib/actions/submitOnEnter.ts';
 	import { combat } from './combat-view-model.svelte';
 	import EyeIcon from '#lib/components/EyeIcon.svelte';
+	import OwnWords from '#lib/components/OwnWords.svelte';
 	import DiceTray from './menus/DiceTray.svelte';
 	import RollLog from './menus/RollLog.svelte';
 	import { SKILL_ABILITY, type SkillId } from '#lib/character/derive.ts';
@@ -165,9 +166,12 @@
 
 	/** Escape closes the menu and hands the focus back to what opened it. */
 	function closeToTrigger(): void {
-		const anchor = combat.overlay?.anchor;
+		const trigger = combat.overlay?.returnFocus ?? combat.overlay?.anchor;
 		combat.overlay = null;
-		anchor?.focus();
+		trigger?.focus();
+	}
+	function escapeMenu(): void {
+		if (!popEl?.querySelector('.own-words textarea')) closeToTrigger();
 	}
 </script>
 
@@ -228,7 +232,7 @@
 		style="top:{pos.top}px; max-height:min(72vh, {pos.maxHeight}px); {pos.left != null
 			? `left:${pos.left}px`
 			: `right:${pos.right}px`}"
-		use:dismissOnEscape={closeToTrigger}
+		use:dismissOnEscape={escapeMenu}
 	>
 		{#if overlay.kind === 'dice'}
 			<DiceTray />
@@ -476,7 +480,7 @@
 			<!-- a row's own menu (work/play-layout.md ▸ ROW-MENU): what its number is made of, the roll's
 			     swing, its pin, its article, its own acts — only what this row has -->
 			<div class="popup-heading eyebrow">
-				{rowMenu.title}<button class="icon-button" onclick={() => (combat.overlay = null)}
+				{rowMenu.title}<button class="icon-button" onclick={closeToTrigger}
 					><Icon name="x" size={13} label={$_('combat.menu.close')} /></button
 				>
 			</div>
@@ -487,23 +491,23 @@
 					<button
 						class="pill-btn"
 						onclick={() => {
+							closeToTrigger();
 							rollIt(ROLL_SWING.disadvantage);
-							combat.overlay = null;
-						}}>▼ {$_('combat.rowMenu.disadvantage')}</button
+						}}><Icon name="chevron-down" size={13} /> {$_('combat.rowMenu.disadvantage')}</button
 					>
 					<button
 						class="pill-btn accent"
 						onclick={() => {
+							closeToTrigger();
 							rollIt(ROLL_SWING.straight);
-							combat.overlay = null;
 						}}>{$_('combat.rowMenu.roll')}</button
 					>
 					<button
 						class="pill-btn"
 						onclick={() => {
+							closeToTrigger();
 							rollIt(ROLL_SWING.advantage);
-							combat.overlay = null;
-						}}>▲ {$_('combat.rowMenu.advantage')}</button
+						}}><Icon name="chevron-up" size={13} /> {$_('combat.rowMenu.advantage')}</button
 					>
 				</div>
 			{/if}
@@ -513,8 +517,8 @@
 					class="menu-row"
 					aria-pressed={pin.on}
 					onclick={() => {
+						closeToTrigger();
 						pin.toggle();
-						combat.overlay = null;
 					}}
 					><Icon name="star" size={13} fill={pin.on ? 'currentColor' : 'none'} />
 					{$_(pin.on ? 'combat.rowMenu.unpin' : 'combat.rowMenu.pin')}</button
@@ -525,13 +529,18 @@
 					><Icon name="book-open" size={13} /> {$_('combat.rowMenu.compendium')}</a
 				>
 			{/if}
+			{#if rowMenu.words}
+				{#key rowMenu.words.rowId}
+					<OwnWords {...rowMenu.words} inMenu />
+				{/key}
+			{/if}
 			{#each rowMenu.acts ?? [] as act (act.label)}
 				<button
 					class="menu-row"
 					class:is-gone={act.gone}
-					onclick={() => {
-						act.run();
-						combat.overlay = null;
+					onclick={(event) => {
+						closeToTrigger();
+						act.run(event);
 					}}>{act.label}</button
 				>
 			{/each}

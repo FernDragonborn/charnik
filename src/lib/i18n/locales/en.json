@@ -581,6 +581,7 @@
 		},
 		"rowMenu": {
 			"swing": "Roll with",
+			"useAction": "Use action",
 			"disadvantage": "Disadvantage",
 			"roll": "Roll",
 			"advantage": "Advantage",

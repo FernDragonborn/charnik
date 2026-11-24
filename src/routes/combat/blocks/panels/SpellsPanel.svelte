@@ -9,6 +9,7 @@
 	import { abilityShortLabel } from '#lib/util/format.ts';
 	import { toast } from '#lib/toast/toast.ts';
 	import type { CharacterSheet } from '#lib/character/derive.ts';
+	import { casterForSpell } from '#lib/character/spellcasting.ts';
 	import { combat } from '../../combat-view-model.svelte';
 	import { why, signed } from '#lib/combat/helpers.ts';
 	import { provenance } from '#lib/actions/provenance.ts';
@@ -34,6 +35,30 @@
 		r.summary || combat.casting.caption(r, $_) || $_('combat.spells.utility');
 	const prepLabel = (state: Row['prepState']): string =>
 		$_(state === 'always' ? 'combat.spells.alwaysPrepared' : 'combat.spells.togglePrepared');
+
+	function spellMenu(r: Row, event: Event): void {
+		const caster = casterForSpell(s, r.ref);
+		const parts = [
+			says(r),
+			r.resolutionLabelKey ? $_(r.resolutionLabelKey) : '',
+			...(caster
+				? [
+						caster.className,
+						`${$_('combat.spells.saveDc')} ${caster.saveDC.value} · ${why(caster.saveDC, $_)}`,
+						`${$_('combat.spells.attackBonus')} ${signed(caster.attack.value)} · ${why(caster.attack, $_)}`,
+					]
+				: []),
+		].filter(Boolean);
+		combat.menus.openRowMenu(
+			{
+				title: r.name,
+				why: parts.join('\n'),
+				pin: { on: !!pinned[r.ref], toggle: () => combat.togglePin(r.ref) },
+				compendium: articleHref(r.ref),
+			},
+			event,
+		);
+	}
 </script>
 
 {#if s.spellcasting.classes.length}
@@ -105,18 +130,7 @@
 					     Tab went row, row, out — prepare, pin, ritual cast and the cast-time note were
 					     reachable by mouse only, and ritual casting by nothing else anywhere in the app. The
 					     NAME is the cast button, so the widest cell of the row still casts on a click. -->
-					<div
-						class="spell-row"
-						use:contextAct={(e) =>
-							combat.menus.openRowMenu(
-								{
-									title: r.name,
-									pin: { on: !!pinned[r.ref], toggle: () => combat.togglePin(r.ref) },
-									compendium: articleHref(r.ref),
-								},
-								e,
-							)}
-					>
+					<div class="spell-row" use:contextAct={(e) => spellMenu(r, e)}>
 						<span class="row-name">
 							<button
 								class="prep"

@@ -9,8 +9,11 @@ import type { Action } from 'svelte/action';
  * has it, and a popover is opened by a press — so the focus is on the button that opened it, and
  * the field the popover exists for sits unfocused one click away.
  */
-export const takeFocus: Action<HTMLInputElement> = (node) => {
+export const takeFocus: Action<HTMLInputElement | HTMLTextAreaElement, boolean | undefined> = (
+	node,
+	select = true,
+) => {
 	node.focus();
 	// once the field holds its value: an action runs before a `bind:value` beside it has written
-	void tick().then(() => node.select());
+	if (select) void tick().then(() => node.select());
 };

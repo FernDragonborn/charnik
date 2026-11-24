@@ -4,14 +4,16 @@
 	// resource spend-options (Ki → Flurry) with a cost chip. Three kinds, one order the player owns.
 	import Icon from '#lib/components/Icon.svelte';
 	import { provenance } from '#lib/actions/provenance.ts';
+	import { contextAct } from '#lib/actions/contextAct.ts';
 	import { _ } from '#lib/i18n/index.ts';
 	import { combat } from '../../combat-view-model.svelte';
 	import { dndzone } from 'svelte-dnd-action';
 	import { dragMotion, TOUCH_HOLD_MS, NO_LIBRARY_TAB_STOPS } from '#lib/actions/dragMotion.ts';
 	import RowGrip from '../RowGrip.svelte';
 	import { ROW_PANEL } from '#lib/combat/row-order.ts';
-	import type { StandardAction } from '#lib/combat/helpers.ts';
-	import { ACTION_DEFAULT } from '#lib/combat/actions.ts';
+	import { why, type StandardAction } from '#lib/combat/helpers.ts';
+	import { ACTION_DEFAULT, ATTACK_ACTION_ID } from '#lib/combat/actions.ts';
+	import type { RowMenuSpec } from '#lib/combat/row-menu.ts';
 	import { OPTION_SPENDS_SLOT } from '#lib/play/options.ts';
 	/** The three things this panel lists. A player sees one list of things they can do, so they order
 	 *  one list: a spend-option that opens the character's whole turn has as much claim to the top as
@@ -62,6 +64,42 @@
 			: row.kind === ROW_KIND.roll
 				? row.r.label
 				: row.o.name;
+
+	function actionMenu(row: ActionRow, event: Event): void {
+		const title = nameOf(row);
+		const use = $_('combat.rowMenu.useAction');
+		let spec: RowMenuSpec;
+		switch (row.kind) {
+			case ROW_KIND.action: {
+				const { a } = row;
+				const check = a.skill ? combat.sheet?.skills[a.skill] : undefined;
+				spec = {
+					title,
+					why: [$_(a.descKey), check ? why(check, $_) : ''].filter(Boolean).join('\n'),
+					...(a.roll
+						? { roll: (swing) => combat.actionClick(a, swing) }
+						: a.id !== ATTACK_ACTION_ID
+							? { acts: [{ label: use, run: (e) => combat.actionClick(a, e) }] }
+							: {}),
+				};
+				break;
+			}
+			case ROW_KIND.roll:
+				spec = {
+					title,
+					why: [row.r.formula, row.r.source].join('\n'),
+					acts: [{ label: $_('combat.rowMenu.roll'), run: () => combat.rollFeature(row.r) }],
+				};
+				break;
+			case ROW_KIND.spend:
+				spec = {
+					title,
+					acts: [{ label: use, run: () => combat.activateResourceOption(row.o) }],
+				};
+				break;
+		}
+		combat.menus.openRowMenu(spec, event);
+	}
 </script>
 
 <div
@@ -88,7 +126,7 @@
 	}}
 >
 	{#each items as row (row.id)}
-		<div class="row-wrap">
+		<div class="row-wrap" use:contextAct={(e) => actionMenu(row, e)}>
 			<RowGrip
 				panel={ROW_PANEL.actions}
 				id={row.id}

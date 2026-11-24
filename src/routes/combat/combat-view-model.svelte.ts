@@ -24,6 +24,7 @@ import { FeatureView } from './feature-view.svelte';
 import {
 	ACTION_COST,
 	ACTION_DEFAULT,
+	ATTACK_ACTION_ID,
 	actionsHiddenBy,
 	isActionHidden,
 	type ActionPreset,
@@ -40,6 +41,7 @@ import {
 	type StandardAction,
 } from '#lib/combat/helpers.ts';
 import { RollJournal } from './roll-journal.svelte';
+import type { RollSwing } from '#lib/combat/row-menu.ts';
 import { snapshotCharacterOnLaunch } from '#lib/character/repository.ts';
 import { appendLog, reviseLog, readLog, logLineFor } from '#lib/character/log-repository.ts';
 import { getUserStorage } from '#lib/storage/provider.ts';
@@ -218,11 +220,11 @@ class CombatVM {
 	openRoll = (...a: Parameters<SheetRolls['openRoll']>) => this.rolls.openRoll(...a);
 	roll = (...a: Parameters<SheetRolls['roll']>) => this.rolls.roll(...a);
 	rollSwung = (...a: Parameters<SheetRolls['rollSwung']>) => this.rolls.rollSwung(...a);
-	attackRoll = (at: Attack, e: Event) =>
-		this.inventory.shoot(at.id, e, () => this.rolls.attackRoll(at, e));
+	attackRoll = (at: Attack, e: Event | null, swing?: RollSwing) =>
+		this.inventory.shoot(at.id, e, () => this.rolls.attackRoll(at, e, swing));
 	/** An extra attack fires like any other shot: what it spends in ammunition waits on the roll. */
-	extraAttackRoll = (at: Attack, extra: ExtraAttackRow, e: Event) =>
-		this.inventory.shoot(at.id, e, () => this.rolls.extraAttackRoll(at, extra, e));
+	extraAttackRoll = (at: Attack, extra: ExtraAttackRow, e: Event | null, swing?: RollSwing) =>
+		this.inventory.shoot(at.id, e, () => this.rolls.extraAttackRoll(at, extra, e, swing));
 	/** What the dice tray hands its completed rolls to — the log, plus the weapon-attack reroll offer. */
 	recordTrayRolls = (...a: Parameters<SheetRolls['recordTrayRolls']>) =>
 		this.rolls.recordTrayRolls(...a);
@@ -469,22 +471,21 @@ class CombatVM {
 	);
 	/** Click a standard action (Dash, Hide, …). Spends an action; roll-type ones open their roll,
 	 *  no-roll ones just consume the slot. The "Attack" row is a pointer to the Attacks panel. */
-	actionClick = (a: StandardAction, e: Event) => {
-		if (a.id === 'attack') return; // routes to the Attacks panel; not itself an action spend
+	actionClick = (a: StandardAction, input: Event | RollSwing) => {
+		if (a.id === ATTACK_ACTION_ID) return; // routes to the Attacks panel; not itself an action spend
 		if (a.cost === ACTION_COST.free) return toast(t(a.nameKey), { description: t(a.descKey) });
 		if (!this.economy.trySpend('action')) return;
 		// the roll's NAME is a key: a standard action is a closed rules vocabulary, so its check reads
 		// in the language the log is READ in rather than the one it was made in. Its TARGET is the skill
 		// it checks — Hide is a Stealth check, and it must roll the way the skills panel's Stealth row
 		// does or the same check rolls two ways depending on which panel you tapped.
-		if (a.roll)
-			this.rolls.roll(
-				{ text: t(a.roll[0]), key: a.roll[0] },
-				a.roll[1],
-				e,
-				a.skill ? skillRollTarget(a.skill, this.sheet) : undefined,
-			);
-		else
+		if (a.roll) {
+			const [key, mod] = a.roll;
+			const name = { text: t(key), key };
+			const target = a.skill ? skillRollTarget(a.skill, this.sheet) : undefined;
+			if (typeof input === 'number') this.rolls.rollSwung(name, mod, input, target);
+			else this.rolls.roll(name, mod, input, target);
+		} else
 			this.notify({
 				text: {
 					key: 'combat.notice.actionUsed',

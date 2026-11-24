@@ -1,11 +1,13 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { render } from 'vitest-browser-svelte';
+import { tick } from 'svelte';
 import { startI18n } from '#lib/i18n/index.ts';
 import { SYSTEMS, newCharacter } from '#lib/character/schema.ts';
 import type { ContentGraph } from '#lib/content/loader.ts';
 import { makeTempContentRoot } from '../../../../test-support/fixtures';
 import { combat } from '../../combat-view-model.svelte';
 import SpellsPanel from './SpellsPanel.svelte';
+import CombatMenus from '../../CombatMenus.svelte';
 
 const SOURCE = 'Test pack';
 const FEAT = `feat:${SOURCE}:spell_feat`;
@@ -70,5 +72,20 @@ describe.each(SYSTEMS)('spell panel with repeatable feat profiles · %s', (syste
 		expect(castButton?.disabled).toBe(false);
 		expect(castButton?.textContent).toContain('Test spell');
 		expect(document.querySelector('.armor-block')?.textContent).toContain('Casting block');
+	});
+
+	it('opens the spell and its casting profile in the row menu', async () => {
+		const sheet = combat.sheet;
+		if (!sheet) throw new Error('The character must have a sheet');
+		await render(SpellsPanel, { s: sheet });
+		const menus = await render(CombatMenus);
+		const row = document.querySelector('.spell-row');
+		expect(
+			row?.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true })),
+		).toBe(false);
+		await tick();
+		expect(document.querySelector('.popup-heading')?.textContent).toContain('Test spell');
+		expect(document.querySelector('.row-why')?.textContent).toContain('Save DC');
+		await expect.element(menus.getByRole('link', { name: 'Open in the compendium' })).toBeVisible();
 	});
 });

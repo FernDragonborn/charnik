@@ -17,6 +17,8 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import { why } from '#lib/combat/helpers.ts';
 	import { provenance } from '#lib/actions/provenance.ts';
+	import { contextAct } from '#lib/actions/contextAct.ts';
+	import { articleHref } from '#lib/combat/row-menu.ts';
 	import { describedRules } from '#lib/content/overrides.svelte.ts';
 	import { app } from '#lib/stores/app.svelte.ts';
 	import { dndzone } from 'svelte-dnd-action';
@@ -49,6 +51,22 @@
 		[attackNotes(at, $_), describedRules(attackPropertyRows(at), app.activeLocale)]
 			.filter(Boolean)
 			.join('\n');
+
+	const attackMenu = (at: Attack, e: Event, extra?: ExtraAttackRow) =>
+		combat.menus.openRowMenu(
+			{
+				title: extra?.name ?? attackName(at, $_),
+				why: extra
+					? extraExplanation(extra, combat.economy.isRollUsed(extraAttackMark(at, extra)))
+					: [formatDamageParts(at.damageParts, $_), rowExplanation(at)].filter(Boolean).join('\n'),
+				roll: (swing) =>
+					extra
+						? combat.extraAttackRoll(at, extra, null, swing)
+						: combat.attackRoll(at, null, swing),
+				compendium: at.weaponRef ? articleHref(at.weaponRef) : undefined,
+			},
+			e,
+		);
 
 	/* The order of these rows is the player's — the list itself is derived from what they wield, so
 	   the order lives on `ui.rowOrder` and is reconciled against the live rows on every read. The
@@ -112,7 +130,7 @@
 				/>
 				<!-- the weapon's own line: the row and, where there is one, its grip. Its own box so an
 				     extra attack can stand UNDER it without the two sharing a line. -->
-				<div class="row-line">
+				<div class="row-line" use:contextAct={(e) => attackMenu(at, e)}>
 					<!-- D9: the notes explain a magic weapon's own +X (already folded into toHit/damage) on hover -->
 					<button
 						class="combat-row"
@@ -160,6 +178,7 @@
 					{@const made = combat.economy.isRollUsed(extraAttackMark(at, extra))}
 					<button
 						class="extra-attack"
+						use:contextAct={(e) => attackMenu(at, e, extra)}
 						class:is-blocked={made}
 						aria-disabled={made ? true : undefined}
 						aria-label={$_('combat.attacks.extraAttack', {

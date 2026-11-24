@@ -17,6 +17,7 @@ import { parseDamageParts, type MenuKind } from '#lib/combat/helpers.ts';
 import { registerDiceTray, type DiceTrayRequest } from '#lib/dice/tray.svelte.ts';
 import type { RollJournal } from './roll-journal.svelte';
 import type { RowMenuSpec } from '#lib/combat/row-menu.ts';
+import { FOCUSABLE } from '#lib/actions/trapFocus.ts';
 
 /** What the menus need from the sheet around them: somewhere to put a prefilled roll. */
 export interface MenuOverlayHost {
@@ -34,7 +35,10 @@ export interface OpenOverlay {
 	/** The button it was opened from, when there was one. Kept so a click on THAT button is not read
 	 *  as a click outside the menu — it is the toggle, and closing on it would fight the reopen. */
 	anchor?: HTMLElement;
+	returnFocus?: HTMLElement;
 }
+
+const ROW_CONTROLS = `summary, ${FOCUSABLE}`;
 
 export class MenuOverlay {
 	constructor(private host: () => MenuOverlayHost) {}
@@ -44,7 +48,8 @@ export class MenuOverlay {
 
 	openMenu = (kind: MenuKind, e: Event) => {
 		if (typeof window === 'undefined') return; // no DOM to anchor against (SSR, node tests)
-		const anchor = e.currentTarget as HTMLElement;
+		const anchor = e.currentTarget;
+		if (!(anchor instanceof HTMLElement)) return;
 		// the trigger is a TOGGLE: with no backdrop swallowing the click, the button gets it back, and
 		// a menu that only ever opened would be one you can't put away with the control you opened it by
 		if (this.overlay?.kind === kind && this.overlay.anchor === anchor) {
@@ -67,8 +72,21 @@ export class MenuOverlay {
 
 	/** Open a row's menu under the row (`work/play-layout.md` ▸ ROW-MENU). */
 	openRowMenu = (spec: RowMenuSpec, e: Event) => {
-		this.rowMenu = spec;
 		this.openMenu('row', e);
+		const overlay = this.overlay;
+		if (overlay?.kind !== 'row' || !overlay.anchor) return;
+		this.rowMenu = spec;
+		const active = document.activeElement;
+		const clicked =
+			e.target instanceof Element ? e.target.closest<HTMLElement>(ROW_CONTROLS) : null;
+		const trigger = [clicked, active].find(
+			(element): element is HTMLElement =>
+				element instanceof HTMLElement && overlay.anchor?.contains(element) === true,
+		);
+		const first = overlay.anchor.querySelector<HTMLElement>(ROW_CONTROLS);
+		overlay.returnFocus =
+			trigger ??
+			(overlay.anchor.matches(ROW_CONTROLS) ? overlay.anchor : (first ?? overlay.anchor));
 	};
 
 	openDice = (e: Event) => {
