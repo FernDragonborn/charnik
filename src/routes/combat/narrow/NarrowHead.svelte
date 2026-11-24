@@ -28,7 +28,12 @@
 	import { MediaQuery } from 'svelte/reactivity';
 	import { THREE_COLUMNS_QUERY } from '#lib/config/narrow-window.ts';
 
-	let { c, s }: { c: Character; s: CharacterSheet } = $props();
+	let {
+		c,
+		s,
+		arrangeTab = '',
+	}: { c: Character; s: CharacterSheet; arrangeTab?: string } = $props();
+	const arranging = $derived(combat.layout.arranging);
 
 	const OPEN = { title: 'title', hp: 'hp', ac: 'ac' } as const;
 	type Open = (typeof OPEN)[keyof typeof OPEN];
@@ -56,15 +61,35 @@
 
 <section class="narrow-head" data-region>
 	<div class="headline">
-		<button
-			class="who"
-			class:open={open?.what === OPEN.title}
-			aria-expanded={open?.what === OPEN.title}
-			onclick={(e) => toggle(OPEN.title, e)}
-		>
-			<span class="who-classes">{combat.className}</span>
-			<b class="who-name">{c.build.name}<Icon name="chevron-down" size={13} /></b>
-		</button>
+		<div class="narrow-title" class:arranging>
+			{#if arranging}
+				<b class="who-name"
+					>{arrangeTab
+						? $_('combat.arrange.currentTab', { values: { tab: arrangeTab } })
+						: $_('combat.arrange.arranging')}</b
+				>
+			{:else}
+				<button
+					class="who"
+					class:open={open?.what === OPEN.title}
+					aria-expanded={open?.what === OPEN.title}
+					onclick={(e) => toggle(OPEN.title, e)}
+				>
+					<span class="who-classes">{combat.className}</span>
+					<b class="who-name">{c.build.name}<Icon name="chevron-down" size={13} /></b>
+				</button>
+			{/if}
+			<button
+				type="button"
+				class="pill-btn narrow-arrange-toggle"
+				aria-label={$_(arranging ? 'combat.arrange.done' : 'combat.arrange.start')}
+				aria-pressed={arranging}
+				onclick={combat.layout.toggleArranging}
+			>
+				{#if arranging}{$_('combat.arrange.done')}
+				{:else}<Icon name="sliders-horizontal" size={16} />{/if}
+			</button>
+		</div>
 
 		<button
 			class="hp"
@@ -254,6 +279,25 @@
 		display: flex;
 		align-items: center;
 		gap: var(--space-3);
+	}
+	.narrow-title {
+		display: flex;
+		flex: 1;
+		min-inline-size: 0;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-1);
+	}
+	.narrow-arrange-toggle {
+		flex: none;
+		min-block-size: calc(var(--space-5) + var(--space-2));
+	}
+	.narrow-title.arranging {
+		flex-wrap: wrap;
+	}
+	.arranging .who-name {
+		white-space: normal;
+		overflow-wrap: anywhere;
 	}
 	.who,
 	.hp,
@@ -470,7 +514,7 @@
 		.headline {
 			flex-wrap: wrap;
 		}
-		.who {
+		.narrow-title {
 			flex-basis: 100%;
 		}
 		.hp {

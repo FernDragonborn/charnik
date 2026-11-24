@@ -101,7 +101,7 @@ function hideRing(): void {
 /** The touch hold, SHOWN: the ring that says a row is about to become yours to move. Its own
  *  function because it shares nothing with the drag's motion but the zone it watches — and because
  *  the action that hosts both should read as the two things it does. Returns its own teardown. */
-function watchTouchHold(zone: HTMLElement): () => void {
+function watchTouchHold(zone: HTMLElement, active: () => boolean): () => void {
 	/** Where the finger went down, so drift can be measured against it, and the pending reveal. */
 	let holdFrom: { x: number; y: number } | null = null;
 	let holdTimer: ReturnType<typeof setTimeout> | undefined;
@@ -115,7 +115,7 @@ function watchTouchHold(zone: HTMLElement): () => void {
 
 	function reveal(): void {
 		const at = holdFrom;
-		if (!at) return;
+		if (!at || !active()) return;
 		const el = ringElement();
 		const half = el.getBoundingClientRect().width / 2;
 		el.style.left = `${at.x - half}px`;
@@ -131,6 +131,7 @@ function watchTouchHold(zone: HTMLElement): () => void {
 	}
 
 	function onTouchStart(event: TouchEvent): void {
+		if (!active()) return;
 		const touch = event.touches[0];
 		// a second finger is a pinch, not a take
 		if (!touch || event.touches.length > 1) return endHold();
@@ -165,7 +166,7 @@ function watchTouchHold(zone: HTMLElement): () => void {
 	};
 }
 
-export const dragMotion: Action<HTMLElement> = (zone) => {
+export const dragMotion: Action<HTMLElement, boolean | undefined> = (zone, enabled = true) => {
 	/** The gap this zone is currently showing, so a re-consider does not restart its animation. */
 	let slot: HTMLElement | null = null;
 
@@ -203,10 +204,13 @@ export const dragMotion: Action<HTMLElement> = (zone) => {
 
 	/** named, so `destroy` can actually take it off again */
 	const considerListener = (): void => void onConsider();
-	const unwatchHold = watchTouchHold(zone);
+	const unwatchHold = watchTouchHold(zone, () => enabled);
 	zone.addEventListener('consider', considerListener);
 	zone.addEventListener('finalize', onFinalize);
 	return {
+		update(next = true) {
+			enabled = next;
+		},
 		destroy() {
 			unwatchHold();
 			zone.removeEventListener('consider', considerListener);

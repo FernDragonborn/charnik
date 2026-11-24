@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import '#lib/styles/app.css';
 import { render } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
 import { startI18n } from '#lib/i18n/index.ts';
@@ -7,10 +8,43 @@ import { makeTempContentRoot } from '../../../test-support/fixtures';
 import { combat } from '../combat-view-model.svelte';
 import { playLayout } from '../play-layout.svelte';
 import ColumnPlay from './ColumnPlay.svelte';
+import PhonePlay from './PhonePlay.svelte';
 
 beforeAll(async () => {
 	await startI18n('en');
 	combat.graph = await makeTempContentRoot({});
+});
+
+describe('compact arranging', () => {
+	for (const { layout, view } of [
+		{ layout: 'columns', view: ColumnPlay },
+		{ layout: 'phone', view: PhonePlay },
+	] as const) {
+		it(`reveals the grips and restores an initially hidden tab on ${layout}`, async () => {
+			combat.layout.arranging = false;
+			const c = newCharacter('arrange', 'Arrange', '5.5e');
+			c.ui.playTabsHidden[layout] = ['actions'];
+			combat.character = c;
+			const s = combat.sheet;
+			if (!s) throw new Error('The character must have a sheet');
+			const screen = await render(view, { c, s });
+			const actions = screen.getByRole('tab', { name: 'Actions', exact: true });
+			await expect.element(actions).not.toBeInTheDocument();
+			expect(document.querySelector('.row-grip')).toBeNull();
+			await screen.getByRole('button', { name: 'Arrange', exact: true }).click();
+			await actions.click();
+			const show = screen.getByRole('button', { name: 'Show the Actions tab' });
+			await expect.element(show).toHaveAttribute('aria-pressed', 'false');
+			await show.click();
+			expect(document.querySelector('.row-grip')).not.toBeNull();
+			await screen.getByRole('button', { name: 'Done', exact: true }).click();
+			await expect.element(actions).toBeVisible();
+			expect(document.querySelector('.row-grip')).toBeNull();
+			await expect
+				.element(screen.getByRole('button', { name: 'Arrange', exact: true }))
+				.toHaveFocus();
+		});
+	}
 });
 
 function press(code: string): void {

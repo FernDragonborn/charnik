@@ -25,6 +25,7 @@
 	import RowGrip from '../RowGrip.svelte';
 	import type { InventoryRow } from '../../inventory.svelte';
 
+	let { furniture = true }: { furniture?: boolean } = $props();
 	const inv = $derived(combat.inventory);
 	/** The add dialog is mounted from here rather than from the combat shell: it belongs to this
 	 *  panel's one control, and nothing else opens it. */
@@ -121,8 +122,9 @@
      would be saying something the list does not mean. -->
 <div
 	class="items"
-	use:dragMotion
+	use:dragMotion={furniture}
 	use:dndzone={{
+		dragDisabled: !furniture,
 		items,
 		type: 'inventory-row',
 		// on a finger a drag is TAKEN, not started: hold still and the row becomes yours to move.
@@ -159,12 +161,14 @@
 						e,
 					)}
 			>
-				<RowGrip
-					panel="inventory"
-					id={row.entry.iid}
-					name={row.name}
-					onmove={(by) => inv.move(row.entry.iid, by)}
-				/>
+				{#if furniture}
+					<RowGrip
+						panel="inventory"
+						id={row.entry.iid}
+						name={row.name}
+						onmove={(by) => inv.move(row.entry.iid, by)}
+					/>
+				{/if}
 				<!-- a row the book prints once is asked which one it is when it is added; its own name is
 				     where that is asked again, holding the answers it has, which is the way back from a
 				     misclick (an item answered wrongly used to be a remove and a re-add) -->

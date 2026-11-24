@@ -52,6 +52,7 @@ describe('character schema', () => {
 			ui: { panelColumns, spellsPinned, rowOrder: { attacks: ['longsword'] } },
 		});
 		expect(stored.ui.columnTabs).toEqual({});
+		expect(stored.ui.playTabsHidden).toEqual({ phone: [], columns: [] });
 		expect(stored.ui.panelColumns).toEqual(panelColumns);
 		expect(stored.ui.spellsPinned).toEqual(spellsPinned);
 		expect(stored.ui.rowOrder).toEqual({ attacks: ['longsword'] });
@@ -63,6 +64,15 @@ describe('character schema', () => {
 		expect(c.build.abilities.str).toBe(10);
 		expect(c.play.hp.temp).toBe(0);
 		expect(characterSchema.safeParse(c).success).toBe(true);
+	});
+
+	it('gives each new character independent compact tab preferences', () => {
+		const first = newCharacter('first', 'First', '5e');
+		first.ui.playTabsHidden.columns.push('actions');
+		first.ui.columnTabs.actions = 'actions';
+		const second = newCharacter('second', 'Second', '5e');
+		expect(second.ui.playTabsHidden.columns).toEqual([]);
+		expect(second.ui.columnTabs).toEqual({});
 	});
 
 	it('rejects an out-of-range ability score', () => {

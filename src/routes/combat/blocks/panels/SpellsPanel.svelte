@@ -19,7 +19,15 @@
 	import { spellcastingBlock } from '#lib/play/cast.ts';
 	import { sayText } from '#lib/util/say.ts';
 
-	let { s, compact = false }: { s: CharacterSheet; compact?: boolean } = $props();
+	let {
+		s,
+		compact = false,
+		furniture = true,
+	}: {
+		s: CharacterSheet;
+		compact?: boolean;
+		furniture?: boolean;
+	} = $props();
 	const spellGroups = $derived(combat.spellGroups);
 	const groups = $derived(
 		compact ? spellGroups.filter((group) => group.key !== PACT_SLOT_KEY) : spellGroups,
@@ -178,18 +186,20 @@
 								use:provenance={blockedReason}
 								onclick={(e) => cast(r, e)}><span class="name-main">{r.name}</span></button
 							>
-							<button
-								class="pin-star"
-								class:on={pinned[r.ref]}
-								use:provenance={$_('combat.spells.pinToTop')}
-								aria-pressed={!!pinned[r.ref]}
-								onclick={() => combat.togglePin(r.ref)}
-								><Icon
-									name="star"
-									size={13}
-									fill={pinned[r.ref] ? 'currentColor' : 'none'}
-								/></button
-							>
+							{#if furniture}
+								<button
+									class="pin-star"
+									class:on={pinned[r.ref]}
+									use:provenance={$_('combat.spells.pinToTop')}
+									aria-pressed={!!pinned[r.ref]}
+									onclick={() => combat.togglePin(r.ref)}
+									><Icon
+										name="star"
+										size={13}
+										fill={pinned[r.ref] ? 'currentColor' : 'none'}
+									/></button
+								>
+							{/if}
 							{#if r.ritualCast}
 								<!-- ritual cast: no spell slot (A17). Offered when the class this spell is cast as
 								     may cast it as a ritual as things stand. The name casts normally. -->

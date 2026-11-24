@@ -2288,7 +2288,7 @@ describe('CombatVM · UBUG-16 — a resource chip RUNS its action, it is not a b
 describe('PanelLayout · a saved layout is reconciled with the panels that exist (N1)', () => {
 	it('picks a tab independently for each set of column tabs', () => {
 		const c = newCharacter('columns', 'Columns', '5e');
-		const layout = new PanelLayout(undefined, undefined, undefined, () => c.ui.columnTabs);
+		const layout = new PanelLayout(undefined, undefined, undefined, () => c.ui);
 		const narrow = ['actions', 'spells', 'inventory'];
 		const broad = ['actions', 'inventory'];
 		layout.pickColumnTab(narrow, 'spells');
@@ -2297,6 +2297,19 @@ describe('PanelLayout · a saved layout is reconciled with the panels that exist
 		expect(layout.activeColumnTab(narrow)).toBe('spells');
 		expect(layout.activeColumnTab(broad)).toBe('inventory');
 		expect(layout.activeColumnTab(['skills', 'features'])).toBe('skills');
+	});
+
+	it('hides and restores tabs without changing their saved selection or the other layout', () => {
+		const c = newCharacter('arrange', 'Arrange', '5e');
+		const layout = new PanelLayout(undefined, undefined, undefined, () => c.ui);
+		const group = ['actions', 'spells'];
+		layout.pickColumnTab(group, 'spells');
+		layout.toggleTabShown('columns', 'spells');
+		expect(layout.tabShown('columns', 'spells')).toBe(false);
+		expect(layout.tabShown('phone', 'spells')).toBe(true);
+		expect(layout.activeColumnTab(group, ['actions'])).toBe('actions');
+		layout.toggleTabShown('columns', 'spells');
+		expect(layout.activeColumnTab(group)).toBe('spells');
 	});
 
 	it('appends a panel added after the layout was saved, and drops one since removed', () => {

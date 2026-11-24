@@ -39,6 +39,7 @@
 	import GripVertical from '@lucide/svelte/icons/grip-vertical';
 	import Infinity_ from '@lucide/svelte/icons/infinity';
 	import Info from '@lucide/svelte/icons/info';
+	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import Minus from '@lucide/svelte/icons/minus';
 	import Footprints from '@lucide/svelte/icons/footprints';
 	import KeyRound from '@lucide/svelte/icons/key-round';
@@ -97,6 +98,7 @@
 		'grip-vertical': GripVertical,
 		infinity: Infinity_,
 		info: Info,
+		'sliders-horizontal': SlidersHorizontal,
 		minus: Minus,
 		footprints: Footprints,
 		'key-round': KeyRound,

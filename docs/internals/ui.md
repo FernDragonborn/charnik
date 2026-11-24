@@ -210,6 +210,10 @@ the level's spend and restore pips. Each casting profile shows its own DC and at
 The slot picker shows the total dice at each level using the cast's damage fold. A casting block
 stands above the list, and the affected rows stay readable.
 
+The compact header's Arrange switch reveals row grips, pins, visibility controls and hidden tabs.
+In Arrange, open any tab and use its visibility switch. Done returns the sheet to play. A phone
+whose only visible tab is Mine gives its space to the sheet.
+
 - **`main` is the only scroll region, so everything above it must FIT.** Horizontal overflow at the
   document level scrolls the page sideways and drags every `position: fixed` overlay off-side with
   it. The topbar therefore stays ONE row below the threshold: the navigation slides sideways if it

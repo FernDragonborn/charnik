@@ -207,6 +207,8 @@ so it is never reconciled against the panel list the way `panelColumns` is.
 
 `ui.columnTabs` keeps the active tab for each group of panels in the narrow desktop layout.
 An older save opens each group's first tab and keeps its panel, row and pin settings.
+`ui.playTabsHidden` records which tabs the player hides on the phone and the column layout.
+An older save shows the tabs that its character has.
 
 **A FILTER writes those arrays rather than layering over them** (the Features panel's presets, the
 Actions panel's — `combat/actions.ts ▸ ACTION_PRESET`, sets grouped by how a character fights and

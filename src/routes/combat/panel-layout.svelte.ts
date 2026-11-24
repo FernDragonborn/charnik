@@ -6,6 +6,7 @@
  * the collapsed ids onto `ui.panelsCollapsed`, because the arrangement is per character.
  */
 import { movedOrder, orderRows } from '#lib/combat/row-order.ts';
+import type { CharacterUi } from '#lib/character/schema.ts';
 
 /** Which way a keyboard move goes. Up/down reorders inside a column; left/right hands the panel to
  *  the other one — between them they reach every arrangement a drag can. */
@@ -16,8 +17,10 @@ export const PANEL_MOVE = {
 	right: 'right',
 } as const;
 export type PanelMove = (typeof PANEL_MOVE)[keyof typeof PANEL_MOVE];
+type TabLayout = keyof CharacterUi['playTabsHidden'];
 
 export class PanelLayout {
+	arranging = $state(false);
 	collapsed = $state<Record<string, boolean>>({});
 	// two independent column arrays (svelte-dnd-action items need an id)
 	columns = $state<{ id: string }[][]>([
@@ -34,8 +37,23 @@ export class PanelLayout {
 		private persist: (columns: string[][]) => void = () => {},
 		private rows: () => Record<string, string[]> | undefined = () => undefined,
 		private persistCollapsed: (ids: string[]) => void = () => {},
-		private columnTabs: () => Record<string, string> | undefined = () => undefined,
+		private ui: () => CharacterUi | undefined = () => undefined,
 	) {}
+
+	toggleArranging = (): void => {
+		this.arranging = !this.arranging;
+	};
+
+	tabShown = (layout: TabLayout, tab: string): boolean =>
+		!this.ui()?.playTabsHidden[layout].includes(tab);
+
+	toggleTabShown = (layout: TabLayout, tab: string): void => {
+		const hidden = this.ui()?.playTabsHidden;
+		if (!hidden) return;
+		hidden[layout] = this.tabShown(layout, tab)
+			? [...hidden[layout], tab]
+			: hidden[layout].filter((id) => id !== tab);
+	};
 
 	toggle = (k: string) => {
 		this.collapsed[k] = !this.collapsed[k];
@@ -126,12 +144,12 @@ export class PanelLayout {
 	 * sits where on this player's screen.
 	 */
 	rowOrder = (panel: string): string[] | undefined => this.rows()?.[panel];
-	activeColumnTab = (group: readonly string[]): string => {
-		const picked = this.columnTabs()?.[group.join(',')];
-		return picked && group.includes(picked) ? picked : (group[0] ?? '');
+	activeColumnTab = (group: readonly string[], visible = group): string => {
+		const picked = this.ui()?.columnTabs[group.join(',')];
+		return picked && visible.includes(picked) ? picked : (visible[0] ?? '');
 	};
 	pickColumnTab = (group: readonly string[], tab: string): void => {
-		const tabs = this.columnTabs();
+		const tabs = this.ui()?.columnTabs;
 		if (tabs && group.includes(tab)) tabs[group.join(',')] = tab;
 	};
 	/** Apply this panel's saved order to the rows it has right now — the one call a panel's list

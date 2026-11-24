@@ -38,6 +38,7 @@
 	} from '#lib/character/features.ts';
 
 	/** The pinned group's key — not a FeatureSection, because it is not a source, it is a choice. */
+	let { furniture = true }: { furniture?: boolean } = $props();
 	const PINNED = 'pinned';
 
 	// reading order: what a player looks up most often first
@@ -103,8 +104,9 @@
 	<div class="feature-section eyebrow">{$_(`combat.features.${group.key}`)}</div>
 	<div
 		class="dnd-rows"
-		use:dragMotion
+		use:dragMotion={furniture}
 		use:dndzone={{
+			dragDisabled: !furniture,
 			items: itemsFor(group),
 			// one dnd type PER GROUP, so a row cannot be dropped into a section it does not belong to. A
 			// shared type let it: the target zone accepted the row, the next derive put it back where its
@@ -156,13 +158,15 @@
 						<!-- INSIDE the summary, unlike every other panel's: this row opens, and a handle
 						     anchored to the whole <details> would run the height of the expanded prose. The
 						     pin beside it already sets the precedent that a summary hosts real controls. -->
-						<RowGrip
-							panel={ROW_PANEL.features}
-							{id}
-							name={nameOf(f)}
-							onmove={(by) =>
-								combat.layout.moveRow(ROW_PANEL.features, group.items.map(idOf), id, by)}
-						/>
+						{#if furniture}
+							<RowGrip
+								panel={ROW_PANEL.features}
+								{id}
+								name={nameOf(f)}
+								onmove={(by) =>
+									combat.layout.moveRow(ROW_PANEL.features, group.items.map(idOf), id, by)}
+							/>
+						{/if}
 						<span class="row-name">{nameOf(f)}</span>
 						<span class="feature-meta">
 							<!-- what tells this row apart inside its group, and the class level it arrived at. A
@@ -171,26 +175,32 @@
 							{#if f.at !== undefined}<span class="combat-row-hint">{f.at}</span>{/if}
 							<!-- the pin is a real button beside the name, not inside the summary's click: a
 							     control nested in a control is what cost the keyboard its walk before -->
-							<button
-								class="feature-pin"
-								class:on={combat.featureView.isPinned(id)}
-								aria-pressed={combat.featureView.isPinned(id)}
-								use:provenance={$_(
-									combat.featureView.isPinned(id) ? 'combat.features.unpin' : 'combat.features.pin',
-								)}
-								aria-label={$_(
-									combat.featureView.isPinned(id) ? 'combat.features.unpin' : 'combat.features.pin',
-								)}
-								onclick={(e) => {
-									e.preventDefault();
-									combat.featureView.togglePinned(id);
-								}}
-								><Icon
-									name="star"
-									size={12}
-									{...combat.featureView.isPinned(id) ? { fill: 'currentColor' } : {}}
-								/></button
-							>
+							{#if furniture}
+								<button
+									class="feature-pin"
+									class:on={combat.featureView.isPinned(id)}
+									aria-pressed={combat.featureView.isPinned(id)}
+									use:provenance={$_(
+										combat.featureView.isPinned(id)
+											? 'combat.features.unpin'
+											: 'combat.features.pin',
+									)}
+									aria-label={$_(
+										combat.featureView.isPinned(id)
+											? 'combat.features.unpin'
+											: 'combat.features.pin',
+									)}
+									onclick={(e) => {
+										e.preventDefault();
+										combat.featureView.togglePinned(id);
+									}}
+									><Icon
+										name="star"
+										size={12}
+										{...combat.featureView.isPinned(id) ? { fill: 'currentColor' } : {}}
+									/></button
+								>
+							{/if}
 						</span>
 					</summary>
 					<!-- ArticleProse, not a plain <p>: a feature's text is Markdown in user-owned CSV, and

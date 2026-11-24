@@ -109,7 +109,7 @@ class CombatVM {
 		(ids) => {
 			if (this.character) this.character.ui.panelsCollapsed = ids;
 		},
-		() => this.character?.ui.columnTabs,
+		() => this.character?.ui,
 	);
 	/** Action-economy subsystem (pips, movement, turn/round, in-combat spend checks). */
 	economy = new TurnEconomy(() => this);
@@ -324,7 +324,10 @@ class CombatVM {
 		// the character opened from the Roster, else a sensible default (demo on first run, else the
 		// user's first save, else none → the empty state)
 		const c = await ensureActiveCharacter();
-		if (c !== this.character) forgetCharacterState(this);
+		if (c !== this.character) {
+			forgetCharacterState(this);
+			this.layout.arranging = false;
+		}
 		// set even when null: a kept previous object is what the autosave wrote back after a delete
 		this.character = c;
 		if (!c) {

@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (127)
+## Duplicate suspects (128)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -35,6 +35,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `rowName` ×4 — src/lib/components/OrphanDialog.svelte · src/lib/content/loader.ts · src/routes/build/rows.ts · src/routes/combat/delta-text.ts
 - `save` ×4 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/lib/components/OwnWords.svelte · src/routes/translate/+page.svelte
 - `says` ×4 — src/lib/character/derive-gather.ts · src/lib/combat/attack-properties.ts · src/routes/combat/blocks/panels/SpellsPanel.svelte · src/routes/combat/sheet-rolls.svelte.ts
+- `SKILLS` ×4 — src/routes/build/blocks/FeatSubChoices.svelte · src/routes/build/blocks/SkillRows.svelte · src/routes/build/blocks/SkillsPane.svelte · src/routes/combat/narrow/PhonePlay.svelte
 - `toggle` ×4 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/combat/narrow/NarrowHead.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `cell` ×3 — src/lib/components/UpcastBuilder.svelte · src/lib/content/locale-merge.ts · src/lib/content/migrations.ts
 - `choose` ×3 — src/lib/components/FirstRunModal.svelte · src/lib/components/LanguagePicker.svelte · src/lib/components/settings/TableSettings.svelte
@@ -55,7 +56,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `refused` ×3 — src/routes/dev/page-reach/+page.svelte · src/routes/dev/self-update/+page.svelte · src/routes/dev/table-link/+page.svelte
 - `REPO` ×3 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/packs/+page.svelte
 - `show` ×3 — src/lib/actions/focusHalo.ts · src/lib/actions/provenance.ts · src/routes/dev/storage/+page.svelte
-- `SKILLS` ×3 — src/routes/build/blocks/FeatSubChoices.svelte · src/routes/build/blocks/SkillRows.svelte · src/routes/build/blocks/SkillsPane.svelte
 - `sourceOf` ×3 — src/lib/components/RollerLine.svelte · src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
 - `adoptCharacter` ×2 — src/lib/character/repository.ts · src/lib/play/outcome.ts
 - `AMOUNT_MAX` ×2 — src/lib/table-link/wire-schema.ts · src/routes/table/AskComposer.svelte
@@ -125,8 +125,8 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `settled` ×2 — src/lib/play/settle.ts · src/routes/dev/characters-write/+page.svelte
 - `SKILL_IDS` ×2 — src/lib/character/skills.ts · src/lib/combat/constants.ts
 - `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
-- `step` ×2 — src/lib/components/RollerLine.svelte · src/routes/combat/narrow/PhonePlay.svelte
 - `t` ×2 — src/lib/i18n/index.ts · src/routes/dev/storage/+page.svelte
+- `tabName` ×2 — src/routes/combat/narrow/ColumnPlay.svelte · src/routes/combat/narrow/PhonePlay.svelte
 - `TABS` ×2 — src/routes/combat/narrow/PhonePlay.svelte · src/routes/settings/+page.svelte
 - `take` ×2 — src/lib/stores/flash.ts · src/routes/build/feat-slots.svelte.ts
 - `takeFocus` ×2 — src/lib/actions/takeFocus.ts · src/routes/build/blocks/OwnEntries.svelte
@@ -136,6 +136,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `UNTYPED` ×2 — src/routes/combat/blocks/HpPanel/HitLine.svelte · src/routes/table/AskComposer.svelte
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
 - `WALK` ×2 — src/lib/character/forms.ts · src/routes/dev/storage-edges/+page.svelte
+- `walkTabs` ×2 — src/routes/combat/narrow/ColumnPlay.svelte · src/routes/combat/narrow/PhonePlay.svelte
 - `when` ×2 — src/lib/components/settings/DataConflictDialog.svelte · src/lib/components/settings/PackTranslationBackups.svelte
 - `wordsOf` ×2 — src/lib/drafts/orphan-view.ts · src/routes/dev/table-question/+page.svelte
 
@@ -2806,4 +2807,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_51 tokens · 108 global classes · 63 components · 1712 exports across 239 modules · 127 duplicate suspects._
+_51 tokens · 108 global classes · 63 components · 1712 exports across 239 modules · 128 duplicate suspects._

@@ -8,6 +8,7 @@
 	// anchors the handle to its header rather than to everything the header opens. Hence the swallowed
 	// click: inside a <summary>, a press on the handle would otherwise toggle the row.
 	import { provenance } from '#lib/actions/provenance.ts';
+	import Icon from '#lib/components/Icon.svelte';
 	import { tick } from 'svelte';
 	import { dragHandle } from 'svelte-dnd-action';
 	import { _ } from '#lib/i18n/index.ts';
@@ -49,7 +50,8 @@
 	aria-label={label}
 	use:provenance={label}
 	onkeydown={moveOnArrow}
-></span>
+	><span class="grip-icon" aria-hidden="true"><Icon name="grip-vertical" /></span></span
+>
 
 <style>
 	/* INVISIBLE at rest. A list of things you own is not a list of handles, and a mark on every row was
@@ -67,7 +69,9 @@
 	.row-grip {
 		position: absolute;
 		/* just outside the row's visible edge — `--row-bleed` is how far that edge overhangs its box */
-		inset-inline-start: calc(-1 * (var(--row-bleed, var(--space-2)) + var(--space-1-5)));
+		inset-inline-start: calc(
+			-1 * (var(--row-bleed, var(--space-2)) + var(--row-grip-width, var(--space-1-5)))
+		);
 		top: 0;
 		bottom: 0;
 		display: flex;
@@ -75,14 +79,15 @@
 		/* the mark sits OUTWARD in its box (see `::before`), so it breathes against the row while the
 		   6px target keeps its distance from the card's border */
 		justify-content: flex-start;
-		width: var(--space-1-5);
+		width: var(--row-grip-width, var(--space-1-5));
 		/* a quiet line, not a piece of text: dimmer than the row it belongs to in either theme */
 		color: var(--color-border-strong);
-		opacity: 0;
+		opacity: var(--row-grip-opacity, 0);
 	}
 	/* the spine itself: the target is the full height of the row, the mark is a hairline inside it */
 	.row-grip::before {
 		content: '';
+		display: var(--row-grip-spine, block);
 		/* fractions of the target box, never pixels: `--space-1-5` is a rem, so the mark scales with
 		   the root font the same way the row it marks does */
 		width: calc(var(--space-1-5) / 3);
@@ -92,6 +97,12 @@
 		height: 70%;
 		border-radius: var(--radius-full);
 		background: currentColor;
+	}
+	.grip-icon {
+		display: var(--row-grip-icon, none);
+		place-items: center;
+		inline-size: 100%;
+		color: var(--color-text-muted);
 	}
 	/* whatever row HOSTS the handle reveals it — one rule instead of a list that grows a line every
 	   time a panel gets a different wrapper */
@@ -103,7 +114,7 @@
 	   but present, or a phone cannot reorder at all */
 	@media (hover: none) {
 		.row-grip {
-			opacity: 0.4;
+			opacity: var(--row-grip-opacity, 0.4);
 		}
 	}
 </style>

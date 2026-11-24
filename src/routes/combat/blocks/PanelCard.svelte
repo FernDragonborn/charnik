@@ -41,6 +41,7 @@
 		asTab?: boolean;
 		compactSpells?: boolean;
 	} = $props();
+	const furniture = $derived(!asTab || combat.layout.arranging);
 
 	// keyed on `e.code`, so it is the physical arrow key on every layout (AGENTS.md ▸ Taste)
 	const ARROW_MOVE: Record<string, PanelMove> = {
@@ -84,7 +85,7 @@
 			>{$_(`combat.panel.${pid}`)}
 		</button>
 	{/if}
-	{#if pid === 'actions'}
+	{#if pid === 'actions' && furniture}
 		<button class="pill-btn" onclick={(e) => openMenu('showhide', e)}>
 			<EyeIcon on={true} />
 			{$_('combat.panel.showHide')}
@@ -111,7 +112,7 @@
 				aria-label={autoCalcLabel}><Icon name="zap" size={13} /></button
 			>
 		</span>
-	{:else if pid === 'features'}
+	{:else if pid === 'features' && furniture}
 		<button class="pill-btn" onclick={(e) => openMenu('featuresview', e)}>
 			<EyeIcon on={true} />
 			{$_('combat.panel.showHide')}
@@ -165,21 +166,21 @@
 </div>
 {#if asTab || !collapsed[pid]}
 	<!-- the panel's rows are ONE Tab stop, walked by the arrows (work/ui.md ▸ KEYBOARD-NAV) -->
-	<div class="panel-body" use:rowGrid={PANEL_ROWS}>
+	<div class="panel-body" class:arranging={asTab && furniture} use:rowGrid={PANEL_ROWS}>
 		{#if pid === 'skills'}
 			<SkillsPanel {s} />
 		{:else if pid === 'attacks'}
-			<AttacksPanel />
+			<AttacksPanel {furniture} />
 		{:else if pid === 'actions'}
-			<ActionsPanel />
+			<ActionsPanel {furniture} />
 		{:else if pid === 'effects'}
 			<EffectsPanel {c} {s} />
 		{:else if pid === 'spells'}
-			<SpellsPanel {s} compact={compactSpells} />
+			<SpellsPanel {s} compact={compactSpells} {furniture} />
 		{:else if pid === 'inventory'}
-			<InventoryPanel />
+			<InventoryPanel {furniture} />
 		{:else if pid === 'features'}
-			<FeaturesPanel />
+			<FeaturesPanel {furniture} />
 		{/if}
 	</div>
 {/if}
@@ -188,6 +189,14 @@
 	/* a wrapper for the keyboard, not for the layout: the panel lays itself out as it did */
 	.panel-body {
 		display: contents;
+	}
+	.panel-body.arranging {
+		display: block;
+		padding-inline-start: calc(var(--space-5) + var(--space-2));
+		--row-grip-opacity: 1;
+		--row-grip-width: var(--space-5);
+		--row-grip-icon: grid;
+		--row-grip-spine: none;
 	}
 	.head-btns {
 		display: flex;

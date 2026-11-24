@@ -19,6 +19,7 @@
 	 *  one list: a spend-option that opens the character's whole turn has as much claim to the top as
 	 *  Dash does. The kind rides on the row because each renders differently, not because each sorts
 	 *  differently. */
+	let { furniture = true }: { furniture?: boolean } = $props();
 	const ROW_KIND = { action: 'action', roll: 'roll', spend: 'spend' } as const;
 	type FeatureRoll = (typeof combat.featureRolls)[number];
 	type SpendOption = (typeof combat.resourceOptions)[number];
@@ -104,8 +105,9 @@
 
 <div
 	class="dnd-rows"
-	use:dragMotion
+	use:dragMotion={furniture}
 	use:dndzone={{
+		dragDisabled: !furniture,
 		items,
 		type: 'action-row',
 		// on a finger a drag is TAKEN, not started: hold still and the row becomes yours to move.
@@ -127,18 +129,20 @@
 >
 	{#each items as row (row.id)}
 		<div class="row-wrap" use:contextAct={(e) => actionMenu(row, e)}>
-			<RowGrip
-				panel={ROW_PANEL.actions}
-				id={row.id}
-				name={nameOf(row)}
-				onmove={(by) =>
-					combat.layout.moveRow(
-						ROW_PANEL.actions,
-						rows.map((x) => x.id),
-						row.id,
-						by,
-					)}
-			/>
+			{#if furniture}
+				<RowGrip
+					panel={ROW_PANEL.actions}
+					id={row.id}
+					name={nameOf(row)}
+					onmove={(by) =>
+						combat.layout.moveRow(
+							ROW_PANEL.actions,
+							rows.map((x) => x.id),
+							row.id,
+							by,
+						)}
+				/>
+			{/if}
 			{#if row.kind === ROW_KIND.action}
 				{@const a = row.a}
 				<button class="combat-row" onclick={(e) => combat.actionClick(a, e)}>

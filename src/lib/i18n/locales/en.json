@@ -589,6 +589,13 @@
 			"unpin": "Unpin",
 			"compendium": "Open in the compendium"
 		},
+		"arrange": {
+			"start": "Arrange",
+			"arranging": "Arranging",
+			"currentTab": "Arranging · {tab}",
+			"done": "Done",
+			"showTab": "Show the {tab} tab"
+		},
 		"action": {
 			"attack": "Attack",
 			"attackDesc": "weapon / spell / unarmed",

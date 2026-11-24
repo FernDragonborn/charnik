@@ -28,6 +28,7 @@
 	import type { Attack } from '#lib/combat/attacks.ts';
 	// the player's own order, applied where it is a view concern; the VM hands over the rows the
 	// character actually has, and this reconciles them against what was arranged
+	let { furniture = true }: { furniture?: boolean } = $props();
 	const attacks = $derived(combat.layout.ordered(ROW_PANEL.attacks, combat.attacks, (a) => a.id));
 
 	/** What an extra attack's control says on hover and on focus: what it costs, what it rolls, and
@@ -91,8 +92,9 @@
 
 <div
 	class="dnd-rows"
-	use:dragMotion
+	use:dragMotion={furniture}
 	use:dndzone={{
+		dragDisabled: !furniture,
 		items,
 		type: 'attack-row',
 		// on a finger a drag is TAKEN, not started: hold still and the row becomes yours to move.
@@ -116,18 +118,20 @@
 		{@const at = item.at}
 		{#if at}
 			<div class="row-wrap" class:has-extras={!!at.extras?.length}>
-				<RowGrip
-					panel={ROW_PANEL.attacks}
-					id={at.id}
-					name={attackName(at, $_)}
-					onmove={(by) =>
-						combat.layout.moveRow(
-							ROW_PANEL.attacks,
-							attacks.map((a) => a.id),
-							at.id,
-							by,
-						)}
-				/>
+				{#if furniture}
+					<RowGrip
+						panel={ROW_PANEL.attacks}
+						id={at.id}
+						name={attackName(at, $_)}
+						onmove={(by) =>
+							combat.layout.moveRow(
+								ROW_PANEL.attacks,
+								attacks.map((a) => a.id),
+								at.id,
+								by,
+							)}
+					/>
+				{/if}
 				<!-- the weapon's own line: the row and, where there is one, its grip. Its own box so an
 				     extra attack can stand UNDER it without the two sharing a line. -->
 				<div class="row-line" use:contextAct={(e) => attackMenu(at, e)}>

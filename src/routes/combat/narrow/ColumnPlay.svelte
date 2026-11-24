@@ -6,7 +6,7 @@
 	import type { Character } from '#lib/character/schema.ts';
 	import type { CharacterSheet } from '#lib/character/derive.ts';
 	import { _ } from '#lib/i18n/index.ts';
-	import { playLayout } from '../play-layout.svelte';
+	import { playLayout, PLAY_LAYOUT } from '../play-layout.svelte';
 	import { combat } from '../combat-view-model.svelte';
 	import { walkInlineOptions } from '#lib/util/option-walk.ts';
 	import NarrowHead from './NarrowHead.svelte';
@@ -16,12 +16,21 @@
 	import CombatStrip from '../blocks/CombatStrip.svelte';
 	import Abilities from '../blocks/Abilities.svelte';
 	import PluginNeeds from '#lib/components/PluginNeeds.svelte';
+	import ArrangeTab from './ArrangeTab.svelte';
 
 	let { c, s }: { c: Character; s: CharacterSheet } = $props();
+	const arranging = $derived(combat.layout.arranging);
+	const tabName = (id: string) =>
+		$_(`combat.narrow.tab.${id}`, { default: $_(`combat.panel.${id}`) });
 
-	function walkTabs(event: KeyboardEvent, group: readonly string[], tab: string): void {
+	function walkTabs(
+		event: KeyboardEvent,
+		group: readonly string[],
+		visible: readonly string[],
+		tab: string,
+	): void {
 		walkInlineOptions(event, {
-			ids: group,
+			ids: visible,
 			previewId: tab,
 			onpreview: (choice) => {
 				combat.layout.pickColumnTab(group, choice);
@@ -39,36 +48,45 @@
 
 	<div class="panes">
 		{#each playLayout.groups as group (group.join())}
-			{@const on = combat.layout.activeColumnTab(group)}
-			<section class="pane" data-region aria-labelledby={`pane-tab-${on}`}>
-				<div class="pane-tabs" role="tablist">
-					{#each group as pid (pid)}
-						<button
-							role="tab"
-							id={`pane-tab-${pid}`}
-							class="pane-tab"
-							class:on={pid === on}
-							aria-selected={pid === on}
-							aria-controls={`pane-body-${group[0] ?? ''}`}
-							tabindex={pid === on ? 0 : -1}
-							onclick={() => combat.layout.pickColumnTab(group, pid)}
-							onkeydown={(e) => walkTabs(e, group, pid)}
-							>{$_(`combat.narrow.tab.${pid}`, { default: $_(`combat.panel.${pid}`) })}</button
-						>
-					{/each}
-				</div>
-				<div
-					class="pane-body"
-					role="tabpanel"
-					id={`pane-body-${group[0] ?? ''}`}
-					aria-labelledby={`pane-tab-${on}`}
-				>
-					<!-- what the wide screen stands above its panels — the passives, the defenses, the abilities
+			{@const visible = arranging
+				? group
+				: group.filter((id) => combat.layout.tabShown(PLAY_LAYOUT.columns, id))}
+			{@const on = combat.layout.activeColumnTab(group, visible)}
+			{#if on}
+				<section class="pane" data-region aria-labelledby={`pane-tab-${on}`}>
+					<div class="pane-tabs" role="tablist">
+						{#each visible as pid (pid)}
+							<button
+								role="tab"
+								id={`pane-tab-${pid}`}
+								class="pane-tab"
+								class:on={pid === on}
+								aria-selected={pid === on}
+								aria-controls={`pane-body-${group[0] ?? ''}`}
+								tabindex={pid === on ? 0 : -1}
+								onclick={() => combat.layout.pickColumnTab(group, pid)}
+								onkeydown={(e) => walkTabs(e, group, visible, pid)}>{tabName(pid)}</button
+							>
+						{/each}
+					</div>
+					<div
+						class="pane-body"
+						role="tabpanel"
+						id={`pane-body-${group[0] ?? ''}`}
+						aria-labelledby={`pane-tab-${on}`}
+					>
+						{#if arranging}<ArrangeTab
+								layout={PLAY_LAYOUT.columns}
+								id={on}
+								name={tabName(on)}
+							/>{/if}
+						<!-- what the wide screen stands above its panels — the passives, the defenses, the abilities
 					     and their saves — is looked up with the skills, as the mock deals it -->
-					{#if on === 'skills'}<Abilities {s} /><CombatStrip {s} tiles={false} />{/if}
-					<PanelCard pid={on} {c} {s} asTab compactSpells />
-				</div>
-			</section>
+						{#if on === 'skills'}<Abilities {s} /><CombatStrip {s} tiles={false} />{/if}
+						<PanelCard pid={on} {c} {s} asTab compactSpells />
+					</div>
+				</section>
+			{/if}
 		{/each}
 	</div>
 

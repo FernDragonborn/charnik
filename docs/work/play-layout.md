@@ -107,11 +107,13 @@ and a panel's rows share one Tab stop with their controls on the arrows.
   **Mine · Actions · Spells · Skills · Items · Bio**.
   **Built** (`../internals/ui.md` ▸ A narrow window): the layout for a finger, the narrow top block
   with the name on a line of its own, the controls and time in one sliding strip, the six tabs with
-  Spells left out of a sheet that casts nothing, the last roll above the bar. **Left:** Mine as the
+  Spells left out of a sheet that casts nothing, the last roll above the bar. The bar omits hidden
+  tabs and uses the space for the sheet when only Mine is visible. [to audit]
+  **Left:** Mine as the
   pinned set — until RESOURCE-PIN it shows the attacks and the effects; Actions' standard actions
   behind one row (P3, P3b); Items one line each in folding categories (P13, P14); Bio's About /
-  Features / Notes (P16–P16c); the hold for a row's menu (ROW-MENU); the bar hiding a tab the player
-  hid; and every *new idea* frame, which are their own items.
+  Features / Notes (P16–P16c); the hold for a row's menu (ROW-MENU); and every *new idea* frame,
+  which are their own items.
   - **The tabs.** *Mine* is the character's pinned set — RESOURCE-PIN's answer (P1). Out of combat,
     combat, rests and time sit under the vitals on every tab (P1); in combat that strip becomes the
     turn — round, movement, Next, ✕ ends combat (P2). *Actions* lists what this character does by
@@ -190,12 +192,16 @@ and a panel's rows share one Tab stop with their controls on the arrows.
 
 ## Controls the layouts share
 
-- [ ] **ARRANGE-MODE · one switch for all the furniture** (P9; COMBAT-RAIL ▸ 4). A sliders icon in
+- [~] **ARRANGE-MODE · one switch for all the furniture** (P9; COMBAT-RAIL ▸ 4). A sliders icon in
   the title bar turns arranging on: grips, pins, eyes and the tab switches appear together, and Done
   hides them. While it is off, a row carries no furniture. Its reverse state is the same switch, and
   a hidden tab or panel is shown again from inside arranging ("Show the Actions tab").
   **A wave of its own** — the maintainer's call: neither the wide desktop nor the new layouts take it
   before that wave, so until then the furniture stands where it stands today.
+  **Built:** the phone and narrow desktop show grips, pins, eyes and visibility switches while
+  arranging. Done hides them. Each hidden tab can be selected and shown while arranging. [to audit]
+  **Open:** The original wave note defers Arrange on every layout. Does the wide desktop take it
+  with the rail (COMBAT-RAIL ▸ 4) while the compact layouts have it in this wave?
 
 - [~] **ROW-MENU · hold a row, or right-click it** (P10, P14, P17, P23): the one place a row's
   secondary acts live — why the number is what it is, the roll's swing, Pin to Mine, Open in the
