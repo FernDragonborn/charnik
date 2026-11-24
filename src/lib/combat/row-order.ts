@@ -42,6 +42,20 @@ export function movedOrder(ids: readonly string[], id: string, by: -1 | 1): stri
 	return order;
 }
 
+/** Replace a category's positions in the full order without moving its neighbours. */
+export function reorderRowSubset(
+	live: readonly string[],
+	saved: readonly string[] | undefined,
+	group: readonly string[],
+): string[] {
+	const ids = [...new Set([...live, ...(saved ?? [])])];
+	const members = new Set(group);
+	let index = 0;
+	return orderRows(ids, (id) => id, saved).map((id) =>
+		members.has(id) ? (group[index++] ?? id) : id,
+	);
+}
+
 /**
  * One key per row for a list whose ids may repeat — an attack is named for its weapon, and the same
  * weapon can stand on two inventory rows. The first holder keeps the id as it is, so a saved order

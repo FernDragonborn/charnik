@@ -1,5 +1,15 @@
 import { describe, it, expect } from 'vitest';
-import { uniqueRowKeys } from './row-order';
+import { reorderRowSubset, uniqueRowKeys } from './row-order';
+
+it('moves only the visible category and keeps the saved hidden rows', () => {
+	expect(
+		reorderRowSubset(
+			['dash', 'rage', 'flurry', 'help'],
+			['dash', 'rage', 'hide', 'flurry'],
+			['flurry', 'rage'],
+		),
+	).toEqual(['dash', 'flurry', 'hide', 'rage', 'help']);
+});
 
 describe('uniqueRowKeys — a keyed list never sees one key twice', () => {
 	it('leaves unrepeated ids alone and numbers the repeats', () => {

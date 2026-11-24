@@ -214,6 +214,10 @@ The compact header's Arrange switch reveals row grips, pins, visibility controls
 In Arrange, open a tab and use its visibility switch. Mine on the phone stays visible. Done returns
 the sheet to play. A phone whose only visible tab is Mine gives its space to the sheet.
 
+On the phone, Actions folds by action, bonus action and reaction. Feature rolls and options
+without a turn cost have their own group. The Standard actions row opens a sheet of the
+character's visible, edition-specific actions. One selection uses the action and closes the sheet.
+
 - **`main` is the only scroll region, so everything above it must FIT.** Horizontal overflow at the
   document level scrolls the page sideways and drags every `position: fixed` overlay off-side with
   it. The topbar therefore stays ONE row below the threshold: the navigation slides sideways if it
@@ -1006,9 +1010,9 @@ a region joins by being marked.
 **A row's secondary acts are its menu** (`contextAct` → `openRowMenu`, `lib/combat/row-menu.ts`).
 A right click, the context-menu key, or Shift+F10 opens it. In compact play, holding a finger on a
 row opens the same menu and consumes the release. A moving finger scrolls. While arranging, holding
-is for dragging. The menu shows what the row has of: what its number is made of, the check with a swing (the
-player's advantage or disadvantage joining the sheet's, one of each cancelling), its pin, its
-article and its own acts. Spells show the casting profile's parts and a feature opens the shared
+is for dragging. The menu shows what makes up the row's number, its check with a swing, its pin,
+its article and its own acts. The player's advantage or disadvantage joins the sheet's, and one of
+each cancels. Spells show the casting profile's parts and a feature opens the shared
 own-words editor. Escape leaves the editor first, then returns from the row menu to its trigger.
 
 **`Ctrl+K` opens the command palette** — all content and every character. Views switch by tab bar

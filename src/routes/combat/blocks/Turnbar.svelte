@@ -190,53 +190,6 @@
 		display: inline-flex;
 		gap: var(--space-1);
 	}
-	/* One shape per slot, following Baldur's Gate 3's action economy — a circle for an action, a
-	   triangle for a bonus action, a four-pointed star for a reaction. The shape, not the colour, is
-	   what identifies a slot: it survives a user theme, a colour-blind eye, and the narrow bar that
-	   has dropped the words. Colours come from existing semantic tokens rather than new ones, so
-	   every shipped and user-written theme keeps working with no entry to add.
-	   `clip-path` clips a border and a box-shadow away with the box, so a spent pip is a MUTED FILL
-	   (not an outline) and the glow is a drop-shadow filter.
-	   The SHAPE is drawn on `::before`, and only the glow lives on the pip itself: CSS applies a
-	   filter BEFORE clip-path, so a pip that clipped itself cut its own drop-shadow away — which is
-	   why the circle glowed and the triangle and the star did not. */
-	.turn-slot .turn-pip {
-		width: 13px;
-		height: 13px;
-		padding: 0;
-		border: 0;
-		background: none;
-		filter: drop-shadow(0 0 4px color-mix(in srgb, var(--pip-color) 55%, transparent));
-		cursor: pointer;
-	}
-	.turn-slot .turn-pip::before {
-		content: '';
-		display: block;
-		width: 100%;
-		height: 100%;
-		background: var(--pip-color);
-		clip-path: var(--pip-shape, none);
-		border-radius: var(--pip-radius, 0);
-	}
-	.turn-slot .turn-pip.used {
-		--pip-color: var(--color-border-strong);
-		filter: none;
-	}
-	.turn-slot .pip-action {
-		--pip-color: var(--color-good);
-		--pip-radius: 50%;
-	}
-	.turn-slot .pip-bonus {
-		--pip-color: var(--color-warning);
-		width: 15px;
-		--pip-shape: polygon(50% 4%, 100% 96%, 0 96%);
-	}
-	.turn-slot .pip-reaction {
-		--pip-color: var(--color-accent-bright);
-		width: 15px;
-		height: 15px;
-		--pip-shape: polygon(50% 0, 58% 42%, 100% 50%, 58% 58%, 50% 100%, 42% 58%, 0 50%, 42% 42%);
-	}
 	.turn-slot b {
 		color: var(--color-text);
 	}

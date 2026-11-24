@@ -644,7 +644,14 @@
 		"actions": {
 			"unavailable": "Not available right now",
 			"cantAfford": "Not enough {resource}",
-			"costSlot": "spell slot"
+			"costSlot": "spell slot",
+			"standard": "Standard actions",
+			"standardMore": "{names} and {count, plural, one {# more} other {# more}}",
+			"standardPrompt": "A reminder — tap one to use it",
+			"emptyGroup": "Nothing on this sheet uses one",
+			"spentGroup": "{label} is spent this turn",
+			"other": "Other actions",
+			"bonus": "Bonus action"
 		},
 		"attacks": {
 			"extraAttack": "{name}: an extra attack with {weapon}",

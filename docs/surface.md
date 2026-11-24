@@ -187,7 +187,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **the light a moving surface catches: a spark, a shaft, a bright edge** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`, `--color-death`, `--color-glint`
 
-## Global CSS classes (108)
+## Global CSS classes (113)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -263,6 +263,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.on` | components.css | the SELECTED chip. |
 | `.panel-head` | components.css | panel header: click the whole title area (chev + name) to collapse |
 | `.pill-btn` | components.css | display-font pill button — the shared toolbar/disclosure control (combat toolbar, compendium group-by + disclosure su… |
+| `.pip-action` | components.css |  |
+| `.pip-bonus` | components.css |  |
+| `.pip-reaction` | components.css |  |
 | `.primary` | components.css | the answer to a question the system asks — in a dialog, or where a GM's request waits beside the sheet (`.system-ques… |
 | `.prose-break` | components.css | The air after a hard break in rendered CSV prose (`content/markdown.ts` puts one after every <br>): the source separa… |
 | `.prose-table-scroll` | ArticleProse.svelte :global |  |
@@ -298,8 +301,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.text-field` | components.css | text-input / textarea field base (edit forms, inline editors). |
 | `.toggle-track` | components.css | --- toggle-track: the pill on/off switch knob (Switch component, combat menus) --- |
 | `.trace` | components.css | --- small shared bits --- |
+| `.turn-pip` | components.css | The same slot keeps its shape in the turn strip and the groups beneath it. |
 | `.type-pill` | components.css | the chevron is quieter than the type it belongs to until the pill is under the pointer |
 | `.types` | components.css | the type picker is every damage type there is — a dozen-odd rows. |
+| `.used` | components.css |  |
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 
 ## Shared components (63)
@@ -324,7 +329,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **DataMigrationDialog** | `title`, `detail`, `note`, `newDir`, `left`, `reason`, `retrying`, `onRetry`, `onReveal`, `onclose` | The result of a data-folder move that did not simply succeed. |
 | **DefenseStrip** | `sheet`, `graph`, `system` |  |
 | **DiagnosticsModal** | `onDismiss` | The bug report (audit DIAG-1): one field for what happened and one button that opens a GitHub |
-| **DialogShell** | `titleId`, `title`, `ask`, `sub`, `subIsPath`, `subtitle`, `width`, `initialFocus`, `onDismiss`, `children` | The shared dialog shell: full-screen backdrop, the centred `.dialog` panel, and its head — the |
+| **DialogShell** | `titleId`, `title`, `ask`, `sub`, `subIsPath`, `subtitle`, `width`, `bottom`, `initialFocus`, `onDismiss`, `children` | The shared dialog shell: full-screen backdrop, the centred `.dialog` panel, and its head — the |
 | **DiceIcon** | `size` | The dice-roll glyph: a d20 (icosahedron, top-down) with a small d4 (tetrahedron) tucked at its |
 | **DraftsPane** | `graph`, `onResume`, `onResolveOrphans` | Pending-drafts list — the full-width pane that replaces the editing block in the compendium right |
 | **EditableTitle** | `value`, `placeholder` | The article title field shown in edit/translate mode. |
@@ -1162,6 +1167,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const ROW_PANEL` — The panels that keep a stored row order — compared against these, never a bare string.
 - `function orderRows` — Sort `rows` by a saved order, keeping anything unnamed in its own order at the end.
 - `function movedOrder` — The order after moving one row a step — `-1` up, `1` down.
+- `function reorderRowSubset` — Replace a category's positions in the full order without moving its neighbours.
 - `function uniqueRowKeys` — * One key per row for a list whose ids may repeat — an attack is named for its weapon, and the same * weapon can stan…
 
 ### `src/lib/combat/sheet-roll-specs.ts`
@@ -2809,4 +2815,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_51 tokens · 108 global classes · 63 components · 1713 exports across 239 modules · 129 duplicate suspects._
+_51 tokens · 113 global classes · 63 components · 1714 exports across 239 modules · 129 duplicate suspects._

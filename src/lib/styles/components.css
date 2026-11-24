@@ -134,6 +134,47 @@
 	cursor: ns-resize !important; /* a row moves up and down its own list, never sideways */
 }
 
+/* The same slot keeps its shape in the turn strip and the groups beneath it. */
+.turn-pip {
+	inline-size: var(--font-size-sm);
+	block-size: var(--font-size-sm);
+	padding: 0;
+	border: 0;
+	background: none;
+	filter: drop-shadow(0 0 var(--space-1) color-mix(in srgb, var(--pip-color) 55%, transparent));
+}
+button.turn-pip {
+	cursor: pointer;
+}
+.turn-pip::before {
+	content: '';
+	display: block;
+	inline-size: 100%;
+	block-size: 100%;
+	background: var(--pip-color);
+	clip-path: var(--pip-shape, none);
+	border-radius: var(--pip-radius, 0);
+}
+.pip-action {
+	--pip-color: var(--color-good);
+	--pip-radius: 50%;
+}
+.pip-bonus {
+	--pip-color: var(--color-warning);
+	inline-size: calc(var(--space-4) - var(--space-1) / 4);
+	--pip-shape: polygon(50% 4%, 100% 96%, 0 96%);
+}
+.pip-reaction {
+	--pip-color: var(--color-accent-bright);
+	inline-size: calc(var(--space-4) - var(--space-1) / 4);
+	block-size: calc(var(--space-4) - var(--space-1) / 4);
+	--pip-shape: polygon(50% 0, 58% 42%, 100% 50%, 58% 58%, 50% 100%, 42% 58%, 0 50%, 42% 42%);
+}
+.turn-pip.used {
+	--pip-color: var(--color-border-strong);
+	filter: none;
+}
+
 /* ---- the dice tray's pill and its menu rows, shared ----
    Two surfaces say a damage type the same way: a damage line in the tray, and the hit on the
    hit-point block. So the pill a type wears and the rows of the menu it opens live here once, under

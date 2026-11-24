@@ -34,12 +34,14 @@
 		s,
 		asTab = false,
 		compactSpells = false,
+		phone = false,
 	}: {
 		pid: string;
 		c: Character;
 		s: CharacterSheet;
 		asTab?: boolean;
 		compactSpells?: boolean;
+		phone?: boolean;
 	} = $props();
 	const furniture = $derived(!asTab || combat.layout.arranging);
 
@@ -172,7 +174,7 @@
 		{:else if pid === 'attacks'}
 			<AttacksPanel {furniture} />
 		{:else if pid === 'actions'}
-			<ActionsPanel {furniture} />
+			<ActionsPanel {furniture} {phone} />
 		{:else if pid === 'effects'}
 			<EffectsPanel {c} {s} />
 		{:else if pid === 'spells'}

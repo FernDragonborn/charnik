@@ -109,9 +109,10 @@ and a panel's rows share one Tab stop with their controls on the arrows.
   with the name on a line of its own, the controls and time in one sliding strip, the six tabs with
   Spells left out of a sheet that casts nothing, the last roll above the bar. The bar omits hidden
   tabs and uses the space for the sheet when only Mine is visible. [to audit]
-  **Left:** Mine as the
-  pinned set — until RESOURCE-PIN it shows the attacks and the effects; Actions' standard actions
-  behind one row (P3, P3b); Items one line each in folding categories (P13, P14); Bio's About /
+  Actions groups attacks and ability options by turn cost. A Standard actions row opens the
+  edition's available choices in a sheet and closes after the player picks one (P3, P3b). [to audit]
+  **Left:** Mine as the pinned set — until RESOURCE-PIN it shows the attacks and the effects;
+  Items one line each in folding categories (P13, P14); Bio's About /
   Features / Notes (P16–P16c); and every *new idea* frame,
   which are their own items.
   - **The tabs.** *Mine* is the character's pinned set — RESOURCE-PIN's answer (P1). Out of combat,

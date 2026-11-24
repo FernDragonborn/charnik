@@ -11,6 +11,7 @@
 	import { trapFocus } from '#lib/actions/trapFocus.ts';
 	import { focusHalo } from '#lib/actions/focusHalo.ts';
 	import { _ } from '#lib/i18n/index.ts';
+	import Icon from './Icon.svelte';
 	import LangSwitcher from './LangSwitcher.svelte';
 
 	// the key a Mac's keyboard prints is Return
@@ -24,6 +25,7 @@
 		subIsPath = false,
 		subtitle = '',
 		width,
+		bottom = false,
 		initialFocus,
 		onDismiss,
 		children,
@@ -42,6 +44,7 @@
 		subtitle?: string;
 		/** CSS width for the panel (e.g. "min(760px, calc(100vw - 2 * var(--space-4)))"). */
 		width: string;
+		bottom?: boolean;
 		/** Where the keyboard starts, when that is not the first control — the safe choice. */
 		initialFocus?: HTMLElement | null;
 		/** Omit for a dialog with NO way out but its own buttons: the backdrop stops being clickable and
@@ -56,6 +59,7 @@
 <div class="dialog-backdrop" onclick={onDismiss}></div>
 <div
 	class="dialog"
+	class:dialog-bottom={bottom}
 	style="width: {width}"
 	role="dialog"
 	aria-modal="true"
@@ -66,7 +70,15 @@
 	use:focusHalo={{ enterKey: $_(onMac ? 'app.returnKey' : 'app.enterKey') }}
 >
 	<header class="dialog-head">
-		<div class="dialog-lang-corner"><LangSwitcher /></div>
+		<div class="dialog-lang-corner">
+			{#if !bottom}
+				<LangSwitcher />
+			{:else if onDismiss}
+				<button type="button" class="icon-button" aria-label={$_('app.close')} onclick={onDismiss}
+					><Icon name="x" /></button
+				>
+			{/if}
+		</div>
 		{#if ask}<p class="dialog-ask">{ask}</p>{/if}
 		<h2 id={titleId} class="dialog-title">{title}</h2>
 		{#if sub}<p class="dialog-sub" class:is-path={subIsPath}>{sub}</p>{/if}
@@ -74,3 +86,14 @@
 	</header>
 	{@render children()}
 </div>
+
+<style>
+	.dialog-bottom {
+		inset: auto 0 0;
+		transform: none;
+		margin-inline: auto;
+		max-height: calc(100dvh - var(--space-8));
+		border-end-start-radius: 0;
+		border-end-end-radius: 0;
+	}
+</style>

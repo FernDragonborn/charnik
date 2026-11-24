@@ -1,5 +1,7 @@
 import type { Action } from 'svelte/action';
 
+const escapeLayers: { handler: (() => void) | undefined }[] = [];
+
 /**
  * Call `onEscape` when the Escape key is pressed while the node is mounted (AUDIT F8) — the one home
  * for the `<svelte:window onkeydown>` + Escape-check every attention dialog hand-wrote. Applied to
@@ -11,19 +13,26 @@ import type { Action } from 'svelte/action';
  * Escape (DataMigrationDialog) needs no second code path.
  */
 export const dismissOnEscape: Action<HTMLElement, (() => void) | undefined> = (_node, onEscape) => {
-	let handler = onEscape;
+	const layer = { handler: onEscape };
+	escapeLayers.push(layer);
 	const onKeydown = (e: KeyboardEvent) => {
-		if (e.key === 'Escape' && handler) {
+		if (
+			e.key === 'Escape' &&
+			!e.defaultPrevented &&
+			escapeLayers.at(-1) === layer &&
+			layer.handler
+		) {
 			e.preventDefault();
-			handler();
+			layer.handler();
 		}
 	};
 	window.addEventListener('keydown', onKeydown);
 	return {
 		update(next: (() => void) | undefined) {
-			handler = next;
+			layer.handler = next;
 		},
 		destroy() {
+			escapeLayers.splice(escapeLayers.indexOf(layer), 1);
 			window.removeEventListener('keydown', onKeydown);
 		},
 	};

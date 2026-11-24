@@ -644,7 +644,14 @@
 		"actions": {
 			"unavailable": "Зараз недоступно",
 			"cantAfford": "Недостатньо: {resource}",
-			"costSlot": "комірка заклять"
+			"costSlot": "комірка заклять",
+			"standard": "Стандартні дії",
+			"standardMore": "{names} і ще {count, plural, one {# дія} few {# дії} many {# дій} other {# дії}}",
+			"standardPrompt": "Підказка — натисніть дію, щоб її виконати",
+			"emptyGroup": "Персонаж не має дій цього типу",
+			"spentGroup": "«{label}» витрачено цього ходу",
+			"other": "Інші дії",
+			"bonus": "Бонусна дія"
 		},
 		"attacks": {
 			"extraAttack": "{name}: додаткова атака — {weapon}",

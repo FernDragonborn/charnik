@@ -26,7 +26,8 @@ export const trapFocus: Action<HTMLElement, HTMLElement | null | undefined> = (n
 	// ponytail: no visibility filter (offsetParent/getClientRects) — the attention dialogs here never
 	// ship hidden focusables, so a display:none control would just be a benign extra tab stop. Add a
 	// visibility check if a dialog ever renders hidden focusable elements.
-	const focusable = (): HTMLElement[] => [...node.querySelectorAll<HTMLElement>(FOCUSABLE)];
+	const focusable = (): HTMLElement[] =>
+		[...node.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((control) => control.tabIndex >= 0);
 
 	// start inside the dialog: the caller's choice, else the first answer — the house footer puts what
 	// declines first, so an Enter pressed by habit says no — else the first control, else the panel

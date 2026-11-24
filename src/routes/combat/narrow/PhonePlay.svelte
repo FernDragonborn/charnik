@@ -27,7 +27,7 @@
 	const SKILLS = 'skills';
 	const TABS = [
 		{ id: MINE, panels: ['attacks', 'effects'] },
-		{ id: 'actions', panels: ['actions', 'attacks'] },
+		{ id: 'actions', panels: ['actions'] },
 		{ id: SPELLS, panels: ['spells'] },
 		{ id: SKILLS, panels: ['skills'] },
 		{ id: 'items', panels: ['inventory'] },
@@ -81,7 +81,7 @@
 		{/if}
 		{#if on?.id === SKILLS}<Abilities {s} /><CombatStrip {s} tiles={false} />{/if}
 		{#each on?.panels ?? [] as pid (pid)}
-			<div class="phone-panel"><PanelCard {pid} {c} {s} asTab /></div>
+			<div class="phone-panel"><PanelCard {pid} {c} {s} asTab phone /></div>
 		{/each}
 	</div>
 
