@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saved play layouts</title>
+<link rel="stylesheet" href="../src/lib/styles/tokens.css">
+<style>
+	body { margin: var(--space-5); background: var(--color-bg); color: var(--color-text); font: var(--font-size-body)/1.4 var(--font-body); }
+	h1, h2, h3, p, figure { margin: 0; }
+	h1, h2, strong, .brand { font-family: var(--font-display); }
+	h1 { font-size: var(--font-size-h5); }
+	h2 { font-size: var(--font-size-md); }
+	figure { margin-block: var(--space-5); }
+	figcaption { margin-block-end: var(--space-3); }
+	figcaption p { margin-block-start: var(--space-1); color: var(--color-text-muted); }
+	.layouts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--space-8) * 5)), 1fr)); gap: var(--space-2); }
+	.sample { min-inline-size: 0; display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-2); background: var(--color-bg); outline: thin solid var(--color-border-strong); border-radius: var(--radius-lg); }
+	.label { color: var(--color-text-muted); font-size: var(--font-size-sm); }
+	header, .vitals, footer { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-2); border-radius: var(--radius-md); background: var(--color-surface); }
+	header span, footer { color: var(--color-text-muted); }
+	.vitals strong { flex-basis: 100%; }
+	.columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+	.panel { min-inline-size: 0; border-radius: var(--radius-md); background: var(--color-surface); overflow: hidden; }
+	.panel h3, .row { padding: var(--space-2); }
+	.panel h3 { font-size: var(--font-size-sm); background: var(--color-surface-2); }
+	.row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--space-1); border-block-start: thin solid var(--color-border); }
+	.row b { font-size: var(--font-size-xs); color: var(--color-resource); }
+	footer { margin-block-start: auto; }
+	.phone-tabs { border-block-start: thin solid var(--color-accent); }
+</style>
+<h1>What a character’s saved layout carries between screens</h1>
+<figure>
+	<figcaption>
+		<h2>One arrangement across screens</h2>
+		<p><b>Gives the player</b> the same row order and pins on every screen, with the panels fitted to the available space.</p>
+		<p><b>Risks</b> carrying a desktop choice to the phone where it takes up room. The saved desktop panel columns remain the source.</p>
+	</figcaption>
+	<div class="layouts">
+	<div class="sample"><p class="label">Wide desktop</p><header><b class="brand">Charnik</b><span>Combat</span></header>
+<div class="vitals"><strong>Sample character</strong><span>38 / 73 HP</span><span>15 AC</span></div><div class="columns"><section class="panel"><h3>Actions</h3><div class="row"><span>Greataxe</span><b>Pinned</b></div><div class="row"><span>Dash</span><b></b></div><div class="row"><span>Dodge</span><b></b></div></section><section class="panel"><h3>Skills</h3><div class="row"><span>Stealth</span><b>Pinned</b></div><div class="row"><span>Athletics</span><b></b></div></section></div><footer>Roll log</footer></div>
+	<div class="sample"><p class="label">Narrow desktop</p><header><b class="brand">Charnik</b><span>Combat</span></header>
+<div class="vitals"><strong>Sample character</strong><span>38 / 73 HP</span><span>15 AC</span></div><div class="columns"><section class="panel"><h3>Actions   Spells</h3><div class="row"><span>Greataxe</span><b>Pinned</b></div><div class="row"><span>Dash</span><b></b></div><div class="row"><span>Dodge</span><b></b></div></section><section class="panel"><h3>Skills   Effects</h3><div class="row"><span>Stealth</span><b>Pinned</b></div></section></div><footer>Roll log</footer></div>
+	<div class="sample phone"><p class="label">Phone</p><header><b class="brand">Charnik</b><span>Combat</span></header>
+<div class="vitals"><strong>Sample character</strong><span>38 / 73 HP</span><span>15 AC</span></div><section class="panel"><h3>Mine</h3><div class="row"><span>Greataxe</span><b>Pinned</b></div><div class="row"><span>Stealth</span><b>Pinned</b></div></section><footer class="phone-tabs">Mine · Actions · Skills · Bio</footer></div>
+</div>
+</figure>
+<figure>
+	<figcaption>
+		<h2>Independent arrangements</h2>
+		<p><b>Gives the player</b> distinct panel, row and pin choices for each screen. Existing choices seed each screen once.</p>
+		<p><b>Risks</b> making the same change three times when the player wants it everywhere.</p>
+	</figcaption>
+	<div class="layouts">
+	<div class="sample"><p class="label">Wide desktop</p><header><b class="brand">Charnik</b><span>Combat</span></header>
+<div class="vitals"><strong>Sample character</strong><span>38 / 73 HP</span><span>15 AC</span></div><div class="columns"><section class="panel"><h3>Actions</h3><div class="row"><span>Greataxe</span><b>Pinned</b></div><div class="row"><span>Dash</span><b></b></div><div class="row"><span>Dodge</span><b></b></div></section><section class="panel"><h3>Skills</h3><div class="row"><span>Stealth</span><b>Pinned</b></div><div class="row"><span>Athletics</span><b></b></div></section></div><footer>Roll log</footer></div>
+	<div class="sample"><p class="label">Narrow desktop</p><header><b class="brand">Charnik</b><span>Combat</span></header>
+<div class="vitals"><strong>Sample character</strong><span>38 / 73 HP</span><span>15 AC</span></div><div class="columns"><section class="panel"><h3>Actions   Spells</h3><div class="row"><span>Dodge</span><b></b></div><div class="row"><span>Greataxe</span><b></b></div><div class="row"><span>Dash</span><b></b></div></section><section class="panel"><h3>Skills   Effects</h3><div class="row"><span>Stealth</span><b>Pinned</b></div></section></div><footer>Roll log</footer></div>
+	<div class="sample phone"><p class="label">Phone</p><header><b class="brand">Charnik</b><span>Combat</span></header>
+<div class="vitals"><strong>Sample character</strong><span>38 / 73 HP</span><span>15 AC</span></div><section class="panel"><h3>Mine</h3><div class="row"><span>Rage</span><b>Pinned</b></div><div class="row"><span>Dash</span><b>Pinned</b></div></section><footer class="phone-tabs">Mine · Actions · Skills · Bio</footer></div>
+</div>
+</figure>
+</html>

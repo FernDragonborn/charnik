@@ -26,8 +26,10 @@ and a panel's rows share one Tab stop with their controls on the arrows.
   three columns from 760px. At 1024px and above the play screen uses the wide desktop layout.
   **Built** ([UI](../internals/ui.md) ▸ A narrow window): `narrow.mjs` and `shot.mjs` check 512px,
   768px and 1280px with a mouse and 393px with touch. [to audit]
-  **Left:** what a character's saved layout (`ui.panelColumns`, row orders, pins) means in each
-  layout.
+  **Open:** Should a character's saved panel arrangement, row order and pins carry across all three
+  layouts or have separate settings per layout? See
+  [saved-play-layout-variants.html](../../design-preview/saved-play-layout-variants.html).
+  [to audit: variants]
 
 - [ ] **COMBAT-RAIL · the wide desktop: a scrolling body beside a rail that does not scroll.**
   Three parts, and the third is the reason the other two are not a CSS tweak:
