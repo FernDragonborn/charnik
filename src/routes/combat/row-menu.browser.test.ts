@@ -1,7 +1,8 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
 import { startI18n } from '#lib/i18n/index.ts';
+import { TOUCH_HOLD_MS } from '#lib/actions/dragMotion.ts';
 import { newCharacter, SYSTEMS } from '#lib/character/schema.ts';
 import { makeTempContentRoot } from '../../test-support/fixtures';
 import { combat } from './combat-view-model.svelte';
@@ -45,6 +46,10 @@ function pressKey(target: Element | null, code: string, shiftKey = false): void 
 	).toBe(false);
 }
 
+function sendTouch(target: Element, type: string, touches: Touch[]): boolean {
+	return target.dispatchEvent(new TouchEvent(type, { touches, bubbles: true, cancelable: true }));
+}
+
 describe.each(SYSTEMS)('attack, action and feature menus · %s', (system) => {
 	beforeEach(() => {
 		const character = newCharacter('rows', 'Rows', system);
@@ -65,6 +70,61 @@ describe.each(SYSTEMS)('attack, action and feature menus · %s', (system) => {
 		expect(combat.journal.log[0]?.advantage).toBe('advantage');
 		expect(combat.journal.log[0]?.damage?.length).toBeGreaterThan(0);
 		expect(document.activeElement).toBe(row);
+	});
+
+	it('uses a tap for the attack and consumes a hold without rolling', async () => {
+		await render(AttacksPanel, { furniture: false });
+		await render(CombatMenus);
+		const row = document.querySelector<HTMLButtonElement>('.row-line .combat-row');
+		if (!row) throw new Error('The attack must have a row');
+		const finger = new Touch({ target: row, identifier: 1, clientX: 30, clientY: 30 });
+		const journalEntry = combat.journal.log[0];
+		vi.useFakeTimers();
+		try {
+			sendTouch(row, 'touchstart', [finger]);
+			vi.advanceTimersByTime(TOUCH_HOLD_MS - 1);
+			expect(combat.overlay).toBeNull();
+			expect(sendTouch(row, 'touchend', [])).toBe(true);
+			row.click();
+			const tapEntry = combat.journal.log[0];
+			expect(tapEntry).not.toBe(journalEntry);
+			expect(tapEntry?.damage?.length).toBeGreaterThan(0);
+
+			sendTouch(row, 'touchstart', [finger]);
+			vi.advanceTimersByTime(TOUCH_HOLD_MS);
+			await tick();
+			expect(popup()?.querySelector('.popup-heading')?.textContent).toContain('Unarmed Strike');
+			expect(sendTouch(row, 'touchend', [])).toBe(false);
+			expect(combat.journal.log[0]).toBe(tapEntry);
+			pressKey(document.activeElement, 'Escape');
+			await tick();
+			expect(document.activeElement).toBe(row);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it('cancels the hold for movement or a second finger outside the row', async () => {
+		await render(ActionsPanel, { furniture: false });
+		const row = document.querySelector('.row-wrap');
+		if (!row) throw new Error('The action must have a row');
+		const finger = new Touch({ target: row, identifier: 1, clientX: 30, clientY: 30 });
+		const moved = new Touch({ target: row, identifier: 1, clientX: 30, clientY: 45 });
+		const second = new Touch({ target: document.body, identifier: 2 });
+		vi.useFakeTimers();
+		try {
+			sendTouch(row, 'touchstart', [finger]);
+			sendTouch(row, 'touchmove', [moved]);
+			vi.advanceTimersByTime(TOUCH_HOLD_MS);
+			expect(combat.overlay).toBeNull();
+
+			sendTouch(row, 'touchstart', [finger]);
+			sendTouch(document.body, 'touchstart', [finger, second]);
+			vi.advanceTimersByTime(TOUCH_HOLD_MS);
+			expect(combat.overlay).toBeNull();
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 
 	it('opens a standard action menu by right click and returns focus to the row', async () => {

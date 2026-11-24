@@ -56,6 +56,9 @@ export const NO_LIBRARY_TAB_STOPS = { zoneTabIndex: -1, zoneItemTabIndex: -1 } a
  *  own `MIN_MOVEMENT_BEFORE_DRAG_START_PX`: past it, it has already dropped the drag, and a ring that
  *  kept filling would be promising something that is no longer going to happen. */
 const HOLD_SLOP_PX = 3;
+export const touchHoldDrifted = (start: Touch, finger: Touch): boolean =>
+	Math.abs(finger.clientX - start.clientX) >= HOLD_SLOP_PX ||
+	Math.abs(finger.clientY - start.clientY) >= HOLD_SLOP_PX;
 /** The ring's size and weight. Drawn, not typed, and in rem so it scales with everything else. */
 const RING_REM = 2.5;
 const RING_STROKE_REM = 0.1875;
@@ -103,7 +106,7 @@ function hideRing(): void {
  *  the action that hosts both should read as the two things it does. Returns its own teardown. */
 function watchTouchHold(zone: HTMLElement, active: () => boolean): () => void {
 	/** Where the finger went down, so drift can be measured against it, and the pending reveal. */
-	let holdFrom: { x: number; y: number } | null = null;
+	let holdFrom: Touch | null = null;
 	let holdTimer: ReturnType<typeof setTimeout> | undefined;
 
 	function endHold(): void {
@@ -118,8 +121,8 @@ function watchTouchHold(zone: HTMLElement, active: () => boolean): () => void {
 		if (!at || !active()) return;
 		const el = ringElement();
 		const half = el.getBoundingClientRect().width / 2;
-		el.style.left = `${at.x - half}px`;
-		el.style.top = `${at.y - half}px`;
+		el.style.left = `${at.clientX - half}px`;
+		el.style.top = `${at.clientY - half}px`;
 		// the arc is the WAIT itself, so it is animated even under `prefers-reduced-motion`: that rule
 		// covers decoration, and a progress that does not progress says nothing about how long is left.
 		// Web Animations is outside the global rule's reach in any case.
@@ -135,7 +138,7 @@ function watchTouchHold(zone: HTMLElement, active: () => boolean): () => void {
 		const touch = event.touches[0];
 		// a second finger is a pinch, not a take
 		if (!touch || event.touches.length > 1) return endHold();
-		holdFrom = { x: touch.clientX, y: touch.clientY };
+		holdFrom = touch;
 		holdTimer = setTimeout(reveal, HOLD_QUIET_MS);
 	}
 
@@ -144,10 +147,7 @@ function watchTouchHold(zone: HTMLElement, active: () => boolean): () => void {
 	function onTouchMove(event: TouchEvent): void {
 		const touch = event.touches[0];
 		if (!holdFrom || !touch) return;
-		const drifted =
-			Math.abs(touch.clientX - holdFrom.x) >= HOLD_SLOP_PX ||
-			Math.abs(touch.clientY - holdFrom.y) >= HOLD_SLOP_PX;
-		if (drifted) endHold();
+		if (touchHoldDrifted(holdFrom, touch)) endHold();
 	}
 
 	// CAPTURE, and it is not optional: the library's own `touchstart` sits on the draggable ITEM and

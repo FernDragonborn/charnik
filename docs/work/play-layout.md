@@ -112,7 +112,7 @@ and a panel's rows share one Tab stop with their controls on the arrows.
   **Left:** Mine as the
   pinned set — until RESOURCE-PIN it shows the attacks and the effects; Actions' standard actions
   behind one row (P3, P3b); Items one line each in folding categories (P13, P14); Bio's About /
-  Features / Notes (P16–P16c); the hold for a row's menu (ROW-MENU); and every *new idea* frame,
+  Features / Notes (P16–P16c); and every *new idea* frame,
   which are their own items.
   - **The tabs.** *Mine* is the character's pinned set — RESOURCE-PIN's answer (P1). Out of combat,
     combat, rests and time sit under the vitals on every tab (P1); in combat that strip becomes the
@@ -212,7 +212,8 @@ and a panel's rows share one Tab stop with their controls on the arrows.
   Shift+F10 open it on a skill (its parts and the check with a swing), a spell and a feature (the
   pin, the article) and an item (the article, Remove). Attack and action rows open the same menu,
   spells show their casting parts, and a feature opens its own-words editor in the menu. [to audit]
-  **Left:** the hold on a finger, once dragging is ARRANGE-MODE's.
+  A finger holding a row in either compact play layout opens its menu. A tap uses the row.
+  Scrolling or adding a second finger cancels the hold. Arrange keeps the drag gesture. [to audit]
   **Open:** Should dismissing the own-words editor save with Undo as in P45–P45b, or keep the shared
   editor's explicit Save and Cancel controls?
 

@@ -169,7 +169,10 @@
 					     Tab went row, row, out — prepare, pin, ritual cast and the cast-time note were
 					     reachable by mouse only, and ritual casting by nothing else anywhere in the app. The
 					     NAME is the cast button, so the widest cell of the row still casts on a click. -->
-					<div class="spell-row" use:contextAct={(e) => spellMenu(r, e)}>
+					<div
+						class="spell-row"
+						use:contextAct={{ open: (e) => spellMenu(r, e), touch: !furniture }}
+					>
 						<span class="row-name">
 							<button
 								class="prep"

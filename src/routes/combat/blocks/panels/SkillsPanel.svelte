@@ -11,7 +11,7 @@
 	import { provenance } from '#lib/actions/provenance.ts';
 	import { contextAct } from '#lib/actions/contextAct.ts';
 
-	let { s }: { s: CharacterSheet } = $props();
+	let { s, touchMenu = false }: { s: CharacterSheet; touchMenu?: boolean } = $props();
 	const { roll } = combat;
 
 	/** A skill's row menu: what its number is made of, and the check rolled with a swing. */
@@ -58,7 +58,7 @@
 						<button
 							class="skill-row"
 							use:provenance={why(sk, $_)}
-							use:contextAct={(e) => skillMenu(skill, e)}
+							use:contextAct={{ open: (e) => skillMenu(skill, e), touch: touchMenu }}
 							onclick={(e) => {
 								const check = skillRoll(skill, s);
 								roll(check.name, check.mod, e, check.target);

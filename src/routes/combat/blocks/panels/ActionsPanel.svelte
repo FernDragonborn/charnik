@@ -128,7 +128,7 @@
 	}}
 >
 	{#each items as row (row.id)}
-		<div class="row-wrap" use:contextAct={(e) => actionMenu(row, e)}>
+		<div class="row-wrap" use:contextAct={{ open: (e) => actionMenu(row, e), touch: !furniture }}>
 			{#if furniture}
 				<RowGrip
 					panel={ROW_PANEL.actions}

@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (128)
+## Duplicate suspects (129)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -104,6 +104,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `NOTE_KEY` ×2 — src/lib/combat/roll.ts · src/lib/rules/pipeline.ts
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `onKey` ×2 — src/routes/build/+page.svelte · src/routes/combat/blocks/HpPanel/HitLine.svelte
+- `onTouchStart` ×2 — src/lib/actions/contextAct.ts · src/lib/actions/dragMotion.ts
 - `optionsOf` ×2 — src/lib/content/homebrew.ts · src/lib/content/options.ts
 - `ORDER` ×2 — src/lib/play/delta.ts · src/routes/combat/blocks/panels/FeaturesPanel.svelte
 - `PACK` ×2 — src/routes/dev/packs-write/+page.svelte · src/routes/dev/storage-edges/+page.svelte
@@ -586,7 +587,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/actions/contextAct.ts`
 
-- `const contextAct` — * A row's secondary menu, reached the ways a desktop reaches one (`work/play-layout.md` ▸ ROW-MENU): * a right click …
+- `const contextAct` — * A row's secondary menu.
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -596,6 +597,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `const TOUCH_HOLD_MS` — What every zone passes as `delayTouchStart`: the silence plus the fill, so the ring closes at the * exact moment the …
 - `const NO_LIBRARY_TAB_STOPS` — What every zone passes so the LIBRARY adds no Tab stops of its own: left at its default it makes * the list and every…
+- `const touchHoldDrifted`
 - `const dragMotion`
 
 ### `src/lib/actions/floatInBody.ts`
@@ -2807,4 +2809,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_51 tokens · 108 global classes · 63 components · 1712 exports across 239 modules · 128 duplicate suspects._
+_51 tokens · 108 global classes · 63 components · 1713 exports across 239 modules · 129 duplicate suspects._

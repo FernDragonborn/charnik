@@ -136,19 +136,22 @@
 			{@const id = idOf(f)}
 			<div
 				class="row-wrap"
-				use:contextAct={(e) =>
-					combat.menus.openRowMenu(
-						{
-							title: nameOf(f),
-							pin: {
-								on: combat.featureView.isPinned(id),
-								toggle: () => combat.featureView.togglePinned(id),
+				use:contextAct={{
+					touch: !furniture,
+					open: (e) =>
+						combat.menus.openRowMenu(
+							{
+								title: nameOf(f),
+								pin: {
+									on: combat.featureView.isPinned(id),
+									toggle: () => combat.featureView.togglePinned(id),
+								},
+								compendium: articleHref(f.row.effectiveId),
+								words: { rowId: id, original: localizedProse(f.row, 'text', app.activeLocale) },
 							},
-							compendium: articleHref(f.row.effectiveId),
-							words: { rowId: id, original: localizedProse(f.row, 'text', app.activeLocale) },
-						},
-						e,
-					)}
+							e,
+						),
+				}}
 			>
 				<details class="feature-item">
 					<!-- the same row a panel uses everywhere else (`.combat-row` in components.css): name on

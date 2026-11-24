@@ -134,7 +134,10 @@
 				{/if}
 				<!-- the weapon's own line: the row and, where there is one, its grip. Its own box so an
 				     extra attack can stand UNDER it without the two sharing a line. -->
-				<div class="row-line" use:contextAct={(e) => attackMenu(at, e)}>
+				<div
+					class="row-line"
+					use:contextAct={{ open: (e) => attackMenu(at, e), touch: !furniture }}
+				>
 					<!-- D9: the notes explain a magic weapon's own +X (already folded into toHit/damage) on hover -->
 					<button
 						class="combat-row"
@@ -182,7 +185,7 @@
 					{@const made = combat.economy.isRollUsed(extraAttackMark(at, extra))}
 					<button
 						class="extra-attack"
-						use:contextAct={(e) => attackMenu(at, e, extra)}
+						use:contextAct={{ open: (e) => attackMenu(at, e, extra), touch: !furniture }}
 						class:is-blocked={made}
 						aria-disabled={made ? true : undefined}
 						aria-label={$_('combat.attacks.extraAttack', {

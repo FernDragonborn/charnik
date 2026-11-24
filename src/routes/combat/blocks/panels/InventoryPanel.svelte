@@ -146,20 +146,23 @@
 		{#if row}
 			<div
 				class="inv-row"
-				use:contextAct={(e) =>
-					combat.menus.openRowMenu(
-						{
-							title: row.name,
-							compendium: row.item ? articleHref(row.item.row.effectiveId) : undefined,
-							acts: [
-								{
-									label: $_('combat.inventory.remove', { values: { name: row.name } }),
-									run: () => inv.remove(row.entry.iid),
-								},
-							],
-						},
-						e,
-					)}
+				use:contextAct={{
+					touch: !furniture,
+					open: (e) =>
+						combat.menus.openRowMenu(
+							{
+								title: row.name,
+								compendium: row.item ? articleHref(row.item.row.effectiveId) : undefined,
+								acts: [
+									{
+										label: $_('combat.inventory.remove', { values: { name: row.name } }),
+										run: () => inv.remove(row.entry.iid),
+									},
+								],
+							},
+							e,
+						),
+				}}
 			>
 				{#if furniture}
 					<RowGrip

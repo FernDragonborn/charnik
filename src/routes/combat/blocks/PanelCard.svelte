@@ -168,7 +168,7 @@
 	<!-- the panel's rows are ONE Tab stop, walked by the arrows (work/ui.md ▸ KEYBOARD-NAV) -->
 	<div class="panel-body" class:arranging={asTab && furniture} use:rowGrid={PANEL_ROWS}>
 		{#if pid === 'skills'}
-			<SkillsPanel {s} />
+			<SkillsPanel {s} touchMenu={!furniture} />
 		{:else if pid === 'attacks'}
 			<AttacksPanel {furniture} />
 		{:else if pid === 'actions'}
