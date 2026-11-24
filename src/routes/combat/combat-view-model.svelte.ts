@@ -109,6 +109,7 @@ class CombatVM {
 		(ids) => {
 			if (this.character) this.character.ui.panelsCollapsed = ids;
 		},
+		() => this.character?.ui.columnTabs,
 	);
 	/** Action-economy subsystem (pips, movement, turn/round, in-combat spend checks). */
 	economy = new TurnEconomy(() => this);

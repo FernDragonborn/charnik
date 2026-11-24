@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (127)
+## Duplicate suspects (126)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -72,7 +72,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `CONFIG_PATH` ×2 — src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts
 - `CONTENT_DIR` ×2 — src/lib/content/disk.ts · src/lib/effects/plugin-host.ts
 - `countOf` ×2 — src/lib/components/settings/DataConflictDialog.svelte · src/routes/combat/delta-text.ts
-- `current` ×2 — src/lib/character/repository.ts · src/routes/combat/narrow/ColumnPlay.svelte
 - `DC_MAX` ×2 — src/lib/table-link/wire-schema.ts · src/routes/table/AskComposer.svelte
 - `DEATH_SAVE_TRACK` ×2 — src/lib/play/hit-points.ts · src/lib/table-link/wire-schema.ts
 - `deleteDraft` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
@@ -2805,4 +2804,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_51 tokens · 108 global classes · 63 components · 1711 exports across 239 modules · 127 duplicate suspects._
+_51 tokens · 108 global classes · 63 components · 1711 exports across 239 modules · 126 duplicate suspects._

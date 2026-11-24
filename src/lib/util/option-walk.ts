@@ -17,7 +17,7 @@ export interface KeyPress {
 export interface OptionWalk {
 	/** The options in rendered order. A sectioned list passes only what is actually on screen: a
 	 *  collapsed section is not somewhere the keyboard can land. */
-	ids: string[];
+	ids: readonly string[];
 	previewId: string | null;
 	onpreview: (id: string) => void;
 	/**
@@ -36,12 +36,14 @@ export interface OptionWalk {
 	 * the thing the focus ring is around.
 	 */
 	onenter?: (id: string) => void;
+	/** A tab strip wraps and walks inline in its reading direction. */
+	inlineDirection?: 'ltr' | 'rtl';
 }
 
 /** Handle a key, or leave it alone. Returns whether it was ours, so a caller can still react. */
 export function walkOptions(
 	event: KeyPress,
-	{ ids, previewId, onpreview, onenter, jumpKeys = true }: OptionWalk,
+	{ ids, previewId, onpreview, onenter, jumpKeys = true, inlineDirection }: OptionWalk,
 ): boolean {
 	if (!ids.length) return false;
 	const at = previewId ? ids.indexOf(previewId) : -1;
@@ -59,8 +61,13 @@ export function walkOptions(
 		return true;
 	}
 	let next: number | null = null;
-	if (event.code === 'ArrowDown') next = Math.min(ids.length - 1, at + 1);
-	else if (event.code === 'ArrowUp') next = at <= 0 ? 0 : at - 1;
+	if (inlineDirection && (event.code === 'ArrowLeft' || event.code === 'ArrowRight')) {
+		const forward = inlineDirection === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
+		const by = event.code === forward ? 1 : -1;
+		next = at < 0 ? 0 : (at + by + ids.length) % ids.length;
+	} else if (!inlineDirection && event.code === 'ArrowDown')
+		next = Math.min(ids.length - 1, at + 1);
+	else if (!inlineDirection && event.code === 'ArrowUp') next = at <= 0 ? 0 : at - 1;
 	else if (jumpKeys && event.code === 'Home') next = 0;
 	else if (jumpKeys && event.code === 'End') next = ids.length - 1;
 	if (next === null) return false;

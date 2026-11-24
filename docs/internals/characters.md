@@ -205,6 +205,9 @@ launch, which is exactly what `actionsHidden` and then `panelsCollapsed` each di
 here. `panelsCollapsed` is the one that also holds the two sheet SECTIONS (`abilities`, `combat`),
 so it is never reconciled against the panel list the way `panelColumns` is.
 
+`ui.columnTabs` keeps the active tab for each group of panels in the narrow desktop layout.
+An older save opens each group's first tab and keeps its panel, row and pin settings.
+
 **A FILTER writes those arrays rather than layering over them** (the Features panel's presets, the
 Actions panel's — `combat/actions.ts ▸ ACTION_PRESET`, sets grouped by how a character fights and
 never a rule — and whatever grows one next). So there is one answer to "is this shown", a preset's effect reads back in

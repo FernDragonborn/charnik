@@ -195,7 +195,7 @@ The play screen chooses among three layouts live (`config/narrow-window.ts`, `pl
   `MobileWarning` uses the same pointer and width checks.
 - **Narrow desktop.** A mouse window below 1024px, or a coarse-pointer window above 800px and
   below 1024px, gets tabs dealt into columns (`ColumnPlay.svelte`). Two columns fit below 760px,
-  and three fit from 760px. Each scrolls independently.
+  and three fit from 760px. Each scrolls independently and restores its active tab per character.
 - **Wide desktop.** From 1024px, the character header sits above two reorderable panel columns
   in the main scroll region.
 

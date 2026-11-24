@@ -73,8 +73,9 @@ and a panel's rows share one Tab stop with their controls on the arrows.
   first with its way out and the way to add one last; the Skills tab carrying the abilities, the
   passives, the defenses and the resources; a spell row in two lines in a column; the top bar as one
   row with the rest behind ⋯; the strip as the mock's one line — pills without glyphs, concentration
-  there only while a save is owed, the dice tray beside the log at the bottom. **Left:** a column's
-  chosen tab kept across a reload; D12–D15's slot cells and the ritual and blocked readings.
+  there only while a save is owed, the dice tray beside the log at the bottom.
+  Each group of column tabs keeps its selection across reloads. [to audit]
+  **Left:** D12–D15's slot cells and the ritual and blocked readings.
   - **D1–D3 · a third of the screen, 512px: two columns, six panels.** Actions beside Skills (what
     the character does on the left, what is looked up on the right; neither scrolls), Spells beside
     Effects (concentration, bonus action and reaction marked; an action carries no mark), Items

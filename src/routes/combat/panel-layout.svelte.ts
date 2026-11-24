@@ -34,6 +34,7 @@ export class PanelLayout {
 		private persist: (columns: string[][]) => void = () => {},
 		private rows: () => Record<string, string[]> | undefined = () => undefined,
 		private persistCollapsed: (ids: string[]) => void = () => {},
+		private columnTabs: () => Record<string, string> | undefined = () => undefined,
 	) {}
 
 	toggle = (k: string) => {
@@ -125,6 +126,14 @@ export class PanelLayout {
 	 * sits where on this player's screen.
 	 */
 	rowOrder = (panel: string): string[] | undefined => this.rows()?.[panel];
+	activeColumnTab = (group: readonly string[]): string => {
+		const picked = this.columnTabs()?.[group.join(',')];
+		return picked && group.includes(picked) ? picked : (group[0] ?? '');
+	};
+	pickColumnTab = (group: readonly string[], tab: string): void => {
+		const tabs = this.columnTabs();
+		if (tabs && group.includes(tab)) tabs[group.join(',')] = tab;
+	};
 	/** Apply this panel's saved order to the rows it has right now — the one call a panel's list
 	 *  makes, so no view-model has to remember both halves of the reconciliation. */
 	ordered = <T>(panel: string, rows: readonly T[], idOf: (row: T) => string): T[] =>

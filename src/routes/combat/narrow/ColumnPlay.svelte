@@ -7,6 +7,8 @@
 	import type { CharacterSheet } from '#lib/character/derive.ts';
 	import { _ } from '#lib/i18n/index.ts';
 	import { playLayout } from '../play-layout.svelte';
+	import { combat } from '../combat-view-model.svelte';
+	import { walkOptions } from '#lib/util/option-walk.ts';
 	import NarrowHead from './NarrowHead.svelte';
 	import PlayStrip from './PlayStrip.svelte';
 	import Playbar from '../blocks/Playbar.svelte';
@@ -17,13 +19,19 @@
 
 	let { c, s }: { c: Character; s: CharacterSheet } = $props();
 
-	/** Which tab each column shows, by the column's first panel — kept while the window re-deals. */
-	let shown = $state<Record<string, string>>({});
-	const current = (group: readonly string[]): string => {
-		const first = group[0] ?? '';
-		const picked = shown[first];
-		return picked && group.includes(picked) ? picked : first;
-	};
+	function walkTabs(event: KeyboardEvent, group: readonly string[], tab: string): void {
+		const trigger = event.currentTarget;
+		if (!(trigger instanceof HTMLElement)) return;
+		walkOptions(event, {
+			ids: group,
+			previewId: tab,
+			inlineDirection: getComputedStyle(trigger).direction === 'rtl' ? 'rtl' : 'ltr',
+			onpreview: (choice) => {
+				combat.layout.pickColumnTab(group, choice);
+				document.getElementById(`pane-tab-${choice}`)?.focus();
+			},
+		});
+	}
 </script>
 
 <div class="column-play">
@@ -34,7 +42,7 @@
 
 	<div class="panes">
 		{#each playLayout.groups as group (group.join())}
-			{@const on = current(group)}
+			{@const on = combat.layout.activeColumnTab(group)}
 			<section class="pane" data-region aria-labelledby={`pane-tab-${on}`}>
 				<div class="pane-tabs" role="tablist">
 					{#each group as pid (pid)}
@@ -46,20 +54,18 @@
 							aria-selected={pid === on}
 							aria-controls={`pane-body-${group[0] ?? ''}`}
 							tabindex={pid === on ? 0 : -1}
-							onclick={() => (shown = { ...shown, [group[0] ?? '']: pid })}
-							onkeydown={(e) => {
-								const step = e.code === 'ArrowRight' ? 1 : e.code === 'ArrowLeft' ? -1 : 0;
-								if (!step) return;
-								e.preventDefault();
-								const next = group[(group.indexOf(pid) + step + group.length) % group.length];
-								if (!next) return;
-								shown = { ...shown, [group[0] ?? '']: next };
-								document.getElementById(`pane-tab-${next}`)?.focus();
-							}}>{$_(`combat.narrow.tab.${pid}`, { default: $_(`combat.panel.${pid}`) })}</button
+							onclick={() => combat.layout.pickColumnTab(group, pid)}
+							onkeydown={(e) => walkTabs(e, group, pid)}
+							>{$_(`combat.narrow.tab.${pid}`, { default: $_(`combat.panel.${pid}`) })}</button
 						>
 					{/each}
 				</div>
-				<div class="pane-body" role="tabpanel" id={`pane-body-${group[0] ?? ''}`}>
+				<div
+					class="pane-body"
+					role="tabpanel"
+					id={`pane-body-${group[0] ?? ''}`}
+					aria-labelledby={`pane-tab-${on}`}
+				>
 					<!-- what the wide screen stands above its panels — the passives, the defenses, the abilities
 					     and their saves — is looked up with the skills, as the mock deals it -->
 					{#if on === 'skills'}<Abilities {s} /><CombatStrip {s} tiles={false} />{/if}

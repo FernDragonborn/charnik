@@ -2286,6 +2286,19 @@ describe('CombatVM · UBUG-16 — a resource chip RUNS its action, it is not a b
 });
 
 describe('PanelLayout · a saved layout is reconciled with the panels that exist (N1)', () => {
+	it('picks a tab independently for each set of column tabs', () => {
+		const c = newCharacter('columns', 'Columns', '5e');
+		const layout = new PanelLayout(undefined, undefined, undefined, () => c.ui.columnTabs);
+		const narrow = ['actions', 'spells', 'inventory'];
+		const broad = ['actions', 'inventory'];
+		layout.pickColumnTab(narrow, 'spells');
+		layout.pickColumnTab(broad, 'inventory');
+		layout.pickColumnTab(narrow, 'features');
+		expect(layout.activeColumnTab(narrow)).toBe('spells');
+		expect(layout.activeColumnTab(broad)).toBe('inventory');
+		expect(layout.activeColumnTab(['skills', 'features'])).toBe('skills');
+	});
+
 	it('appends a panel added after the layout was saved, and drops one since removed', () => {
 		const layout = new PanelLayout();
 		const shipped = layout.columns.flat().map((p) => p.id);

@@ -424,6 +424,8 @@ const uiSchema = z
 	.object({
 		/** Combat-sheet panel layout: one array of panel ids per column (left, right). */
 		panelColumns: z.array(z.array(z.string())).optional(),
+		/** Active tab for each compact column, keyed by the ordered tabs it contains. */
+		columnTabs: z.record(z.string(), z.string()).default({}),
 		/** The panels and sections this character has COLLAPSED, by id. Additive the way
 		 *  `actionsHidden` is — absent means expanded, so every save written before this opens as it
 		 *  always did. Holds the two sheet sections (`abilities`, `combat`) alongside the panel ids,
@@ -508,6 +510,7 @@ const uiSchema = z
 		trackAmmunition: false,
 		downMotion: DEFAULT_DOWN_MOTION,
 		rowOrder: {},
+		columnTabs: {},
 		panelsCollapsed: [],
 	});
 

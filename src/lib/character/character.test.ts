@@ -43,6 +43,20 @@ function sample(): Character {
 }
 
 describe('character schema', () => {
+	it('loads saved desktop panels and pins when there are no compact column tabs', () => {
+		const c = sample();
+		const panelColumns = [['spells', 'skills'], ['attacks']];
+		const spellsPinned = ['spell:SRD 5.2.1:fireball'];
+		const stored = characterSchema.parse({
+			...c,
+			ui: { panelColumns, spellsPinned, rowOrder: { attacks: ['longsword'] } },
+		});
+		expect(stored.ui.columnTabs).toEqual({});
+		expect(stored.ui.panelColumns).toEqual(panelColumns);
+		expect(stored.ui.spellsPinned).toEqual(spellsPinned);
+		expect(stored.ui.rowOrder).toEqual({ attacks: ['longsword'] });
+	});
+
 	it('newCharacter is valid and bound to its system', () => {
 		const c = newCharacter('elf-1', 'Aria', '5e');
 		expect(c.system).toBe('5e');
