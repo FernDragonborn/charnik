@@ -14,7 +14,10 @@
 	import { provenance } from '#lib/actions/provenance.ts';
 	import { signed } from '#lib/util/format.ts';
 
-	let { c }: { c: Character } = $props();
+	// compact: the narrow layouts' strip (work/play-layout.md ▸ NARROW-DESKTOP). Concentration already
+	// stands among the top block's chips there, so this chip appears only while a save is owed, and the
+	// dice tray sits with the last roll at the bottom instead.
+	let { c, compact = false }: { c: Character; compact?: boolean } = $props();
 	const conc = $derived(combat.conc);
 	const owed = $derived(combat.hp.owedConcentrationSaves);
 	const shield = $derived(combat.inventory.shield);
@@ -52,7 +55,7 @@
 	     one press apart on purpose: a miss ends concentration, so the roll is the common act and the
 	     deliberate end is the rare one, and it used to be the other way round — a single stray press on
 	     this chip killed the spell with nothing to confirm it. -->
-	{#if conc}
+	{#if conc && (!compact || owed.length > 0)}
 		<span class="conc-chip">
 			<button
 				class="toggle concentration on"
@@ -177,9 +180,11 @@
 		use:provenance={$_('combat.controls.longHint')}
 		><Icon name="tent" /> {$_('combat.controls.long')}</button
 	>
-	<button class="toggle dice" onclick={openDice}
-		><DiceIcon /> {$_('combat.controls.diceTray')}</button
-	>
+	{#if !compact}
+		<button class="toggle dice" onclick={openDice}
+			><DiceIcon /> {$_('combat.controls.diceTray')}</button
+		>
+	{/if}
 </section>
 
 <style>

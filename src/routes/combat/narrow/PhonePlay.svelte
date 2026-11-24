@@ -55,7 +55,7 @@
 		{/each}
 	</div>
 
-	<div class="phone-last"><Playbar /></div>
+	<div class="phone-last"><Playbar withDice /></div>
 
 	<div class="phone-tabs" role="tablist" aria-label={$_('combat.phone.tabs')}>
 		{#each tabs as tab (tab.id)}

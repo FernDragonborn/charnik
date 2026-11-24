@@ -196,7 +196,8 @@ banner and every script that asks, so the warning and the rules that make it sur
 where narrow starts. **The play screen in a mouse window below 1024px deals its panels into columns
 of tabs** (`routes/combat/narrow/ColumnPlay.svelte`, `play-layout.svelte.ts`): a top that does not
 scroll — the character in one block (`NarrowHead`), the controls and the turn or the time in one
-strip — the last roll at the bottom, and between them two columns, three from 760px, each scrolling
+line (`PlayStrip`, with concentration there only while a save is owed, since the block's chips carry
+it) — the last roll at the bottom with the dice tray beside it, and between them two columns, three from 760px, each scrolling
 on its own. **Under a finger it shows one tab at a time** (`PhonePlay.svelte`): the same top, the
 tab's content, the last roll, and a tab bar under the thumb — Mine, Actions, Spells, Skills, Items,
 Bio, a tab with nothing in it not drawn. A view

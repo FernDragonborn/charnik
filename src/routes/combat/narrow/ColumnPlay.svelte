@@ -69,7 +69,7 @@
 		{/each}
 	</div>
 
-	<div class="column-last"><Playbar /></div>
+	<div class="column-last"><Playbar withDice /></div>
 </div>
 
 <style>

@@ -25,7 +25,10 @@
 	import TableRequestLine from '../../table/TableRequestLine.svelte';
 	import TableRequestAnswers from '../../table/TableRequestAnswers.svelte';
 
-	const { openMenu } = combat;
+	// withDice: the narrow layouts keep the dice tray here, beside the log, since their strip has no
+	// room for it (work/play-layout.md ▸ NARROW-DESKTOP)
+	let { withDice = false }: { withDice?: boolean } = $props();
+	const { openMenu, openDice } = combat;
 	const log = $derived(combat.journal.log);
 	// the newest thing the player DID: what followed from it, or what was said about it, sits in the log
 	const last = $derived(log.find((e) => isTurnAct(e.kind ?? LOG_KIND.roll)));
@@ -113,6 +116,11 @@
 			{$_('combat.log.logCue')}
 			<Icon name="chevron-right" size={12} /></button
 		>
+		{#if withDice}
+			<button class="log-cue" onclick={openDice}
+				><DiceIcon size={15} /> {$_('combat.controls.diceTray')}</button
+			>
+		{/if}
 	</div>
 </div>
 

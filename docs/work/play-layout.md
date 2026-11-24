@@ -76,10 +76,10 @@ of NARROW-DESKTOP are built, because a column card with tabs is exactly a region
   (D5), the field standing open in the block from 760px (D6), the whole block with its saves at 0
   hit points — (D10, D11) and the effects as chips under them, exhaustion among them once above 0, concentration
   first with its way out and the way to add one last; the Skills tab carrying the abilities, the
-  passives, the defenses and the resources; a spell row in two lines in a column. **Left:** the strip as the mock's
-  one line — today the controls and the time slide sideways, and concentration still also stands
-  there beside its save prompt; a column's chosen tab kept across
-  a reload; D12–D15's slot cells and the ritual and blocked readings; the widths in
+  passives, the defenses and the resources; a spell row in two lines in a column; the top bar as one
+  row with the rest behind ⋯; the strip as the mock's one line — pills without glyphs, concentration
+  there only while a save is owed, the dice tray beside the log at the bottom. **Left:** a column's
+  chosen tab kept across a reload; D12–D15's slot cells and the ritual and blocked readings; the widths in
   `tools/visual/shot.mjs`.
   - **D1–D3 · a third of the screen, 512px: two columns, six panels.** Actions beside Skills (what
     the character does on the left, what is looked up on the right; neither scrolls), Spells beside

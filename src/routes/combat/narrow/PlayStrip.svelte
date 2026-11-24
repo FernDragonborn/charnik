@@ -11,7 +11,7 @@
 </script>
 
 <div class="play-strip">
-	<Controls {c} />
+	<Controls {c} compact />
 	{#if c.play.inCombat}<Turnbar {c} />{:else}<TimeSkip />{/if}
 </div>
 
@@ -30,7 +30,31 @@
 		flex-wrap: nowrap;
 		margin-bottom: 0;
 	}
+	/* one line, as the mock draws it: the controls and the steps side by side, without the bar's own
+	   frame and title, which a wide screen needs to tell its bars apart and one strip does not */
 	.play-strip :global(.combat-bar) {
 		margin-bottom: 0;
+		padding: 0;
+		background: transparent;
+		border: 0;
+		min-height: 0;
+	}
+	.play-strip :global(.bar-label) {
+		display: none;
+	}
+	.play-strip :global(.spacer) {
+		display: none;
+	}
+	/* the mock's pills: words without their glyphs, and less air, so the line fits a third of a screen */
+	.play-strip :global(.toggle) {
+		gap: var(--space-1);
+		padding: var(--space-1) var(--space-2);
+	}
+	.play-strip :global(.toggle > svg) {
+		display: none;
+	}
+	.play-strip :global(.controls),
+	.play-strip :global(.combat-bar) {
+		gap: var(--space-1-5);
 	}
 </style>
