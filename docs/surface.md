@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (126)
+## Duplicate suspects (127)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -114,6 +114,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `record` ×2 — src/lib/diag/logger.ts · src/lib/effects/plugin-store.svelte.ts
 - `reflow` ×2 — src/lib/actions/anchored.ts · src/routes/combat/CombatMenus.svelte
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
+- `resolutionLabel` ×2 — src/lib/content/detail.ts · src/routes/combat/blocks/panels/SpellsPanel.svelte
 - `restore` ×2 — src/lib/components/MissingContentModal.svelte · src/lib/components/settings/PackTranslationBackups.svelte
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
 - `ROOT` ×2 — src/routes/dev/locked-seed/+page.svelte · src/routes/dev/packs-write/+page.svelte
@@ -2761,6 +2762,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface KeyPress` — All a walk needs from a key event.
 - `interface OptionWalk`
 - `function walkOptions` — Handle a key, or leave it alone.
+- `function walkInlineOptions`
 - `const optionDomId` — * A stable DOM id for one option, so the search box can name the highlighted one through * `aria-activedescendant` — …
 
 ### `src/lib/util/persist.ts`
@@ -2804,4 +2806,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_51 tokens · 108 global classes · 63 components · 1711 exports across 239 modules · 126 duplicate suspects._
+_51 tokens · 108 global classes · 63 components · 1712 exports across 239 modules · 127 duplicate suspects._

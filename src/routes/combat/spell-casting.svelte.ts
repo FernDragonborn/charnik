@@ -26,14 +26,20 @@ import { PLAY_REQUEST, type PlayContext, type PlayOutcome } from '#lib/play/outc
 import {
 	effectsCaption,
 	canTogglePreparedFor,
+	formatDamageParts,
 	type DamagePart,
 	type SpellRow,
 	type MenuKind,
 	type Attack,
 } from '#lib/combat/helpers.ts';
-import { castablePactLevel, castableSlotLevels } from '#lib/rules/spellcasting.ts';
+import { castablePactLevel, castableSlotLevels, PACT_SLOT_KEY } from '#lib/rules/spellcasting.ts';
 import { NO_VARS, withWalkingSpeed } from '#lib/effects/context.ts';
-import { SpellCastRolls, type CastRollsHost, type UpcastFlatKind } from './spell-cast-rolls';
+import {
+	SpellCastRolls,
+	mergeSpellDamage,
+	type CastRollsHost,
+	type UpcastFlatKind,
+} from './spell-cast-rolls';
 
 /** How a cast was asked for. `weapon` is the one a magic-weapon buff lands on: a weapon id, or
  *  `null` once it is settled that there is none to touch. Absent means not asked yet. */
@@ -44,6 +50,17 @@ type CastOptions = {
 	pact?: boolean;
 	weapon?: string | null;
 };
+
+function diceDeltas(results: ReturnType<typeof upcastAt>): DamagePart[] {
+	const out: DamagePart[] = [];
+	for (const res of results) {
+		if ('error' in res || (res.kind !== 'damage' && res.kind !== 'heal') || res.combine !== 'delta')
+			continue;
+		if (Object.keys(res.pool).length === 0 && res.flat === 0) continue;
+		out.push({ pool: res.pool, mod: res.flat, type: res.type ?? '' });
+	}
+	return out;
+}
 
 /** What casting needs from the sheet around it. A narrow structural interface rather than the VM
  *  class, so this module does not import the thing that imports it. */
@@ -98,18 +115,39 @@ export class SpellCasting {
 	 *  elsewhere. A zero delta (base slot) is dropped so it adds no phantom part. A broken formula
 	 *  degrades (toast + base only, H11), never silently-wrong dice. */
 	upcastDamageParts(r: SpellRow, slotLevel: number): DamagePart[] {
-		const out: DamagePart[] = [];
-		for (const res of this.evalUpcastAt(r, slotLevel)) {
-			if ('error' in res) {
-				toast(t('combat.notice.upcastUnknown'), { description: res.error });
-				continue;
-			}
-			if ((res.kind !== 'damage' && res.kind !== 'heal') || res.combine !== 'delta') continue;
-			if (Object.keys(res.pool).length === 0 && res.flat === 0) continue; // base slot → no delta
-			out.push({ pool: res.pool, mod: res.flat, type: res.type ?? '' });
-		}
-		return out;
+		const results = this.evalUpcastAt(r, slotLevel);
+		for (const res of results)
+			if ('error' in res) toast(t('combat.notice.upcastUnknown'), { description: res.error });
+		return diceDeltas(results);
 	}
+
+	get slotReadings() {
+		const { character, sheet } = this.host;
+		return (sheet?.spellcasting.pools ?? []).flatMap((pool) => {
+			if (pool.spellLevel === undefined) return [];
+			const key = pool.forcedUpcast ? PACT_SLOT_KEY : String(pool.spellLevel);
+			const spent = Math.min(pool.max, character?.play.spellSlotsSpent[key] ?? 0);
+			return [{ key, level: pool.spellLevel, full: pool.max, spent, left: pool.max - spent }];
+		});
+	}
+
+	/** Total dice at a slot level use the same fold as a cast. Other kinds retain their own preview. */
+	castReading = (r: SpellRow, level: number, translate: Translate): string => {
+		const results = this.evalUpcastAt(r, level);
+		const parts = formatDamageParts(
+			mergeSpellDamage(r.damageParts, diceDeltas(results)),
+			translate,
+		);
+		const other = upcastPreview(
+			results.filter(
+				(res) =>
+					'error' in res ||
+					(res.kind !== 'damage' && res.kind !== 'heal') ||
+					res.combine !== 'delta',
+			),
+		);
+		return [parts, other].filter(Boolean).join(' · ');
+	};
 
 	/** Every slot level this spell can be cast from right now (the upcast picker's options; a UI can
 	 *  offer these and pass the choice as `cast(r, e, { slot })`). Empty = no choice (cantrip / single

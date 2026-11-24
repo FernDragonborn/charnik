@@ -24,7 +24,7 @@ import { loadPacks } from '../../test-support/real-content';
 import type { ContentGraph } from '#lib/content/loader.ts';
 import { newCharacter, type Character, classRow, inventoryRow } from '#lib/character/schema.ts';
 import { combat } from './combat-view-model.svelte';
-import { startI18n, locale, waitLocale } from '#lib/i18n/index.ts';
+import { startI18n, locale, waitLocale, translator } from '#lib/i18n/index.ts';
 import { spellRow } from '#lib/combat/helpers.ts';
 import { rollFormula as rollOf } from '#lib/rules/dice.ts';
 
@@ -70,6 +70,22 @@ for (const { system, pack, source } of EDITIONS) {
 						pick(r.data),
 				);
 		}
+
+		it('reads all wizard slots and the same total Fireball dice that its slot buys', async () => {
+			await play('wizard', 20);
+			const spell = spellRow(graph, `spell:${source}:fireball`, 'on');
+			if (!spell) throw new Error('The pack must contain Fireball');
+			const readings = combat.casting.slotReadings;
+			expect(readings.map(({ level }) => level)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+			expect(combat.casting.castReading(spell, 3, translator())).toContain('8d6');
+			expect(combat.casting.castReading(spell, 5, translator())).toContain('10d6');
+			const last = readings.at(-1);
+			if (!last) throw new Error('The wizard must have slots');
+			combat.resources.slotClick(last.key, last.full, last.spent, 0);
+			expect(combat.casting.slotReadings.at(-1)?.left).toBe(0);
+			combat.resources.slotClick(last.key, last.full, last.full, 0);
+			expect(combat.casting.slotReadings.at(-1)?.left).toBe(1);
+		});
 
 		it('damage comes off hit points, and healing puts it back', async () => {
 			const character = await play('fighter', 5);

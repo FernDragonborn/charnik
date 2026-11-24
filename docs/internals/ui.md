@@ -205,6 +205,11 @@ concentration, and the strip carries it while a save is owed. The root layout us
 compact chrome. A component's own floor, such as 640px for the combat stat grid and settings tabs,
 comes from the component's contents.
 
+In the desktop spell column, slot cells show what is left at each level. The selected cell opens
+the level's spend and restore pips. Each casting profile shows its own DC and attack with provenance.
+The slot picker shows the total dice at each level using the cast's damage fold. A casting block
+stands above the list, and the affected rows stay readable.
+
 - **`main` is the only scroll region, so everything above it must FIT.** Horizontal overflow at the
   document level scrolls the page sideways and drags every `position: fixed` overlay off-side with
   it. The topbar therefore stays ONE row below the threshold: the navigation slides sideways if it

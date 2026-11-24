@@ -8,7 +8,7 @@
 	import { _ } from '#lib/i18n/index.ts';
 	import { playLayout } from '../play-layout.svelte';
 	import { combat } from '../combat-view-model.svelte';
-	import { walkOptions } from '#lib/util/option-walk.ts';
+	import { walkInlineOptions } from '#lib/util/option-walk.ts';
 	import NarrowHead from './NarrowHead.svelte';
 	import PlayStrip from './PlayStrip.svelte';
 	import Playbar from '../blocks/Playbar.svelte';
@@ -20,12 +20,9 @@
 	let { c, s }: { c: Character; s: CharacterSheet } = $props();
 
 	function walkTabs(event: KeyboardEvent, group: readonly string[], tab: string): void {
-		const trigger = event.currentTarget;
-		if (!(trigger instanceof HTMLElement)) return;
-		walkOptions(event, {
+		walkInlineOptions(event, {
 			ids: group,
 			previewId: tab,
-			inlineDirection: getComputedStyle(trigger).direction === 'rtl' ? 'rtl' : 'ltr',
 			onpreview: (choice) => {
 				combat.layout.pickColumnTab(group, choice);
 				document.getElementById(`pane-tab-${choice}`)?.focus();
@@ -69,7 +66,7 @@
 					<!-- what the wide screen stands above its panels — the passives, the defenses, the abilities
 					     and their saves — is looked up with the skills, as the mock deals it -->
 					{#if on === 'skills'}<Abilities {s} /><CombatStrip {s} tiles={false} />{/if}
-					<PanelCard pid={on} {c} {s} asTab />
+					<PanelCard pid={on} {c} {s} asTab compactSpells />
 				</div>
 			</section>
 		{/each}

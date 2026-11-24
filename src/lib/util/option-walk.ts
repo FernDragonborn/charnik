@@ -40,6 +40,24 @@ export interface OptionWalk {
 	inlineDirection?: 'ltr' | 'rtl';
 }
 
+function inlineStep(
+	code: string,
+	direction: 'ltr' | 'rtl',
+	at: number,
+	length: number,
+): number | null {
+	if (code !== 'ArrowLeft' && code !== 'ArrowRight') return null;
+	const forward = direction === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
+	const by = code === forward ? 1 : -1;
+	return at < 0 ? 0 : (at + by + length) % length;
+}
+
+function blockStep(code: string, at: number, length: number): number | null {
+	if (code === 'ArrowDown') return Math.min(length - 1, at + 1);
+	if (code === 'ArrowUp') return Math.max(0, at - 1);
+	return null;
+}
+
 /** Handle a key, or leave it alone. Returns whether it was ours, so a caller can still react. */
 export function walkOptions(
 	event: KeyPress,
@@ -60,21 +78,25 @@ export function walkOptions(
 		onenter(previewId);
 		return true;
 	}
-	let next: number | null = null;
-	if (inlineDirection && (event.code === 'ArrowLeft' || event.code === 'ArrowRight')) {
-		const forward = inlineDirection === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
-		const by = event.code === forward ? 1 : -1;
-		next = at < 0 ? 0 : (at + by + ids.length) % ids.length;
-	} else if (!inlineDirection && event.code === 'ArrowDown')
-		next = Math.min(ids.length - 1, at + 1);
-	else if (!inlineDirection && event.code === 'ArrowUp') next = at <= 0 ? 0 : at - 1;
-	else if (jumpKeys && event.code === 'Home') next = 0;
-	else if (jumpKeys && event.code === 'End') next = ids.length - 1;
+	let next = inlineDirection
+		? inlineStep(event.code, inlineDirection, at, ids.length)
+		: blockStep(event.code, at, ids.length);
+	if (jumpKeys && event.code === 'Home') next = 0;
+	if (jumpKeys && event.code === 'End') next = ids.length - 1;
 	if (next === null) return false;
 	event.preventDefault();
 	const id = ids[next];
 	if (id) onpreview(id);
 	return true;
+}
+
+export function walkInlineOptions(event: KeyboardEvent, options: OptionWalk): boolean {
+	const trigger = event.currentTarget;
+	if (!(trigger instanceof HTMLElement)) return false;
+	return walkOptions(event, {
+		...options,
+		inlineDirection: getComputedStyle(trigger).direction === 'rtl' ? 'rtl' : 'ltr',
+	});
 }
 
 /**

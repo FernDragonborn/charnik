@@ -26,6 +26,7 @@
 	import { localizedName } from '#lib/content/detail.ts';
 	import { poolCastLevel } from '#lib/play/cast.ts';
 	import { app } from '#lib/stores/app.svelte.ts';
+	import { playLayout, PLAY_LAYOUT } from './play-layout.svelte';
 
 	const overlay = $derived(combat.overlay);
 	const rowMenu = $derived(combat.menus.rowMenu);
@@ -576,13 +577,19 @@
 		{:else if overlay.kind === 'upcast'}
 			{@const r = combat.upcastSpell}
 			{#if r}
+				{@const compact = playLayout.current !== PLAY_LAYOUT.wide}
 				<div class="popup-heading eyebrow" style="border: 0">
 					{$_('combat.menu.upcastTitle', { values: { name: r.name } })}
+					{#if compact}
+						<button class="icon-button" onclick={closeToTrigger}>
+							<Icon name="x" size={13} label={$_('combat.menu.close')} />
+						</button>
+					{/if}
 				</div>
 				<!-- a spell with ONE slot option does not list it (`castableSlots` is empty then), so the
 				     implied cast is spelled out here — otherwise a pool would be the only row offered and
 				     the ordinary way to cast would have disappeared behind the picker. -->
-				{#if combat.casting.allowsSlots(r) && !combat.castableSlots(r).length}
+				{#if !compact && combat.casting.allowsSlots(r) && !combat.castableSlots(r).length}
 					<button class="menu-row" onclick={(e) => combat.cast(r, e)}>
 						<span class="main"
 							>{$_('combat.menu.slotLevelBase', { values: { level: r.level } })}</span
@@ -590,14 +597,28 @@
 					</button>
 				{/if}
 				{#each combat.castableSlots(r) as lvl (lvl)}
-					{@const preview = combat.castPreview(r, lvl)}
-					<button class="menu-row" onclick={(e) => combat.castAtSlot(lvl, e)}>
+					{@const slot = combat.casting.slotReadings.find((reading) => reading.key === String(lvl))}
+					{@const preview = compact
+						? combat.casting.castReading(r, lvl, $_)
+						: combat.castPreview(r, lvl)}
+					<button
+						class="menu-row"
+						onclick={(e) => {
+							closeToTrigger();
+							combat.castAtSlot(lvl, e);
+						}}
+					>
 						<span class="main"
 							>{$_(lvl === r.level ? 'combat.menu.slotLevelBase' : 'combat.menu.slotLevel', {
 								values: { level: lvl },
 							})}</span
 						>
 						{#if preview}<span class="meta">{preview}</span>{/if}
+						{#if compact && slot}
+							<span class="meta"
+								>{$_('combat.inventory.leftCount', { values: { count: slot.left } })}</span
+							>
+						{/if}
 					</button>
 				{/each}
 				<!-- a Warlock multiclass pays with either kind of slot (SRD 5.1, Multiclassing ▸ Pact Magic) -->
@@ -607,6 +628,8 @@
 						<span class="main"
 							>{$_('combat.menu.castFromPact', { values: { level: pactLevel } })}</span
 						>
+						{#if compact}<span class="meta">{combat.casting.castReading(r, pactLevel, $_)}</span
+							>{/if}
 					</button>
 				{/if}
 				<!-- FEAT-FREE-CAST: the other way to pay. A pool is offered, never chosen for the player —

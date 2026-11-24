@@ -81,37 +81,37 @@ const SPELL_SCOPE = 'spell';
 const spellScopes = (r: SpellRow, caster: SpellcastingClass | undefined): Set<string> =>
 	new Set([r.id, SPELL_SCOPE, ...(caster ? [caster.classId, caster.ability] : [])]);
 
+/** A typed upcast delta joins the part sharing its type. An untyped delta joins the first part. */
+export function mergeSpellDamage(base: DamagePart[], deltas: DamagePart[]): DamagePart[] {
+	const parts: DamagePart[] = base.map((p) => ({
+		pool: { ...p.pool },
+		mod: p.mod,
+		type: p.type,
+	}));
+	for (const d of deltas) {
+		const idx = d.type ? parts.findIndex((p) => p.type === d.type) : 0;
+		const hit = idx >= 0 ? parts[idx] : undefined;
+		if (hit) {
+			const merged = combinePools(hit.pool, hit.mod, d.pool, d.mod);
+			parts[idx] = { pool: merged.pool, mod: merged.flat, type: hit.type };
+		} else parts.push({ pool: { ...d.pool }, mod: d.mod, type: d.type });
+	}
+	return parts;
+}
+
 export class SpellCastRolls {
 	constructor(
 		private host: CastRollsHost,
 		private upcast: UpcastReads,
 	) {}
 
-	/** A spell's typed damage parts for the roll path (item 2): base parts (`r.damageParts`) with the
-	 *  upcast deltas folded in BY TYPE — an untyped delta (`damage:per_slot`) onto the primary part, a
-	 *  typed one (`damage:cold:per_slot` — Ice Knife) onto the part sharing its type, or as its OWN new
-	 *  part when the base can't supply that type (N4/N9: Web adds fire to a fire-less base). `primaryFx`
-	 *  (damage effects, or the heal's spellcasting-mod flat) rides the PRIMARY part only — RAW adds a
-	 *  damage bonus / the ability mod once, to the base, never to a second type's dice. */
+	/** The cast's flat modifiers ride on the primary part so multiple damage types add them once. */
 	private spellDamageParts(
 		r: SpellRow,
 		primaryFx: RollEffects,
 		deltas: DamagePart[],
 	): DamagePartSpec[] {
-		const parts: DamagePart[] = r.damageParts.map((p) => ({
-			pool: { ...p.pool },
-			mod: p.mod,
-			type: p.type,
-		}));
-		for (const d of deltas) {
-			const idx = d.type ? parts.findIndex((p) => p.type === d.type) : 0;
-			const hit = idx >= 0 ? parts[idx] : undefined;
-			if (hit) {
-				const merged = combinePools(hit.pool, hit.mod, d.pool, d.mod);
-				parts[idx] = { pool: merged.pool, mod: merged.flat, type: hit.type };
-			} else parts.push({ pool: { ...d.pool }, mod: d.mod, type: d.type });
-		}
-		return parts.map((p, i) => ({
+		return mergeSpellDamage(r.damageParts, deltas).map((p, i) => ({
 			dice: p.pool,
 			mod: p.mod + (i === 0 ? primaryFx.flat : 0),
 			type: p.type,

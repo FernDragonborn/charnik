@@ -33,11 +33,13 @@
 		c,
 		s,
 		asTab = false,
+		compactSpells = false,
 	}: {
 		pid: string;
 		c: Character;
 		s: CharacterSheet;
 		asTab?: boolean;
+		compactSpells?: boolean;
 	} = $props();
 
 	// keyed on `e.code`, so it is the physical arrow key on every layout (AGENTS.md ▸ Taste)
@@ -173,7 +175,7 @@
 		{:else if pid === 'effects'}
 			<EffectsPanel {c} {s} />
 		{:else if pid === 'spells'}
-			<SpellsPanel {s} />
+			<SpellsPanel {s} compact={compactSpells} />
 		{:else if pid === 'inventory'}
 			<InventoryPanel />
 		{:else if pid === 'features'}

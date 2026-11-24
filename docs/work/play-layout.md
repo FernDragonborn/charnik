@@ -75,7 +75,10 @@ and a panel's rows share one Tab stop with their controls on the arrows.
   row with the rest behind ⋯; the strip as the mock's one line — pills without glyphs, concentration
   there only while a save is owed, the dice tray beside the log at the bottom.
   Each group of column tabs keeps its selection across reloads. [to audit]
-  **Left:** D12–D15's slot cells and the ritual and blocked readings.
+  The spell column shows slot cells with spend and restore pips, total dice in the slot picker,
+  ritual casting, per-profile DC and attack, and the global casting block above greyed rows
+  (D12–D15). [to audit]
+  **Left:** the D4 turn strip needs enough width for its controls inside the compact header.
   - **D1–D3 · a third of the screen, 512px: two columns, six panels.** Actions beside Skills (what
     the character does on the left, what is looked up on the right; neither scrolls), Spells beside
     Effects (concentration, bonus action and reaction marked; an action carries no mark), Items

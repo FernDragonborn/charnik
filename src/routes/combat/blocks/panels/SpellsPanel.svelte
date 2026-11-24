@@ -5,11 +5,13 @@
 	// groups with slot pips and rows (prepare toggle, pin, ritual-cast badge, cast on click).
 	import Icon from '#lib/components/Icon.svelte';
 	import SlotPips from '#lib/components/SlotPips.svelte';
+	import SpellSlotCells from './SpellSlotCells.svelte';
 	import { _ } from '#lib/i18n/index.ts';
 	import { abilityShortLabel } from '#lib/util/format.ts';
 	import { toast } from '#lib/toast/toast.ts';
 	import type { CharacterSheet } from '#lib/character/derive.ts';
-	import { casterForSpell } from '#lib/character/spellcasting.ts';
+	import { casterForSpell, type SpellcastingClass } from '#lib/character/spellcasting.ts';
+	import { PACT_SLOT_KEY } from '#lib/rules/spellcasting.ts';
 	import { combat } from '../../combat-view-model.svelte';
 	import { why, signed } from '#lib/combat/helpers.ts';
 	import { provenance } from '#lib/actions/provenance.ts';
@@ -17,8 +19,11 @@
 	import { spellcastingBlock } from '#lib/play/cast.ts';
 	import { sayText } from '#lib/util/say.ts';
 
-	let { s }: { s: CharacterSheet } = $props();
+	let { s, compact = false }: { s: CharacterSheet; compact?: boolean } = $props();
 	const spellGroups = $derived(combat.spellGroups);
+	const groups = $derived(
+		compact ? spellGroups.filter((group) => group.key !== PACT_SLOT_KEY) : spellGroups,
+	);
 	const pinned = $derived(combat.pinned);
 	const castingBlock = $derived(spellcastingBlock(s));
 	const blockedReason = $derived(castingBlock ? sayText(castingBlock, $_) : '');
@@ -35,12 +40,21 @@
 		r.summary || combat.casting.caption(r, $_) || $_('combat.spells.utility');
 	const prepLabel = (state: Row['prepState']): string =>
 		$_(state === 'always' ? 'combat.spells.alwaysPrepared' : 'combat.spells.togglePrepared');
+	const resolutionLabel = (r: Row): string =>
+		r.resolutionLabelKey
+			? $_(
+					r.resolutionLabelKey,
+					r.resolutionAbility
+						? { values: { ability: abilityShortLabel(r.resolutionAbility, $_) } }
+						: {},
+				)
+			: '';
 
 	function spellMenu(r: Row, event: Event): void {
 		const caster = casterForSpell(s, r.ref);
 		const parts = [
 			says(r),
-			r.resolutionLabelKey ? $_(r.resolutionLabelKey) : '',
+			resolutionLabel(r),
 			...(caster
 				? [
 						caster.className,
@@ -61,21 +75,36 @@
 	}
 </script>
 
+{#snippet castingNumbers(caster: SpellcastingClass)}
+	{$_('combat.spells.saveDc')}
+	<b use:provenance={why(caster.saveDC, $_)}>{caster.saveDC.value}</b>
+	· {$_('combat.spells.attackBonus')}
+	<b use:provenance={why(caster.attack, $_)}>{signed(caster.attack.value)}</b>
+{/snippet}
+
 {#if s.spellcasting.classes.length}
 	{@const multi = s.spellcasting.classes.length > 1}
+	{#if compact && blockedReason}
+		<div class="armor-block" role="status">
+			<Icon name="triangle-alert" size={13} />{blockedReason}
+		</div>
+	{/if}
 	<div class="cast-line">
 		{#each s.spellcasting.classes as sc, i (sc.classEffectiveId)}
-			{#if i > 0}<span class="cast-separator">&nbsp;·&nbsp;</span>{/if}
-			{#if multi}<b class="cast-class">{sc.className}</b>
-			{/if}{$_('combat.spells.saveDc')}
-			<b use:provenance={why(sc.saveDC, $_)}>{sc.saveDC.value}</b>
-			· {$_('combat.spells.attackBonus')}
-			<b use:provenance={why(sc.attack, $_)}>{signed(sc.attack.value)}</b>
+			{#if compact}
+				<div class="spell-caster-tag">
+					<b class="cast-class">{sc.className}</b>
+					<span>{@render castingNumbers(sc)}</span>
+				</div>
+			{:else}
+				{#if i > 0}<span class="cast-separator">&nbsp;·&nbsp;</span>{/if}
+				{#if multi}<b class="cast-class">{sc.className}</b>{/if}{@render castingNumbers(sc)}
+			{/if}
 		{/each}
-		{#if !multi}
+		{#if !compact && !multi}
 			{$_('combat.spells.everySpell')}{/if}
 	</div>
-	{#if combat.armorBlock}
+	{#if !compact && combat.armorBlock}
 		<!-- the `title` stays the rules note verbatim: it is the same sentence Content health shows for
 		     this block, and that copy is its own i18n domain (docs/internals/ui.md ▸ Error copy) -->
 		<div
@@ -88,27 +117,28 @@
 			{$_('combat.spells.castingBlocked', { values: { armor: combat.armorBlock.source } })}
 		</div>
 	{/if}
-	{#if combat.formBlock}
+	{#if !compact && combat.formBlock}
 		<!-- the same kind of rule-based block, for the same reason: the player sees WHY before they try -->
 		<div class="armor-block" use:provenance={$_('combat.spells.formBlockNote')}>
 			<Icon name="triangle-alert" size={13} />
 			{$_('combat.spells.formBlocked', { values: { form: combat.formBlock.source } })}
 		</div>
 	{/if}
-	<div class="spell-rows">
+	{#if compact}<SpellSlotCells />{/if}
+	<div class="spell-rows" class:casting-blocked={compact && !!blockedReason}>
 		{#each featSpellGaps as gap, index (index)}
 			<div class="armor-block">
 				<Icon name="triangle-alert" size={13} />
 				{sayText(gap, $_)}
 			</div>
 		{/each}
-		{#each s.facts.spellcastingBlocks as block, index (index)}
+		{#each compact ? [] : s.facts.spellcastingBlocks as block, index (index)}
 			<div class="armor-block" use:provenance={$_('combat.spells.stateBlockNote')}>
 				<Icon name="triangle-alert" size={13} />
 				{$_('combat.spells.stateBlocked', { values: { source: block.source } })}
 			</div>
 		{/each}
-		{#each spellGroups as g (g.key)}
+		{#each groups as g (g.key)}
 			<div class="spgroup">
 				<div class="spell-category eyebrow" class:star={g.key === 'pinned'}>
 					{g.labelKey
@@ -117,7 +147,7 @@
 								...(g.labelValues ? { values: g.labelValues } : {}),
 							})
 						: g.label}
-					{#if g.slots}{@const sl = g.slots}<SlotPips
+					{#if !compact && g.slots}{@const sl = g.slots}<SlotPips
 							full={sl.full}
 							spent={sl.spent}
 							title={$_('combat.spells.slotPip')}
@@ -125,6 +155,7 @@
 						/>{/if}
 				</div>
 				{#each g.rows as r (g.key + r.id)}
+					{@const caster = compact && multi ? casterForSpell(s, r.ref) : undefined}
 					<!-- the row is a DIV and each control on it is a real `<button>`: they used to be spans and
 					     `<i>`s inside one row-button, which is invalid nested interactive content and the reason
 					     Tab went row, row, out — prepare, pin, ritual cast and the cast-time note were
@@ -173,13 +204,16 @@
 						<!-- a `title` for the one thing rule 3 leaves it: the cell's own text, where the
 						     column cuts it short (Haste says three things) -->
 						<span class="spell-summary" title={says(r)}>{says(r)}</span>
-						{#if r.resolution}<span class="resolution-tag {r.resolution}"
-								>{$_(r.resolutionLabelKey, {
-									...(r.resolutionAbility
-										? { values: { ability: abilityShortLabel(r.resolutionAbility, $_) } }
-										: {}),
-								})}</span
-							>{:else}<span></span>{/if}
+						{#if r.resolution}
+							<span class="resolution-tag {r.resolution}">
+								{resolutionLabel(r)}
+								{#if caster && r.resolutionAbility}
+									<b use:provenance={why(caster.saveDC, $_)}>{caster.saveDC.value}</b>
+								{:else if caster && r.resolution === 'hit'}
+									<b use:provenance={why(caster.attack, $_)}>{signed(caster.attack.value)}</b>
+								{/if}
+							</span>
+						{:else}<span></span>{/if}
 						<span class="spell-level"
 							>{#if r.castTimeIcon}{@const when = $_(
 									r.castTimeIcon === 'react'
@@ -230,6 +264,19 @@
 	}
 	.cast-separator {
 		color: var(--color-border-strong);
+	}
+	.spell-caster-tag {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: var(--space-1);
+		padding: var(--space-1) var(--space-2);
+		border: thin solid var(--color-border);
+		border-radius: var(--radius-sm);
+		margin-block-end: var(--space-1);
+	}
+	.casting-blocked .spell-row {
+		opacity: 0.6;
 	}
 	.spell-rows {
 		margin-top: 2px;
