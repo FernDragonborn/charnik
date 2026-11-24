@@ -16,25 +16,18 @@ A frame is cited by its mock and its number: **D4** is frame 4 of the narrow des
 frame 11 of the phone mock. A frame the phone mock labels *new idea* is behaviour the app does not
 have; *layout*, *flow* and *hard case* place behaviour the app has.
 
-**This splits what `internals/ui.md` ▸ A narrow window treats as one.** That section says a phone and
-a small desktop window are the same thing under one 800px threshold; these mocks give them different
-layouts, so the section is rewritten in the change that builds LAYOUT-WIDTHS.
-
-Every surface here follows KEYBOARD-NAV's standard (`ui.md`) from its first line, and that item's
-open questions (F6 between regions, per-row controls as grid cells) are answered before the columns
-of NARROW-DESKTOP are built, because a column card with tabs is exactly a region F6 would walk.
+Every surface here follows KEYBOARD-NAV's standard (`ui.md`). A column is a region F6 can reach,
+and a panel's rows share one Tab stop with their controls on the arrows.
 
 ## The layouts
 
-- [ ] **LAYOUT-WIDTHS · what tells the three layouts apart.** The phone and the narrow desktop are
-  told apart by the POINTER, not the width — the maintainer's call: a finger gets the phone layout
-  (`pointer: coarse`), a mouse gets the column layout however narrow the window, since the narrow
-  desktop mock is "driven by a mouse and a keyboard" and a desktop window dragged to 360px is not a
-  phone. The column layout begins below 1024px (`COLUMNS_WINDOW_QUERY`), three columns from 760px.
-  Open: what a character's saved
-  layout (`ui.panelColumns`, the row orders, the pins) means in each — one arrangement read three
-  ways, or one per layout. `tools/visual/narrow.mjs` and `shot.mjs` gain the narrow desktop widths
-  (512 and 768 are the mock's) beside 393 and 1280.
+- [~] **LAYOUT-WIDTHS · what tells the three layouts apart.** The phone layout requires
+  `pointer: coarse` and a width of up to 800px. Other windows below 1024px use columns, with
+  three columns from 760px. At 1024px and above the play screen uses the wide desktop layout.
+  **Built** ([UI](../internals/ui.md) ▸ A narrow window): `narrow.mjs` and `shot.mjs` check 512px,
+  768px and 1280px with a mouse and 393px with touch. [to audit]
+  **Left:** what a character's saved layout (`ui.panelColumns`, row orders, pins) means in each
+  layout.
 
 - [ ] **COMBAT-RAIL · the wide desktop: a scrolling body beside a rail that does not scroll.**
   Three parts, and the third is the reason the other two are not a CSS tweak:
@@ -79,8 +72,7 @@ of NARROW-DESKTOP are built, because a column card with tabs is exactly a region
   passives, the defenses and the resources; a spell row in two lines in a column; the top bar as one
   row with the rest behind ⋯; the strip as the mock's one line — pills without glyphs, concentration
   there only while a save is owed, the dice tray beside the log at the bottom. **Left:** a column's
-  chosen tab kept across a reload; D12–D15's slot cells and the ritual and blocked readings; the widths in
-  `tools/visual/shot.mjs`.
+  chosen tab kept across a reload; D12–D15's slot cells and the ritual and blocked readings.
   - **D1–D3 · a third of the screen, 512px: two columns, six panels.** Actions beside Skills (what
     the character does on the left, what is looked up on the right; neither scrolls), Spells beside
     Effects (concentration, bonus action and reaction marked; an action carries no mark), Items

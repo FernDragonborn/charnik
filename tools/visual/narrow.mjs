@@ -1,14 +1,13 @@
 /*
- * Narrow-viewport overflow probe. `shot.mjs` renders at 1280 only, so nothing there can see a phone
- * breaking — this drives the same dev server at phone widths and asserts the two things that make a
- * narrow layout usable at all:
+ * Overflow probe for the mouse and touch layouts. It asserts the two things that make a narrow
+ * layout usable:
  *
  *   1. `document.scrollWidth` equals the viewport. Horizontal overflow at the DOCUMENT level scrolls
  *      the whole page sideways and drags every `position: fixed` overlay off-side with it.
  *   2. Nothing inside `main` is wider than `main`, unless an ancestor scrolls it on purpose
  *      (`overflow-x: auto | scroll | hidden` — a tab strip or a combat bar that scrolls is fine).
  *
- *   node tools/visual/narrow.mjs                       # every route at 393 and 320 → exit 1 on overflow
+ *   node tools/visual/narrow.mjs                       # every route at all play widths
  *   node tools/visual/narrow.mjs --locale=uk           # same, in Ukrainian (labels run ~15px wider)
  *   node tools/visual/narrow.mjs --width=740 --height=360   # one size, e.g. landscape
  *
@@ -23,11 +22,16 @@
  * `findSmallTargets`), and it never fails the run.
  */
 import { chromium } from 'playwright';
+import { dismissMobileWarning, PLAY_VIEWPORTS, viewportOptions } from './play-viewports.mjs';
 
 const BASE = process.env.BASE || 'http://localhost:5173';
 const arg = (name) => (process.argv.find((a) => a.startsWith(`--${name}=`)) ?? '').split('=')[1];
 const LOCALE = arg('locale');
-const WIDTHS = arg('width') ? [Number(arg('width'))] : [393, 320];
+const THEME = arg('theme') ?? 'dark';
+const WIDTH = Number(arg('width'));
+const PROFILES = arg('width')
+	? [PLAY_VIEWPORTS.find(({ width }) => width === WIDTH) ?? { width: WIDTH, touch: true }]
+	: PLAY_VIEWPORTS;
 const HEIGHT = Number(arg('height') ?? 800);
 
 const ROUTES = [
@@ -133,43 +137,51 @@ const browser = await chromium.launch();
 let failures = 0;
 const smallTargets = new Set();
 
-for (const width of WIDTHS) {
-	const context = await browser.newContext({
-		viewport: { width, height: HEIGHT },
-		isMobile: true,
-		hasTouch: true,
-	});
+for (const profile of PROFILES) {
+	const { width, touch, play } = profile;
+	const context = await browser.newContext(viewportOptions(profile, HEIGHT));
+	await context.addInitScript(
+		({ theme, locale }) => {
+			if (localStorage.getItem('charnik:app') === null) {
+				localStorage.setItem('charnik:app', JSON.stringify({ theme, activeLocale: locale }));
+			}
+		},
+		{ theme: THEME, locale: LOCALE },
+	);
 	const page = await context.newPage();
-	console.log(`\n=== ${width}×${HEIGHT}${LOCALE ? ` · ${LOCALE}` : ''} ===`);
-	let localeSet = false;
+	console.log(
+		`\n=== ${width}×${HEIGHT} · ${touch ? 'touch' : 'mouse'} · ${THEME}${LOCALE ? ` · ${LOCALE}` : ''} ===`,
+	);
 	for (const route of ROUTES) {
 		await page.goto(BASE + route, { waitUntil: 'networkidle' }).catch(() => {});
-		// the alpha banner covers the app until it is dismissed
-		const continueButton = page.locator('.mobile-warning .continue');
-		if (await continueButton.count()) await continueButton.click();
-		if (LOCALE && !localeSet) {
-			// the topbar chip CYCLES the discovered locale list and shows the active one, so click until
-			// it reads the one asked for rather than assuming the next click lands there
-			const chip = page.locator('header.topbar .chip').first();
-			for (let i = 0; i < 12; i++) {
-				if ((await chip.innerText()).trim().toLowerCase() === LOCALE) break;
-				await chip.click();
-				await page.waitForTimeout(150);
-			}
-			localeSet = true; // the choice persists for the rest of the context
-		}
+		await dismissMobileWarning(page);
 		await page.waitForTimeout(450);
+		const root = page.locator('html');
+		const wrongLocale = LOCALE && (await root.getAttribute('lang')) !== LOCALE;
+		const wrongTheme = (await root.getAttribute('data-theme')) !== THEME;
+		const wrongMotion = (await root.getAttribute('data-motion')) !== 'reduced';
+		const wrongLayout = play && route === '/combat' && !(await page.locator(play).isVisible());
 		const result = await page.evaluate(findOverflow);
 		const scrolls = result.documentWidth > result.viewport + 1;
-		const bad = scrolls || result.offenders.length > 0 || result.noMain;
+		const bad =
+			scrolls ||
+			result.offenders.length > 0 ||
+			result.noMain ||
+			wrongLayout ||
+			wrongLocale ||
+			wrongTheme ||
+			wrongMotion;
 		if (bad) failures++;
 		console.log(
 			`${bad ? '✗' : '✓'} ${route} — document=${result.documentWidth}${scrolls ? ' PAGE SCROLLS SIDEWAYS' : ''}${result.noMain ? ' NO <main> — THE ROUTE DID NOT RENDER, NOTHING WAS MEASURED' : ` main=${result.mainScrollWidth}`} offenders=${result.offenders.length}`,
 		);
+		if (wrongLayout) console.log(`      expected ${play}`);
+		if (wrongLocale || wrongTheme || wrongMotion)
+			console.log('      requested locale, theme or reduced motion did not apply');
 		for (const offender of result.offenders.slice(0, 8)) console.log(`      ${offender}`);
 		// a tap target is a property of the control, not of the width, so once per run — and it scrolls
 		// every control into view, which makes it the slow half
-		if (width === WIDTHS[0]) {
+		if (width === PROFILES.find(({ touch }) => touch)?.width) {
 			for (const target of await page.evaluate(findSmallTargets))
 				smallTargets.add(`${route}  ${target}`);
 		}
@@ -183,7 +195,7 @@ if (smallTargets.size) {
 	for (const target of smallTargets) console.log(`   ${target}`);
 }
 if (failures) {
-	console.log(`\n${failures} route(s) overflow — see the offenders above.`);
+	console.log(`\n${failures} route check(s) failed — see the details above.`);
 	process.exit(1);
 }
 console.log('\nno overflow');

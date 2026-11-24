@@ -188,21 +188,22 @@ short on purpose: a word already self-evident inside its component (`.pip`, `.mo
 
 ## A narrow window
 
-A phone and a desktop window dragged small are told apart by the POINTER, not the width — a finger
-(`pointer: coarse`) is a phone, a mouse is a desktop however narrow its window (`config/narrow-window.ts`,
-the maintainer's call). `MobileWarning` says out loud that the phone layout is alpha, and says it to a
-finger only. The app has ONE narrow threshold, **800px**, shared by the root layout's rules, that
-banner and every script that asks, so the warning and the rules that make it survivable agree on
-where narrow starts. **The play screen in a mouse window below 1024px deals its panels into columns
-of tabs** (`routes/combat/narrow/ColumnPlay.svelte`, `play-layout.svelte.ts`): a top that does not
-scroll — the character in one block (`NarrowHead`), the controls and the turn or the time in one
-line (`PlayStrip`, with concentration there only while a save is owed, since the block's chips carry
-it) — the last roll at the bottom with the dice tray beside it, and between them two columns, three from 760px, each scrolling
-on its own. **Under a finger it shows one tab at a time** (`PhonePlay.svelte`): the same top, the
-tab's content, the last roll, and a tab bar under the thumb — Mine, Actions, Spells, Skills, Items,
-Bio, a tab with nothing in it not drawn. A view
-whose own floor is higher names its own width instead (the combat stat grid and the settings tab
-strip both at 640px): that number is a fact about the box's min-content, never about a device.
+The play screen chooses among three layouts live (`config/narrow-window.ts`, `play-layout.svelte.ts`):
+
+- **Phone.** A coarse primary pointer at up to 800px gets one tab at a time (`PhonePlay.svelte`).
+  The tab bar under the thumb shows Mine, Actions, Spells, Skills, Items and Bio as available.
+  `MobileWarning` uses the same pointer and width checks.
+- **Narrow desktop.** A mouse window below 1024px, or a coarse-pointer window above 800px and
+  below 1024px, gets tabs dealt into columns (`ColumnPlay.svelte`). Two columns fit below 760px,
+  and three fit from 760px. Each scrolls independently.
+- **Wide desktop.** From 1024px, the character header sits above two reorderable panel columns
+  in the main scroll region.
+
+The two compact layouts share a fixed character block (`NarrowHead`), one line of controls and
+time or turn state (`PlayStrip`), and the last roll with the dice tray. The character block carries
+concentration, and the strip carries it while a save is owed. The root layout uses 800px for its
+compact chrome. A component's own floor, such as 640px for the combat stat grid and settings tabs,
+comes from the component's contents.
 
 - **`main` is the only scroll region, so everything above it must FIT.** Horizontal overflow at the
   document level scrolls the page sideways and drags every `position: fixed` overlay off-side with
@@ -222,11 +223,10 @@ strip both at 640px): that number is a fact about the box's min-content, never a
 - **A content table scrolls inside itself.** A class feature's spell table is wider than a phone, and
   every ancestor inherits the overflow, so the renderer gives a table its own `overflow-x` scroller.
 
-**Verified by `tools/visual/narrow.mjs`** — overflow and a hit-tested tap-target census — and by
-`shot.mjs`, which captures every state at 393 as well as 1280 (the `@393` files), so a narrow
-regression is a pixel diff too. Several interaction states do not reach their `ready` selector at 393
-and are announced as skipped: a state the harness cannot reach is never captured as the wrong screen.
-See `tooling.md` ▸ Visual regression.
+Both visual tools exercise 393px with touch and 512px, 768px and 1280px with a mouse.
+`narrow.mjs` also checks 320px with touch and hit-tests phone controls.
+`shot.mjs` captures the layout at each width and reports interactions whose ready selector is
+unavailable. See `tooling.md` ▸ Visual regression.
 
 ## The UX pattern contract
 

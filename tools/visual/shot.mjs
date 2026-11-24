@@ -7,7 +7,7 @@
  *   node tools/visual/shot.mjs                      # compare current render vs baseline → exit 1 on drift
  *   node tools/visual/shot.mjs --filter=compendium  # only states whose name contains "compendium"
  *
- * `--filter` is for LOOKING, not for baselining. States share one browser context, so what a state
+ * `--filter` is for LOOKING, not for baselining. States at each width share a browser context, so what a state
  * renders can depend on the ones before it (see the combat route). Capture a baseline with a full
  * `--update` run, or the saved image is of a sequence the comparison run never repeats.
  *
@@ -24,27 +24,18 @@ import { chromium } from 'playwright';
 import { PNG } from 'pngjs';
 import pixelmatch from 'pixelmatch';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { dismissMobileWarning, PLAY_VIEWPORTS, viewportOptions } from './play-viewports.mjs';
 
 const BASE = process.env.BASE || 'http://localhost:5173';
 const UPDATE = process.argv.includes('--update');
 const FILTER = (process.argv.find((a) => a.startsWith('--filter=')) ?? '').slice(
 	'--filter='.length,
 );
-/**
- * The widths every state is captured at. The narrow one is the same 393px `narrow.mjs` hit-tests at
- * (the one threshold, `internals/ui.md` ▸ A narrow window) — without it a narrow regression shows up
- * as overflow or not at all, never as a pixel diff, which is how a phone layout rots between the
- * sessions somebody remembers to look at it. A state's file carries the tag, so the two baselines
- * sit side by side and a `--filter` still selects across both.
- */
-const VIEWPORTS = [
-	{ tag: '', width: 1280, height: 1400 },
-	{ tag: '@393', width: 393, height: 850 },
-];
+const VIEWPORTS = PLAY_VIEWPORTS.filter(({ width }) => width !== 320);
 
 /** Long enough for a debounced autosave to land — the combat sheet's is 800ms. */
 const RESTORE_FLUSH_MS = 1000;
-const DIR = 'tools/visual';
+const DIR = 'design-preview/visual';
 const BASELINE = `${DIR}/baseline`;
 const CURRENT = `${DIR}/current`;
 mkdirSync(BASELINE, { recursive: true });
@@ -70,7 +61,7 @@ async function freeze(page) {
 }
 
 /**
- * Routes to capture. Each: a `path`, a `wait` selector for initial load, and `states`.
+ * Routes to capture. Each has a path, a readiness check, and states.
  * A state: { name, prep?, ready?, restore?, settle? }
  *   prep    — async fn(page) to reach an interaction state (open a menu / select an entry)
  *   ready   — selector that must appear after prep (self-validates the state was reached)
@@ -80,7 +71,7 @@ async function freeze(page) {
 const ROUTES = [
 	{
 		path: '/combat',
-		wait: 'h1',
+		playLayout: true,
 		states: [
 			{ name: 'combat-default' },
 			// interaction: a CombatMenus popup (covers the .popup-h / .section eyebrow labels)
@@ -99,7 +90,12 @@ const ROUTES = [
 			},
 			// interaction: the Ctrl+K command palette (covers CommandPalette .group)
 			{ name: 'command-palette', prep: press('Control+k'), ready: '[role="dialog"]' },
-			{ name: 'combat-turnbar', prep: clickBtn(/Combat/), restore: clickBtn(/Combat/) },
+			{
+				name: 'combat-turnbar',
+				prep: clickBtn(/Combat/),
+				ready: '.turnbar',
+				restore: clickBtn(/Combat/),
+			},
 			{ name: 'combat-dice', prep: clickBtn(/Dice tray/), ready: '[role="dialog"]' },
 			// the tray PREFILLED from an attack: a test line AND an editable damage line, which is the
 			// state UBUG-21 was about — and the only one that shows the two-line model on real data.
@@ -304,17 +300,19 @@ function compare(name, buf) {
 
 async function run() {
 	const browser = await chromium.launch();
-	const page = await browser.newPage({
-		viewport: { width: VIEWPORTS[0].width, height: VIEWPORTS[0].height },
-		reducedMotion: 'reduce',
-	});
 	const drifted = []; // { name, px } for every state that changed — a summary beats a lone `worst`
 	let captured = 0;
-	for (const vp of VIEWPORTS) {
-		await page.setViewportSize({ width: vp.width, height: vp.height });
-		captured += await capturePass(page, vp, drifted);
+	try {
+		for (const profile of VIEWPORTS) {
+			const height = profile.width === 1280 ? 1400 : 850;
+			const context = await browser.newContext(viewportOptions(profile, height));
+			context.setDefaultTimeout(5000);
+			captured += await capturePass(await context.newPage(), profile, drifted);
+			await context.close();
+		}
+	} finally {
+		await browser.close();
 	}
-	await browser.close();
 	report(captured, drifted);
 }
 
@@ -327,10 +325,11 @@ async function capturePass(page, vp, drifted) {
 	for (const route of ROUTES) {
 		for (const st of route.states) {
 			if (FILTER && !st.name.includes(FILTER)) continue;
-			const name = `${st.name}${vp.tag}`;
+			const name = vp.width === 1280 ? st.name : `${st.name}@${vp.width}`;
 			try {
 				await page.goto(`${BASE}${route.path}`, { waitUntil: 'networkidle' });
-				await page.waitForSelector(route.wait, { timeout: 15000 });
+				await dismissMobileWarning(page);
+				await page.waitForSelector(route.playLayout ? vp.play : route.wait, { timeout: 15000 });
 			} catch {
 				console.log(`! ${name}: route ${route.path} did not load (skipped)`);
 				continue;

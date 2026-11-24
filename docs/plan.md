@@ -304,12 +304,11 @@ position and are given per wave, because most of them were learned the hard way.
 - **The play screen's new layout** — `play-layout.md`, from the two layout mocks. The first outside
   playtest is where it comes from ("too much of everything", MOBILE-ALPHA's narrow layout usable
   rather than finished), which is why it stands first after the level waves: a player is already
-  standing in front of it. KEYBOARD-NAV's open questions are answered first, then LAYOUT-WIDTHS,
-  ARRANGE-MODE and ROW-MENU, which every layout uses; then the layouts — COMBAT-RAIL with
-  RESOURCE-PIN, NARROW-DESKTOP, PHONE-PLAY (which retires MOBILE-ALPHA) — with NUMBER-PAD,
-  AT-ZERO-HP, MULTI-ATTACK-RESULT, the rest of TABLE-REQUEST-PLAYBAR and TABLE-ENTRY built inside
-  them. INITIATIVE-OFFER and MINE-STARTER-SET are new behaviour and can land on any layout. The
-  phone LAYOUT is not the phone BUILD: TABLE-LINK-PHONE stays after the engine is whole.
+  standing in front of it. After KEYBOARD-NAV come LAYOUT-WIDTHS, the mouse and keyboard parts of
+  ROW-MENU, NARROW-DESKTOP, ARRANGE-MODE on compact layouts, and the touch part of ROW-MENU. Then
+  PHONE-PLAY and its MOBILE-ALPHA checks, RESOURCE-PIN, MINE-STARTER-SET, NUMBER-PAD, AT-ZERO-HP,
+  TABLE-REQUEST-PLAYBAR and INITIATIVE-OFFER. The design decisions for MULTI-ATTACK-RESULT,
+  COMBAT-RAIL and TABLE-ENTRY follow. TABLE-LINK-PHONE follows the engine work.
 - **The content-shaped work**, once the app stops moving under it: N2's three kinds of class feature, with
   FEATURE-PASSIVES naming the passive kind. MASTERY-HALF's tail sits here: the properties whose
   rule is still only text. A17's tail sits here too: a Tome warlock casts rituals, and the Book of

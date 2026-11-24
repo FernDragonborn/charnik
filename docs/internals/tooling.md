@@ -58,18 +58,16 @@ them against a saved baseline. Use it for **every** CSS or layout change.
   servers take it and Vite lands on 5174 or 5175. Read `pnpm dev`'s output, or every route "did not
   load (skipped)".
 
-**Every state is captured twice**, at 1280 and at the 393px narrow threshold; the narrow file carries
-an `@393` tag, so the two baselines sit side by side and `--filter` selects across both. Eight of the
-interaction states do not reach their `ready` selector at 393 — the narrow layout puts those controls
-somewhere else — and the run says so per state rather than capturing the wrong screen. The landing
-states all capture, which is what makes a narrow regression a pixel diff instead of the nothing it
-used to be.
+The capture widths are 1280px, 768px and 512px with a mouse, and 393px with touch. The compact
+files carry an `@<width>` suffix. Each width has a separate browser context, and `--filter` selects
+across widths. The Combat landing state waits for the expected layout. The run reports any
+interaction whose controls or ready selector are unavailable at that width.
 
 Each state gets a fresh page load, and animations, transitions, and the caret are frozen, so captures
 are deterministic. Coverage includes interaction states (open menus, the command palette, a selected
 compendium entry) through per-state `prep` functions with a self-validating `ready` selector — add
-more by following the pattern. Baselines are machine- and font-specific, so they are gitignored and
-regenerated locally. To check a change already made: stash, capture the baseline, unstash, compare.
+more by following the pattern. Baselines in `design-preview/visual/baseline/` are machine- and
+font-specific and regenerated locally. Captures and diffs go in `design-preview/visual/current/`.
 
 **One red run is not evidence.** It has failed on different states and then passed twice with no code
 change: round- and turn-dependent chips drift on their own, and a dev server that lived through a file
@@ -82,13 +80,13 @@ script in a temp directory throws module-not-found. Drive to the state, screensh
 delete the script. Screenshots go in `design-preview/`, which is gitignored for images.
 
 **`tools/visual/narrow.mjs`** is the other half: `shot.mjs` says whether the narrow layout CHANGED,
-and this says whether it is broken — no baseline, and a rule instead of a comparison. It drives every route at 393px and 320px and fails on two things: a
+and this checks overflow at the same widths plus 320px with touch. It fails on two kinds of overflow: a
 `document.scrollWidth` wider than the viewport (which scrolls the whole page sideways and drags every
 `position: fixed` overlay off-side), and any box inside `main` wider than `main` that no ancestor
 scrolls on purpose. It names the deepest offender rather than every ancestor that inherited the floor.
 `--locale=uk` re-runs it in Ukrainian, whose labels run wider than English and are what usually breaks
-a row that English clears; `--width=` / `--height=` take one size, e.g. a landscape phone. Same `BASE`
-caveat as above. Unlike `shot.mjs` it needs no baseline, so it is the cheaper one to run first.
+a row that English clears. `--width=` / `--height=` take one size, e.g. a landscape phone.
+`--theme=light` selects the light theme. Both tools run with reduced motion. Same `BASE` caveat as above.
 
 It prints one advisory beside the failures: a **tap-target census** of controls a 24×24 finger square
 does not reliably hit. It HIT-TESTS rather than reading boxes, because most of the small controls here

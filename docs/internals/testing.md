@@ -44,7 +44,7 @@ engine disabled (identical shape; trace = base-only when off).
   export). Component tests still use Vitest browser mode, independent of Tauri.
 - **Visual regression (present)** — **`tools/visual/shot.mjs`** (Playwright + `pixelmatch`) drives
   the **web SPA in headless Chromium** against the `pnpm dev` server (`localhost:5173`, `BASE` env
-  overrides), screenshots key route states, and pixel-diffs vs `tools/visual/baseline/` (0-px gate).
+  overrides), screenshots key route states, and pixel-diffs vs `design-preview/visual/baseline/` (0-px gate).
   `node tools/visual/shot.mjs --update` refreshes the baseline BEFORE a change; a bare run compares.
   Companion CSS tools live beside it (`css-dups.mjs` / `css-classes.mjs` / `css-name-collisions.mjs`
   / `rename-class.mjs` / `hoist-class.mjs`). **Layer caveat:** this driver reaches the **webview DOM
