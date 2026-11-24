@@ -24,6 +24,9 @@
 	import HpPanel from '../blocks/HpPanel/HpPanel.svelte';
 	import Exhaustion from '../blocks/Exhaustion.svelte';
 	import HeadPopover from './HeadPopover.svelte';
+	import HitLine from '../blocks/HpPanel/HitLine.svelte';
+	import { MediaQuery } from 'svelte/reactivity';
+	import { THREE_COLUMNS_QUERY } from '#lib/config/narrow-window.ts';
 
 	let { c, s }: { c: Character; s: CharacterSheet } = $props();
 
@@ -38,6 +41,10 @@
 	const close = () => (open = null);
 
 	const hp = $derived(c.play.hp);
+	/** At 0 hit points, or dead: the hit-point popover is the whole block with its saves. */
+	const down = $derived(hp.current <= 0 || !!c.play.death);
+	const exhaustionMax = $derived(combat.effects.exhaustionMax);
+	const roomForTheField = new MediaQuery(THREE_COLUMNS_QUERY);
 	const max = $derived(s.maxHp.value);
 	const xp = $derived(combat.experience.progress);
 	const backgroundName = $derived.by(() => {
@@ -73,6 +80,21 @@
 				><i style="width: {ofMax(hp.current)}"></i><u style="width: {ofMax(hp.temp)}"></u></span
 			>
 		</button>
+
+		{#if roomForTheField.current && !down}
+			<!-- D6: at half the screen the hit has room to stand open in the block itself -->
+			<div class="hp-inline">
+				<HitLine />
+				<button
+					type="button"
+					class="hp-heal"
+					aria-label={$_('combat.hp.healOrTemp')}
+					use:provenance={$_('combat.hp.healOrTemp')}
+					onclick={(event) => combat.openMenu('restore', event)}
+					><Icon name="plus" size={13} /></button
+				>
+			</div>
+		{/if}
 
 		<div class="stats">
 			<button
@@ -113,6 +135,13 @@
 					use:provenance={$_('combat.hp.endConcentration', { values: { spell: conc.label } })}
 					><Icon name="x" size={10} /></button
 				></span
+			>
+		{/if}
+		{#if c.play.exhaustion > 0}
+			<span class="chip bad"
+				>{$_('combat.exhaustion.reading', {
+					values: { level: c.play.exhaustion, max: exhaustionMax },
+				})}</span
 			>
 		{/if}
 		{#each c.play.effects as effect (effect.iid)}
@@ -165,7 +194,40 @@
 	</HeadPopover>
 {:else if open?.what === OPEN.hp}
 	<HeadPopover anchor={open.anchor} label={$_('combat.hp.hitPoints')} onclose={close}>
-		<div class="hp-pop"><HpPanel {c} {s} /><Exhaustion {c} /></div>
+		{#if down}
+			<!-- at 0 hit points the block is the wide screen's whole one: its saves, its roll, its motion
+			     (AT-ZERO-HP redraws it) -->
+			<div class="hp-pop"><HpPanel {c} {s} /><Exhaustion {c} /></div>
+		{:else}
+			<!-- D5: the hit on one line — amount, type, the red press — healing and temporary hit points
+			     behind the green one, and exhaustion as a stepper -->
+			<div class="hp-quick">
+				<HitLine />
+				<button type="button" class="hp-heal" onclick={(event) => combat.openMenu('restore', event)}
+					><Icon name="plus" size={13} />{$_('combat.hp.healOrTemp')}</button
+				>
+				{#if exhaustionMax > 0}
+					<div class="hp-exhaustion">
+						<span>{$_('combat.exhaustion.title')} <b>{c.play.exhaustion}</b> / {exhaustionMax}</span
+						>
+						<button
+							class="icon-button"
+							aria-label={$_('combat.exhaustion.decrease')}
+							disabled={c.play.exhaustion <= 0}
+							onclick={() => combat.effects.setExhaustion(c.play.exhaustion - 1)}
+							><Icon name="minus" size={13} /></button
+						>
+						<button
+							class="icon-button"
+							aria-label={$_('combat.exhaustion.increase')}
+							disabled={c.play.exhaustion >= exhaustionMax}
+							onclick={() => combat.effects.setExhaustion(c.play.exhaustion + 1)}
+							><Icon name="plus" size={13} /></button
+						>
+					</div>
+				{/if}
+			</div>
+		{/if}
 	</HeadPopover>
 {:else if open?.what === OPEN.ac}
 	<HeadPopover anchor={open.anchor} label={$_('combat.narrow.ac')} onclose={close}>
@@ -344,6 +406,43 @@
 	}
 	.facts dd {
 		margin: 0;
+	}
+	.hp-quick {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		min-width: 15rem;
+	}
+	.hp-heal {
+		align-self: flex-start;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-1);
+		padding: var(--space-1-5) var(--space-2-5);
+		border: 1px solid var(--color-good);
+		border-radius: var(--radius-full);
+		background: var(--color-good-soft);
+		color: var(--color-good);
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.hp-inline {
+		display: flex;
+		align-items: center;
+		gap: var(--space-1-5);
+		flex: 0 1 15rem;
+		min-width: 0;
+	}
+	.hp-exhaustion {
+		display: flex;
+		align-items: center;
+		gap: var(--space-1-5);
+		font-size: var(--font-size-sm);
+		color: var(--color-text-muted);
+	}
+	.hp-exhaustion span {
+		margin-inline-end: auto;
 	}
 	.hp-pop {
 		display: flex;

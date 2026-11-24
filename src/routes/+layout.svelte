@@ -441,6 +441,18 @@
 			<span class="control-label">{$_('feedback.link')}</span>
 		</button>
 	{/snippet}
+	{#snippet searchButton()}
+		<button
+			type="button"
+			class="chip search-chip"
+			onclick={() => (ui.commandPaletteOpen = true)}
+			use:provenance={$_('nav.openCommandPalette')}
+			aria-label={$_('nav.openCommandPalette')}
+		>
+			<Icon name="search" size={13} />
+			<span class="control-label">Ctrl K</span>
+		</button>
+	{/snippet}
 	{#snippet barChips()}
 		<LangSwitcher />
 		<button
@@ -495,16 +507,7 @@
 	{/snippet}
 	{#if narrowBar.current}
 		<div class="chips">
-			<button
-				type="button"
-				class="chip search-chip"
-				onclick={() => (ui.commandPaletteOpen = true)}
-				use:provenance={$_('nav.openCommandPalette')}
-				aria-label={$_('nav.openCommandPalette')}
-			>
-				<Icon name="search" size={13} />
-				<span class="control-label">Ctrl K</span>
-			</button>
+			{@render searchButton()}
 			<button
 				type="button"
 				class="chip"
@@ -535,16 +538,7 @@
 		{@render feedbackButton()}
 		<div class="chips">
 			{@render barChips()}
-			<button
-				type="button"
-				class="chip search-chip"
-				onclick={() => (ui.commandPaletteOpen = true)}
-				use:provenance={$_('nav.openCommandPalette')}
-				aria-label={$_('nav.openCommandPalette')}
-			>
-				<Icon name="search" size={13} />
-				<span class="control-label">Ctrl K</span>
-			</button>
+			{@render searchButton()}
 		</div>
 	{/if}
 </header>
