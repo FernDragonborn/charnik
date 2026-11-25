@@ -865,7 +865,18 @@
 			"weight": "{carried} / {capacity} фунтів",
 			"remove": "Прибрати {name}",
 			"reask": "Що це за «{name}»? — відповісти знову",
-			"askWhich": "Який саме?"
+			"askWhich": "Який саме?",
+			"groups": {
+				"equipped": "Споряджене та прив’язане",
+				"consumables": "Витратні предмети",
+				"arms": "Неспоряджена броня та зброя",
+				"gear": "Спорядження"
+			},
+			"quantity": "Кількість",
+			"damage": "Шкода",
+			"weightValue": "Вага · вартість",
+			"unequip": "Зняти",
+			"unattune": "Розірвати прив’язку"
 		},
 		"log": {
 			"damageTaken": "Отримано шкоди: {final}",

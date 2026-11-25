@@ -180,7 +180,7 @@
 		{:else if pid === 'spells'}
 			<SpellsPanel {s} compact={compactSpells} {furniture} />
 		{:else if pid === 'inventory'}
-			<InventoryPanel {furniture} />
+			<InventoryPanel {furniture} {phone} />
 		{:else if pid === 'features'}
 			<FeaturesPanel {furniture} />
 		{/if}

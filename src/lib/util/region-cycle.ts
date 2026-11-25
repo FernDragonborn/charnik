@@ -17,6 +17,10 @@ const isShown = (el: HTMLElement): boolean => el.getClientRects().length > 0;
  */
 export function cycleRegion(event: KeyboardEvent): boolean {
 	if (event.code !== 'F6' || event.ctrlKey || event.altKey || event.metaKey) return false;
+	if ([...document.querySelectorAll<HTMLElement>('[aria-modal="true"]')].some(isShown)) {
+		event.preventDefault();
+		return true;
+	}
 	const regions = [...document.querySelectorAll<HTMLElement>(`[${REGION_ATTRIBUTE}]`)].filter(
 		isShown,
 	);

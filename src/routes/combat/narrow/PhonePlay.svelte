@@ -85,7 +85,7 @@
 		{/each}
 	</div>
 
-	{#if !arranging}<div class="phone-last"><Playbar withDice /></div>{/if}
+	{#if !arranging}<div class="phone-last"><Playbar withDice phone /></div>{/if}
 
 	{#if barShown}<div
 			class="phone-tabs"

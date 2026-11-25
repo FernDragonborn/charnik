@@ -149,6 +149,9 @@ export function attune(
 	);
 }
 
+/** The play strip and the log use the same item-use wording. */
+export const USED_ITEM_NOTICE = 'combat.notice.usedItem';
+
 /** Spend one of a stack — or `count`, never more than it holds. The last one leaves the list, so a
  *  used-up stack does not linger as a zero row. */
 export function useItem(
@@ -166,7 +169,7 @@ export function useItem(
 			...quietly(withInventory(character, list)),
 			notices: [
 				{
-					text: { key: 'combat.notice.usedItem' },
+					text: { key: USED_ITEM_NOTICE },
 					description: { key: 'combat.notice.itemsLeft', values: { count: entry.qty - spent } },
 					rows: { name: entry.item },
 				},

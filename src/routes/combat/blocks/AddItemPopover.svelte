@@ -7,9 +7,7 @@
 	// card beside it. A second, smaller item search here would be a different contract for the same
 	// act, and the row you are looking for would sort differently in the two.
 	//
-	// The chrome is a POPOVER on the control that opened it, not a dialog: adding an item is a step
-	// inside the inventory panel, and nothing is being asked of the player. So no backdrop, no
-	// badge, no subtitle — a title, a way out, and the sheet still readable around it.
+	// The desktop keeps the picker beside the inventory. The phone opens the same picker in a sheet.
 	// The picker's shared pieces — the round ✓ that takes a row, its scrollbars — are styled in the
 	// builder's stylesheet, under the builder's scope. Mounting the picker outside the builder means
 	// bringing both: the sheet, and the scope on the surface the picker sits in.
@@ -17,6 +15,8 @@
 	import { onMount } from 'svelte';
 	import { _ } from '#lib/i18n/index.ts';
 	import Icon from '#lib/components/Icon.svelte';
+	import DialogShell from '#lib/components/DialogShell.svelte';
+	import { parseInstanceRowId } from '#lib/content/item-instance.ts';
 	import { anchored } from '#lib/actions/anchored.ts';
 	import { dismissOnEscape } from '#lib/actions/dismissOnEscape.ts';
 	import SectionedPicker from '../../build/blocks/SectionedPicker.svelte';
@@ -28,7 +28,11 @@
 	import { INSTANCE_SECTION, InstancePicking } from '../../build/item-instance-picking.svelte';
 	import ItemInstanceAsk from '../../build/blocks/ItemInstanceAsk.svelte';
 
-	let { anchor, onclose }: { anchor: HTMLElement; onclose: () => void } = $props();
+	let {
+		anchor,
+		onclose,
+		phone = false,
+	}: { anchor: HTMLElement; onclose: () => void; phone?: boolean } = $props();
 
 	/** The picker's own floating parts, which live in the body: a press on the card's Take is a
 	 *  press inside this surface. */
@@ -58,7 +62,9 @@
 	);
 	const picking = new InstancePicking({
 		scope: () => combat.inventory.instanceScope,
-		carried: () => combat.inventory.rows.map((r) => r.entry.item),
+		// On the phone, the minus control handles removal one at a time. A template may have
+		// carried variants even when it has no stack matching the picker row's exact answers.
+		carried: () => (phone ? [] : combat.inventory.rows.map((r) => r.entry.item)),
 		add: (ref) => combat.inventory.add(ref),
 		addInstance: (ref, answers) => combat.inventory.addInstance(ref, answers),
 		putBack: (ref) => combat.inventory.putBack(ref),
@@ -74,30 +80,69 @@
 		rowDetail(previewId ? combat.graph?.get(picking.rowIdOf(previewId)) : undefined, 'item'),
 	);
 	const carried = $derived(inv.rows.map((r) => r.entry.item));
+	const stacksFor = (id: string) => {
+		const instance = parseInstanceRowId(id);
+		return inv.rows.filter(
+			({ entry }) =>
+				entry.item === (instance?.ref ?? id) &&
+				entry.base === instance?.answers.base &&
+				entry.bonus === instance?.answers.bonus &&
+				entry.choice === instance?.answers.choice,
+		);
+	};
+	const quantityOf = (id: string) => stacksFor(id).reduce((count, row) => count + row.entry.qty, 0);
+	const addOne = (id: string) => {
+		const row = stacksFor(id)[0];
+		if (row) inv.bump(row.entry.iid, 1);
+		else picking.take(id);
+	};
+	const removeOne = (id: string) => {
+		const row = stacksFor(id).at(-1);
+		if (!row) return;
+		if (row.entry.qty > 1) inv.bump(row.entry.iid, -1);
+		else inv.remove(row.entry.iid);
+	};
+	const playStack = { quantityOf, removeOne };
 </script>
 
-<div
-	bind:this={surface}
-	class="add-item-popover build-page"
-	role="dialog"
-	aria-labelledby="add-item-title"
-	use:anchored={{ anchor, onclose, companions: PICKER_PARTS }}
-	use:dismissOnEscape={onclose}
->
-	<header class="head">
-		<h2 id="add-item-title">{$_('combat.inventory.addItem')}</h2>
-		<button class="close" onclick={onclose} aria-label={$_('app.close')}>
-			<Icon name="x" size={15} />
-		</button>
-	</header>
-	<div class="picker">
+{#if phone}
+	<DialogShell
+		titleId="add-item-title"
+		title={$_('combat.inventory.addItem')}
+		width="100%"
+		bottom
+		onDismiss={onclose}
+	>
+		{@render picker()}
+	</DialogShell>
+{:else}
+	<div
+		class="add-item-popover build-page"
+		role="dialog"
+		aria-labelledby="add-item-title"
+		use:anchored={{ anchor, onclose, companions: PICKER_PARTS }}
+		use:dismissOnEscape={onclose}
+	>
+		<header class="head">
+			<h2 id="add-item-title">{$_('combat.inventory.addItem')}</h2>
+			<button class="close" onclick={onclose} aria-label={$_('app.close')}>
+				<Icon name="x" size={15} />
+			</button>
+		</header>
+		{@render picker()}
+	</div>
+{/if}
+
+{#snippet picker()}
+	<div class="picker build-page" class:phone-picker={phone} bind:this={surface}>
 		<SectionedPicker
 			{sections}
 			bind:query
 			{previewId}
 			takenIds={carried}
 			onpreview={(id) => (previewId = id)}
-			ontake={picking.take}
+			ontake={phone ? addOne : picking.take}
+			{...phone ? { playStack } : {}}
 			{detail}
 			initiallyOpen={[INSTANCE_SECTION]}
 			placeholder={$_('build.inventory.search')}
@@ -111,7 +156,7 @@
 	{#if picking.asking}
 		<ItemInstanceAsk ask={picking.asking} onanswer={picking.answer} oncancel={picking.cancel} />
 	{/if}
-</div>
+{/snippet}
 
 <style>
 	.add-item-popover {
@@ -167,5 +212,8 @@
 		flex: 1;
 		min-height: 0;
 		padding: var(--space-3) var(--space-4) var(--space-4);
+	}
+	.phone-picker {
+		block-size: 70dvh;
 	}
 </style>

@@ -40,4 +40,21 @@ describe('F6 between regions (work/ui.md ▸ KEYBOARD-NAV)', () => {
 		expect(at()).toBe('Spells');
 		expect(cycleRegion(new KeyboardEvent('keydown', { code: 'F5' }))).toBe(false);
 	});
+
+	it('keeps both directions of F6 inside a visible modal', () => {
+		mountRegions();
+		const modal = document.createElement('section');
+		modal.setAttribute('aria-modal', 'true');
+		const control = document.createElement('button');
+		control.textContent = 'Close item';
+		modal.append(control);
+		document.body.append(modal);
+		control.focus();
+		expect(f6()).toBe(true);
+		expect(f6(true)).toBe(true);
+		expect(document.activeElement).toBe(control);
+		modal.hidden = true;
+		expect(f6()).toBe(true);
+		expect(at()).toBe('Roster');
+	});
 });

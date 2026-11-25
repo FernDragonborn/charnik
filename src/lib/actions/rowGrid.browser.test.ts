@@ -37,6 +37,21 @@ describe('rowGrid (work/ui.md ▸ KEYBOARD-NAV: a row is one Tab stop)', () => {
 		expect(stops(list)).toHaveLength(1);
 	});
 
+	it('hands the Tab stop to a visible row when its category closes', async () => {
+		const list = mountList();
+		const firstRow = list.firstElementChild;
+		if (!firstRow) throw new Error('The list must have a first row');
+		const category = document.createElement('details');
+		category.open = true;
+		category.append(document.createElement('summary'), firstRow);
+		list.prepend(category);
+		cleanup = rowGrid(list, '.spell-row')?.destroy;
+		firstRow.querySelector('button')?.focus();
+		category.open = false;
+		await expect.poll(() => stops(list)[0]?.closest('.spell-row')?.textContent).toContain('Shield');
+		expect(stops(list)).toHaveLength(1);
+	});
+
 	it('walks rows on ↑/↓ keeping the column, and cells on ←/→', () => {
 		const list = mountList();
 		cleanup = rowGrid(list, '.spell-row')?.destroy;

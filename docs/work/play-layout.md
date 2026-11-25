@@ -111,8 +111,14 @@ and a panel's rows share one Tab stop with their controls on the arrows.
   tabs and uses the space for the sheet when only Mine is visible. [to audit]
   Actions groups attacks and ability options by turn cost. A Standard actions row opens the
   edition's available choices in a sheet and closes after the player picks one (P3, P3b). [to audit]
+  Items shows one row per stack in folding categories. Its detail sheet has large quantity
+  controls and the item's acts (P13, P14). The equipment picker adds one per row press and lets
+  the player reduce each stack (P41). Using the last consumable removes its row and the strip
+  says how many remain (P47). [to audit]
+  **Open:** The equipment records for Potion of Healing use the Gear category in both editions.
+  Should the content classify those records as consumables so their rows offer Use?
   **Left:** Mine as the pinned set — until RESOURCE-PIN it shows the attacks and the effects;
-  Items one line each in folding categories (P13, P14); Bio's About /
+  the item detail's Pin to Mine; Bio's About /
   Features / Notes (P16–P16c); and every *new idea* frame,
   which are their own items.
   - **The tabs.** *Mine* is the character's pinned set — RESOURCE-PIN's answer (P1). Out of combat,

@@ -67,6 +67,8 @@ export interface InventoryRow {
 	weightLb: number;
 	/** The one-line "what is this" the row prints under the name: category, damage, AC. */
 	meta: string;
+	stat: string;
+	value: string;
 	equippable: boolean;
 	consumable: boolean;
 	attunable: boolean;
@@ -76,6 +78,22 @@ export interface InventoryRow {
 	questions: InstanceQuestions;
 	/** A question it asks is still open: a row carried from before the question was asked at Add. */
 	unanswered: boolean;
+}
+
+export const INVENTORY_GROUP = {
+	equipped: 'equipped',
+	consumables: 'consumables',
+	arms: 'arms',
+	gear: 'gear',
+} as const;
+type InventoryGroup = (typeof INVENTORY_GROUP)[keyof typeof INVENTORY_GROUP];
+
+export function inventoryGroupOf(
+	row: Pick<InventoryRow, 'entry' | 'consumable' | 'equippable'>,
+): InventoryGroup {
+	if (row.entry.equipped || row.entry.attuned) return INVENTORY_GROUP.equipped;
+	if (row.consumable) return INVENTORY_GROUP.consumables;
+	return row.equippable ? INVENTORY_GROUP.arms : INVENTORY_GROUP.gear;
 }
 
 /** What the inventory needs from the sheet around it. */
@@ -120,20 +138,24 @@ export class InventoryTracker {
 			const bare = this.resolve(entry.item);
 			const item = entry.base ? this.resolve(entry.item, entry.base) : bare;
 			const ac = item ? tagInt(item.tags, ITEM_TAG.ac) : null;
+			const damage = item?.damage ?? '';
 			const questions =
 				scope && bare ? instanceQuestions(scope, bare.row) : { bases: [], rungs: [], choices: [] };
+			const value = say(costSaid(item?.row.data.cost), translator());
 			return {
 				entry,
 				name: this.nameOf(entry, item),
 				item,
 				weightLb: item?.weightLb ?? 0,
+				value,
+				stat: ac === null ? damage : `${translator()('combat.narrow.ac')} ${ac}`,
 				meta: [
 					item?.row.data.category ?? '',
-					item?.damage ?? '',
+					damage,
 					ac === null ? '' : `AC ${ac}`,
 					// what it is worth, for the half of the game that is spending and selling. Magic items
 					// carry no price in either SRD, so the cell is simply absent for them rather than zero.
-					say(costSaid(item?.row.data.cost), translator()),
+					value,
 				]
 					.filter(Boolean)
 					.join(' · '),

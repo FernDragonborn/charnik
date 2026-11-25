@@ -19,6 +19,9 @@
 	import { rollToastModel, ROLL_LAYOUT } from '#lib/dice/roll-toast.ts';
 	import RollRow from '#lib/components/RollRow.svelte';
 	import { isTurnAct, LOG_KIND } from '#lib/character/log-kind.ts';
+	import { USED_ITEM_NOTICE } from '#lib/play/inventory.ts';
+	import { rollNameOf, sayRollName } from '#lib/combat/roll.ts';
+	import { say } from '#lib/util/say.ts';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { NARROW_WINDOW_QUERY } from '#lib/config/narrow-window.ts';
 	import { table } from '../../table/table-view-model.svelte';
@@ -27,11 +30,12 @@
 
 	// withDice: the narrow layouts keep the dice tray here, beside the log, since their strip has no
 	// room for it (work/play-layout.md ▸ NARROW-DESKTOP)
-	let { withDice = false }: { withDice?: boolean } = $props();
+	let { withDice = false, phone = false }: { withDice?: boolean; phone?: boolean } = $props();
 	const { openMenu, openDice } = combat;
 	const log = $derived(combat.journal.log);
 	// the newest thing the player DID: what followed from it, or what was said about it, sits in the log
 	const last = $derived(log.find((e) => isTurnAct(e.kind ?? LOG_KIND.roll)));
+	const usedItem = $derived(phone && log[0]?.labelKey === USED_ITEM_NOTICE ? log[0] : undefined);
 
 	// The live controls on this roll (UX-3). They exist HERE and in the log, never in the toast: a
 	// toast expires mid-decision and click-anywhere dismisses it, so it announces and these two act.
@@ -71,7 +75,7 @@
 				sheetState={(id) => table.asks.stateFor(id)?.label}
 			/>{/if}</span
 	>
-	<div class="last-roll" class:empty={!last && !pending} class:asking={!!pending}>
+	<div class="last-roll" class:empty={!last && !pending && !usedItem} class:asking={!!pending}>
 		{#if pending}
 			<!-- keyed by the request: the next one arrives as a new face, so a second press meant for
 			     the first cannot answer what replaced it -->
@@ -98,6 +102,12 @@
 					</div>
 				</div>
 			{/key}
+		{:else if usedItem}
+			<span class="no-roll" role="status"
+				>{sayRollName(rollNameOf(usedItem), $_)}
+				{#each usedItem.noteParts ?? [] as part, index (index)}
+					· {say(part, $_)}{/each}</span
+			>
 		{:else if last}
 			<RollRow
 				model={rollToastModel(last, $_)}

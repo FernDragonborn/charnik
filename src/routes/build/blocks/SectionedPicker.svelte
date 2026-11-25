@@ -30,6 +30,7 @@
 		placeholder,
 		controls,
 		initiallyOpen = [],
+		playStack,
 	}: {
 		/** Pre-sorted; `key` is stable across a re-filter so an open section stays open. */
 		sections: { key: string; label: string; rows: LoadedRow[] }[];
@@ -46,9 +47,12 @@
 		/** Sections that open expanded: everything starts collapsed (§4) except a short list worth
 		 *  seeing before anything is typed. */
 		initiallyOpen?: string[];
+		/** A playing inventory uses the row for adding and shows a reverse control for owned stacks. */
+		playStack?: { quantityOf: (id: string) => number; removeOne: (id: string) => void };
 	} = $props();
 
 	const taken = $derived(new Set(takenIds));
+	const isTaken = (id: string) => playStack ? playStack.quantityOf(id) > 0 : taken.has(id);
 	let list = $state<HTMLElement | null>(null);
 	// the opening state only: from here on the player opens and closes them
 	let openKeys = $state<string[]>(untrack(() => [...initiallyOpen]));
@@ -160,6 +164,7 @@
 			previewId,
 			onpreview,
 			ontake,
+			...(playStack ? { onenter: ontake } : {}),
 			onopen: () => (peeking = null), // the teaser steps aside for the real thing
 		}),
 		pickerId,
@@ -180,7 +185,7 @@
 
 <div class="jump" use:wheelSideways>
 	{#each shown as section (section.key)}
-		{@const got = section.rows.filter((r) => taken.has(r.effectiveId)).length}
+		{@const got = section.rows.filter((r) => isTaken(r.effectiveId)).length}
 		<button
 			class="jumpbtn"
 			class:here={section.key === hereKey}
@@ -211,7 +216,7 @@
 >
 	{#each shown as section (section.key)}
 		{@const open = isOpen(section.key)}
-		{@const got = section.rows.filter((r) => taken.has(r.effectiveId)).length}
+		{@const got = section.rows.filter((r) => isTaken(r.effectiveId)).length}
 		<div class="sect-row" role="row" aria-expanded={open}>
 			<div class="sect-cell" role="gridcell">
 				<button
@@ -234,7 +239,8 @@
 		{#if open}
 			{#each section.rows as row (row.effectiveId)}
 				{@const id = row.effectiveId}
-				{@const on = taken.has(id)}
+				{@const on = isTaken(id)}
+				{@const quantity = playStack?.quantityOf(id) ?? 0}
 				{@const name = rowName(row)}
 				<div
 					class="srow"
@@ -247,37 +253,66 @@
 					<!-- the cell is what `aria-activedescendant` names: NVDA drops out of forms mode when it
 					     is pointed at anything else in a grid (nvaccess/nvda#16414) -->
 					<div class="scell" role="gridcell" id={picker.optionId(id)}>
-						<button
-							class="addbtn"
-							class:on
-							tabindex={id === tabRowId ? 0 : -1}
-							aria-pressed={on}
-							aria-label={$_(on ? 'build.picker.removeRow' : 'build.picker.takeRow', {
-								values: { name },
-							})}
-							onclick={() => ontake(id)}
-						>
-							<Icon name="check" size={12} />
-						</button>
-						<!-- a double-click is the shortcut to the toggle beside it: the hand is already on the
+						{#if playStack}
+							<button
+								type="button"
+								class="sbody take-row"
+								tabindex={id === tabRowId ? 0 : -1}
+								aria-label={$_(on ? 'combat.inventory.more' : 'build.picker.takeRow', {
+									values: { name },
+								})}
+								onclick={() => ontake(id)}
+							>
+								<b>{name}</b>
+								<span class="smeta">{pickerMeta(row, $_)}</span>
+								{#if on}<span class="take-count">×{quantity}</span>{/if}<Icon name="plus" />
+							</button>
+							{#if on}
+								<button
+									type="button"
+									class="icon-button take-less"
+									tabindex={id === tabRowId ? 0 : -1}
+									aria-label={$_('combat.inventory.fewer', { values: { name } })}
+									onclick={(event) => {
+										const next = event.currentTarget.previousElementSibling;
+										playStack?.removeOne(id);
+										if (quantity === 1 && next instanceof HTMLElement) next.focus();
+									}}><Icon name="minus" /></button
+								>
+							{/if}
+						{:else}
+							<button
+								class="addbtn"
+								class:on
+								tabindex={id === tabRowId ? 0 : -1}
+								aria-pressed={on}
+								aria-label={$_(on ? 'build.picker.removeRow' : 'build.picker.takeRow', {
+									values: { name },
+								})}
+								onclick={() => ontake(id)}
+							>
+								<Icon name="check" size={12} />
+							</button>
+							<!-- a double-click is the shortcut to the toggle beside it: the hand is already on the
 						     row, and the ✓ is a small target to travel to for something you do dozens of
 						     times. It commits nothing a single click does, so reading stays free. -->
-						<button
-							class="sbody"
-							tabindex={id === tabRowId ? 0 : -1}
-							onclick={(event) => event.detail < 2 && picker.read(id)}
-							ondblclick={() => {
-								ontake(id);
-								picker.close();
-							}}
-							onmouseenter={() => (peeking = id)}
-							onmouseleave={() => (peeking = null)}
-							onfocus={() => (peeking = id)}
-							onblur={() => (peeking = null)}
-						>
-							<b>{name}</b>
-							<span class="smeta">{pickerMeta(row, $_)}</span>
-						</button>
+							<button
+								class="sbody"
+								tabindex={id === tabRowId ? 0 : -1}
+								onclick={(event) => event.detail < 2 && picker.read(id)}
+								ondblclick={() => {
+									ontake(id);
+									picker.close();
+								}}
+								onmouseenter={() => (peeking = id)}
+								onmouseleave={() => (peeking = null)}
+								onfocus={() => (peeking = id)}
+								onblur={() => (peeking = null)}
+							>
+								<b>{name}</b>
+								<span class="smeta">{pickerMeta(row, $_)}</span>
+							</button>
+						{/if}
 					</div>
 				</div>
 			{/each}
@@ -466,6 +501,18 @@
 	.sbody:focus-visible {
 		outline: var(--focus-ring);
 		outline-offset: -2px;
+	}
+	.sbody.take-row {
+		align-items: center;
+		min-block-size: var(--space-6);
+		padding-inline: var(--space-2);
+	}
+	.take-count {
+		color: var(--color-resource);
+	}
+	.take-less {
+		min-inline-size: var(--space-6);
+		min-block-size: var(--space-6);
 	}
 	.sbody b {
 		font-family: var(--font-display);

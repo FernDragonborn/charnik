@@ -18,13 +18,18 @@ const CELLS = `${FOCUSABLE}, summary, [${CELL_MARK}]`;
 
 /** The keys a control may want for itself: an editable one keeps every arrow. */
 const EDITABLE = 'input, select, textarea, [contenteditable="true"]';
+// Chromium gives closed details content rectangles even while keeping it out of the Tab order.
+const CLOSED_DETAILS_BODY = 'details:not([open]) > :not(summary)';
 
 function cellsOf(row: Element): HTMLElement[] {
 	const inner = [...row.querySelectorAll<HTMLElement>(CELLS)];
 	const own = row.matches(CELLS) && row instanceof HTMLElement ? [row] : [];
 	// a cell inside a nested row belongs to that row, and a hidden one is nowhere to land
 	return [...own, ...inner].filter(
-		(cell) => cell.closest('[data-grid-row]') === row && cell.getClientRects().length > 0,
+		(cell) =>
+			cell.closest('[data-grid-row]') === row &&
+			!cell.closest(CLOSED_DETAILS_BODY) &&
+			cell.getClientRects().length > 0,
 	);
 }
 
@@ -64,7 +69,7 @@ function afterEachChange(node: HTMLElement, settle: () => void): () => void {
 			settle();
 		});
 	});
-	observer.observe(node, { childList: true, subtree: true });
+	observer.observe(node, { childList: true, subtree: true, attributeFilter: ['open'] });
 	return () => {
 		observer.disconnect();
 		cancelAnimationFrame(pending);
@@ -75,6 +80,7 @@ export const rowGrid: Action<HTMLElement, string> = (node, rowSelector) => {
 	let selector = rowSelector;
 	/** Where the list's one Tab stop stands: a row and a cell in it, by position. */
 	let at = { row: 0, cell: 0 };
+	let tabStop: HTMLElement | undefined;
 
 	const rows = (): HTMLElement[] => {
 		const found = [...node.querySelectorAll<HTMLElement>(selector)];
@@ -84,6 +90,8 @@ export const rowGrid: Action<HTMLElement, string> = (node, rowSelector) => {
 
 	/** Every cell out of the Tab order but the one the list remembers. */
 	const settle = () => {
+		if (tabStop) tabStop.tabIndex = -1;
+		tabStop = undefined;
 		const all = rows();
 		at.row = Math.min(at.row, Math.max(0, all.length - 1));
 		all.forEach((row, r) =>
@@ -91,6 +99,7 @@ export const rowGrid: Action<HTMLElement, string> = (node, rowSelector) => {
 				const current = r === at.row && c === Math.min(at.cell, cells.length - 1);
 				cell.setAttribute(CELL_MARK, '');
 				cell.tabIndex = current ? 0 : -1;
+				if (current) tabStop = cell;
 			}),
 		);
 	};

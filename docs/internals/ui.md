@@ -218,6 +218,11 @@ On the phone, Actions folds by action, bonus action and reaction. Feature rolls 
 without a turn cost have their own group. The Standard actions row opens a sheet of the
 character's visible, edition-specific actions. One selection uses the action and closes the sheet.
 
+Phone Items groups stacks into equipped and attuned items, consumables, armor and weapons, and
+gear. The row opens a detail sheet with quantity and item controls. In Add an item, the row adds
+one and the minus removes one. The play strip shows the latest item-use notice and remaining count.
+F6 and Shift+F6 keep focus inside an open modal.
+
 - **`main` is the only scroll region, so everything above it must FIT.** Horizontal overflow at the
   document level scrolls the page sideways and drags every `position: fixed` overlay off-side with
   it. The topbar therefore stays ONE row below the threshold: the navigation slides sideways if it
@@ -734,6 +739,7 @@ keyboard starts inside and goes back to the control. Placement is one action, `a
 and travelling with the control while the page scrolls, on the side it opened on. A scroll inside
 the surface — its own list, a rail of chips — moves nothing. A floating part that lives in the body
 — a picker's card — is named to it as a companion, so a press there is not a press outside.
+On the phone there is no room beside the control, so the same picker opens as a bottom sheet.
 **A picker mounted outside the builder brings the builder's stylesheet and its scope with it**
 (`import '#lib/styles/build.css'` and `build-page` on the surface): the round ✓ that takes a row
 and the picker's scrollbars are styled there, under that scope, and without both the picker is

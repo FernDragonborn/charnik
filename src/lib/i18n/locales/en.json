@@ -865,7 +865,18 @@
 			"weight": "{carried} / {capacity} lb",
 			"remove": "Remove {name}",
 			"reask": "Which {name} is this? — answer again",
-			"askWhich": "Which one?"
+			"askWhich": "Which one?",
+			"groups": {
+				"equipped": "Equipped & attuned",
+				"consumables": "Consumables",
+				"arms": "Armor & weapons not in use",
+				"gear": "Gear"
+			},
+			"quantity": "Quantity",
+			"damage": "Damage",
+			"weightValue": "Weight · value",
+			"unequip": "Unequip",
+			"unattune": "Unattune"
 		},
 		"log": {
 			"damageTaken": "Damage taken: {final}",

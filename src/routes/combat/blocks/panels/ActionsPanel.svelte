@@ -196,7 +196,7 @@
 				slot !== null &&
 				character?.play.inCombat &&
 				character.play.turn[slot] >= combat.economy.slotMax[slot]}
-			<details open class="phone-action-group">
+			<details open class="play-group">
 				<summary
 					use:provenance={spent
 						? $_('combat.actions.spentGroup', { values: { label } })
@@ -399,31 +399,6 @@
 {/snippet}
 
 <style>
-	.phone-action-group {
-		margin-block: var(--space-2);
-		padding: var(--space-2) var(--space-3);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-lg);
-		background: var(--color-surface);
-	}
-	.phone-action-group summary {
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
-		min-block-size: var(--space-6);
-		color: var(--color-text-muted);
-		font-weight: 600;
-		cursor: pointer;
-	}
-	.phone-action-group summary :global(svg) {
-		margin-inline-start: auto;
-	}
-	.phone-action-group:not([open]) summary :global(svg) {
-		rotate: -90deg;
-	}
-	.phone-action-group:not([open]) summary:dir(rtl) :global(svg) {
-		rotate: 90deg;
-	}
 	.standard-actions {
 		width: 100%;
 		cursor: pointer;

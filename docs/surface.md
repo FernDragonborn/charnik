@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (129)
+## Duplicate suspects (131)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -45,6 +45,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `has` ×3 — src/lib/components/ClassPicker.svelte · src/lib/content/translate.ts · src/routes/dev/plugin-consent/+page.svelte
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
 - `isOpen` ×3 — src/lib/play/option-activation.ts · src/lib/rules/spellcasting.ts · src/routes/build/blocks/SectionedPicker.svelte
+- `isTaken` ×3 — src/routes/build/blocks/OptionGrid.svelte · src/routes/build/blocks/SectionedPicker.svelte · src/routes/build/blocks/StartingEquipmentPane.svelte
 - `key` ×3 — src/lib/content/issue-text.ts · src/routes/build/blocks/PickerCard.svelte · src/routes/dev/table-question/+page.svelte
 - `name` ×3 — src/lib/content/item-tags.ts · src/lib/storage/browser.ts · src/lib/styles/themeFiles.ts
 - `norm` ×3 — src/lib/storage/browser.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
@@ -88,7 +89,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `GAP` ×2 — src/lib/actions/anchored.ts · src/routes/build/card-placement.ts
 - `inScope` ×2 — src/lib/combat/attack-properties.ts · src/lib/combat/roll.ts
 - `isRecord` ×2 — src/lib/character/migrations.ts · src/lib/play/delta.ts
-- `isTaken` ×2 — src/routes/build/blocks/OptionGrid.svelte · src/routes/build/blocks/StartingEquipmentPane.svelte
 - `KEY` ×2 — src/lib/actions/focusHalo.ts · src/routes/table/asked-log.ts
 - `KINDS` ×2 — src/routes/dev/table-question/+page.svelte · src/routes/table/AskComposer.svelte
 - `listDrafts` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
@@ -115,11 +115,13 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `record` ×2 — src/lib/diag/logger.ts · src/lib/effects/plugin-store.svelte.ts
 - `reflow` ×2 — src/lib/actions/anchored.ts · src/routes/combat/CombatMenus.svelte
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
+- `reorder` ×2 — src/routes/combat/blocks/panels/FeaturesPanel.svelte · src/routes/combat/blocks/panels/InventoryPanel.svelte
 - `resolutionLabel` ×2 — src/lib/content/detail.ts · src/routes/combat/blocks/panels/SpellsPanel.svelte
 - `restore` ×2 — src/lib/components/MissingContentModal.svelte · src/lib/components/settings/PackTranslationBackups.svelte
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
 - `ROOT` ×2 — src/routes/dev/locked-seed/+page.svelte · src/routes/dev/packs-write/+page.svelte
 - `ROW_KIND` ×2 — src/lib/content/schemas.ts · src/routes/combat/blocks/panels/ActionsPanel.svelte
+- `run` ×2 — src/lib/components/CommandPalette.svelte · src/routes/combat/blocks/panels/InventoryPanel.svelte
 - `same` ×2 — src/routes/build/draft-history.svelte.ts · src/routes/combat/roll-journal.svelte.ts
 - `seed` ×2 — src/routes/dev/health/+page.svelte · src/routes/dev/packs/+page.svelte
 - `settle` ×2 — src/lib/actions/rowGrid.ts · src/lib/components/CharacterConflictDialog.svelte
@@ -187,7 +189,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **the light a moving surface catches: a spark, a shaft, a bright edge** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`, `--color-death`, `--color-glint`
 
-## Global CSS classes (113)
+## Global CSS classes (114)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -266,6 +268,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.pip-action` | components.css |  |
 | `.pip-bonus` | components.css |  |
 | `.pip-reaction` | components.css |  |
+| `.play-group` | components.css | Folding groups in the phone's Actions and Items tabs. |
 | `.primary` | components.css | the answer to a question the system asks — in a dialog, or where a GM's request waits beside the sheet (`.system-ques… |
 | `.prose-break` | components.css | The air after a hard break in rendered CSV prose (`content/markdown.ts` puts one after every <br>): the source separa… |
 | `.prose-table-scroll` | ArticleProse.svelte :global |  |
@@ -2239,6 +2242,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const reorderInventory` — * Reorder what is carried.
 - `const setItemAnswers` — Which one a carried row is, answered again (`answerItem`).
 - `function attune` — * Attune, or stop.
+- `const USED_ITEM_NOTICE` — The play strip and the log use the same item-use wording.
 - `function useItem` — Spend one of a stack — or `count`, never more than it holds.
 - `function setCoin` — How many of one coin the purse holds.
 
@@ -2815,4 +2819,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_51 tokens · 113 global classes · 63 components · 1714 exports across 239 modules · 129 duplicate suspects._
+_51 tokens · 114 global classes · 63 components · 1715 exports across 239 modules · 131 duplicate suspects._
